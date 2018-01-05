@@ -1,0 +1,19 @@
+\section{Architecture}
+
+\subsection{Shared Expressions}
+%Sharing implementation needs to be fixed. Show this using the TestSharing example
+%
+Veritesting causes regions of code to be executed using static symbolic execution.
+%
+Symbolic formulas representing the static symbolic execution are then gathered at the exit points of the region and added to the path expression and symbolic store of dynamic symbolic execution.
+%
+This causes large disjunctive formulas to be substituted and reused
+multiple times, necessitating the use of techniques like hash
+consing~\cite{hashconsing}, or its variants such as maximally-shared
+graphs~\cite{babic}.%, or using expression caching~\cite{green}.
+
+\subsection{Complex Expressions}
+%Engineering issue \#2: Need to have complex expressions, talk about how Comparators cannot be used anywhere below the top-level operator
+During exploration, SPF creates conjunctions of expressions and adds them to its {\em PathCondition} to determine satisfiability of paths.
+%
+These expressions are allowed to have a \textit{Comparator}~(a comparison operator such as !=) as the top-level operator; however, comparison and Boolean operators are not allowed in sub-expressions.  Thus, the current set of SPF expressions is insufficiently expressive to represent the disjunctive formulas required for multi-path regions. To support that use used Green\cite{green} AST.

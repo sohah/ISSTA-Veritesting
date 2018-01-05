@@ -1,0 +1,65 @@
+\section{Related Work}
+%Talk about veritesting in Mayhem, Angr.
+%
+The original idea for veritesting was presented by Avgerinos et al.~\cite{veritesting}.
+%
+They implemented veritesting on top of MAYHEM~\cite{mayhem}, a system for finding bugs at the X86 binary level which uses symbolic execution.
+%
+Their implementation demonstrated dramatic performance improvements and allowed them to find more bugs, and have better node and path coverage.
+%
+Veritesting has also been integrated with another binary level symbolic execution engine named {\tt angr}~\cite{angr}.
+%
+Veritesting was added to {\tt angr} with similar goals of statically and selectively merging paths to mitigate path explosion.
+%
+However, path merging from veritesting integration with {\tt angr} caused complex expressions to be introduced which overloaded the constraint solver.
+%
+Using the Green~\cite{green} solver may alleviate such problems when implementing veritesting with SPF.
+%
+Another technique named \textit{MultiSE} for merging symbolic execution states incrementally
+was proposed by Sen et al.~\cite{multise}.
+%
+MultiSE computes a set of guarded symbolic expressions for every
+assignment and does not require identification of points where
+previously forked dynamic symbolic executors need to be merged.
+%
+MultiSE complements predicate construction for multi-path regions beyond
+standard exit points~(such as
+\textit{invokevirtual},~\textit{invokeinterface},~\textit{return}
+statements).
+%
+Combining both techniques, while a substantial implementation effort, has the potential
+to amplify the benefits from both techniques.
+%This observation became even more apparent for longer paths.
+%
+%Integrating veritesting with SPF may expose a similar trade-off.
+%
+%But we expect this problem to be less severe for when doing static symbolic execution of Java bytecode because Java bytecode instructions have fewer behaviors to be statically analyzed than X86 architecture instructions.
+
+% %Talk about other symbolic execution performance improvements.
+% %mentioned in Christopher Kruegel's ISSTA keynote talk as Static Analysis support
+% Other static analysis techniques also provide support for dynamic symbolic execution.
+% %
+% Loop-extended symbolic execution introduced partial loop summarization by having symbolic variables that represent the number of times each loop executes.
+% %
+% This technique allowed symbolic variables to incorporate loop dependent effects along with data dependencies from program inputs.
+%
+%Value Set Analysis~\cite{vsa} is another static analysis technique that can potentially benefit dynamic symbolic execution.
+%%
+%Value set analysis uses an abstract domain to find an over-approximated set of values that registers or abstract locations may have at program points.
+%%
+%Value set analysis can help dynamic symbolic execution resolve ranges without solving constraints.
+%VSA can resolve ranges without solving constraints, thereby, finding applications in computing all possible write targets during a memory write operation.
+%Code summarization (Dodo)
+%  - automatically (and statically) summarize effect of loops / functions
+%VSA - value set analysis
+%  - resolve ranges (and conditionals) without solving constraints
+
+%Talk about TamiFlex, and how using the same technique as TamiFlex is one way to solve veritesting challenges in Java bytecode.
+%
+%Other techniques for static analysis at the Java bytecode level can also benefit dynamic symbolic execution.
+%
+Finding which reflective method call is being used, or handling dynamic class loading are known problems for static analysis tools.
+%
+TamiFlex~\cite{tamiflex} provides an answer that is sound with respect to a set of previously seen program runs.
+%
+Integrating veritesting runs into similar problems, and using techniques from TamiFlex would allow static predicate construction beyond exit points caused by reflection or dynamic class loading. 
