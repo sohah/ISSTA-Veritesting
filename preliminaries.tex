@@ -1,5 +1,9 @@
 \section{Preliminaries}
-\subsection{CFG}
+
+\subsection{WALA/CFG/SSA Form}
+...something here on WALA
+
+%\subsection{CFG}
 A control flow graph (CFG) in computer science is a representation, using graph notation, of all paths that might be traversed through a program during its execution.
 In a control flow graph each node in the graph represents a basic block, i.e. a straight-line piece of code without any jumps or jump targets; jump targets start a block, and jumps end a block. Directed edges are used to represent jumps in the control flow. There are, in most presentations, two specially designated blocks: the entry block, through which control enters into the flow graph, and the exit block, through which all control flow leaves.
 
@@ -8,12 +12,13 @@ Symbolic PathFinder (SPF) \cite{spf} combines symbolic execution with model chec
 
 
 \subsection{Veritesting}
-Veritesting\cite{veritesting} is a technique that reduces the number of paths that need to be explored by avoiding unnecessary forking. 
+Veritesting\cite{veritesting} is a technique that reduces the number of paths that need to be explored by avoiding unnecessary forking.
 %
-Veritesting identifies regions of if-statements that can be statically explored and captured in a logical formula (usually as disjunction of formulas representing different branches in if-statement). 
+Veritesting identifies regions of if-statements that can be statically explored and captured in a logical formula (usually as disjunction of formulas representing different branches in if-statement).
 %
-We will call this formula VeriFormula which captures possible different execution paths. 
+We will call this formula VeriFormula which captures possible different execution paths.
 %
-The result of this process is a VeriFormula, which can be submitted to a SMT solver. 
+The result of this process is a VeriFormula, which can be submitted to a SMT solver.
 %
-If the formula is satisfiable, then there is some path through the code region that reaches the exit point. In this case, dynamic symbolic execution is resumed after updating the PC with the VeriFormula and also updating symbolic values of variable if needed. 
+If the formula is satisfiable, then there is some path through the code region that reaches the exit point. In this case, dynamic symbolic execution is resumed after updating the PC with the VeriFormula and also updating symbolic values of variable if needed.
+

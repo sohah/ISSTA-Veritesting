@@ -1,0 +1,126 @@
+Classfile /C:/Users/whalen/Documents/git/vaibhav/JPF-workshop-paper/code_samples/VeritestingPerfComplete.class
+  Last modified Aug 4, 2017; size 595 bytes
+  MD5 checksum 02e094675f4326609320efaf3db16596
+  Compiled from "VeritestingPerfComplete.java"
+public class VeritestingPerfComplete
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #8.#18         // java/lang/Object."<init>":()V
+   #2 = Fieldref           #19.#20        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = String             #21            // neg
+   #4 = Methodref          #22.#23        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #5 = String             #24            // pos
+   #6 = String             #25            // bug
+   #7 = Class              #26            // VeritestingPerfComplete
+   #8 = Class              #27            // java/lang/Object
+   #9 = Utf8               <init>
+  #10 = Utf8               ()V
+  #11 = Utf8               Code
+  #12 = Utf8               LineNumberTable
+  #13 = Utf8               foo
+  #14 = Utf8               ([I)V
+  #15 = Utf8               StackMapTable
+  #16 = Utf8               SourceFile
+  #17 = Utf8               VeritestingPerfComplete.java
+  #18 = NameAndType        #9:#10         // "<init>":()V
+  #19 = Class              #28            // java/lang/System
+  #20 = NameAndType        #29:#30        // out:Ljava/io/PrintStream;
+  #21 = Utf8               neg
+  #22 = Class              #31            // java/io/PrintStream
+  #23 = NameAndType        #32:#33        // println:(Ljava/lang/String;)V
+  #24 = Utf8               pos
+  #25 = Utf8               bug
+  #26 = Utf8               VeritestingPerfComplete
+  #27 = Utf8               java/lang/Object
+  #28 = Utf8               java/lang/System
+  #29 = Utf8               out
+  #30 = Utf8               Ljava/io/PrintStream;
+  #31 = Utf8               java/io/PrintStream
+  #32 = Utf8               println
+  #33 = Utf8               (Ljava/lang/String;)V
+{
+  public VeritestingPerfComplete();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 1: 0
+
+  public void foo(int[]);
+    descriptor: ([I)V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=5, args_size=2
+         0: iconst_0
+         1: istore_2
+         2: aload_1
+         3: arraylength
+         4: istore_3
+         5: iconst_0
+         6: istore        4
+         8: iload         4
+        10: iload_3
+        11: if_icmpge     47
+        14: aload_1
+        15: iload         4
+        17: iaload
+        18: ifge          27
+        21: iinc          2, -1
+        24: goto          41
+        27: aload_1
+        28: iload         4
+        30: iaload
+        31: ifle          40
+        34: iinc          2, 1
+        37: goto          41
+        40: return
+        41: iinc          4, 1
+        44: goto          8
+        47: iload_2
+        48: ifge          62
+        51: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        54: ldc           #3                  // String neg
+        56: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        59: goto          85
+        62: iload_2
+        63: ifle          77
+        66: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        69: ldc           #5                  // String pos
+        71: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        74: goto          85
+        77: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        80: ldc           #6                  // String bug
+        82: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        85: return
+      LineNumberTable:
+        line 7: 0
+        line 8: 2
+        line 9: 5
+        line 11: 14
+        line 12: 27
+        line 13: 40
+        line 9: 41
+        line 16: 47
+        line 17: 62
+        line 18: 77
+        line 19: 85
+      StackMapTable: number_of_entries = 8
+        frame_type = 254 /* append */
+          offset_delta = 8
+          locals = [ int, int, int ]
+        frame_type = 18 /* same */
+        frame_type = 12 /* same */
+        frame_type = 0 /* same */
+        frame_type = 250 /* chop */
+          offset_delta = 5
+        frame_type = 14 /* same */
+        frame_type = 14 /* same */
+        frame_type = 7 /* same */
+}
+SourceFile: "VeritestingPerfComplete.java"

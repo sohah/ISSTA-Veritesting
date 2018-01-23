@@ -37,6 +37,9 @@
 
 \newcommand{\mike}[1]{\textcolor{red}{#1}}
 
+\newcommand{\tool}{JRex}
+\newcommand{\toolfull}{Java Region Explorer (JRex)}
+
 \definecolor{mygreen}{rgb}{0,0.4,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
@@ -90,20 +93,23 @@
            {δ}{$\delta$}{1}
 }
 
-\title{Veritesting in Symbolic Execution of Java}
+\title{\tool: Higher-Order Static Regions for Efficient Symbolic Execution of Java}
 \author[1]{}
 
 
 \maketitle
 \begin{abstract}
-Path explosion problem is still the main obsticale against scaling up symbolic execution to industrial sized projects. 
+
+Scaling symbolic execution to industrial-sized programs is an important open research problem.  Veritesting introduced bounded static regions in symbolic execution to improve scalability by combining the advantages of static symbolic execution with those of dynamic symbolic execution.  Bounded static regions reduce the number of paths to explore in symbolic execution by describing regions of code using disjunctive formulas.
 %
-One interesting resolution to the problem is \emph{Veritesting}, which represents regions of code as disjunctive formals over paths.
+In previous work, veritesting was applied to binary-level symbolic execution.
+
+Integrating veritesting with Java bytecode presents unique challenges, 
+notably, incorporating many more non-local control jumps caused by runtime polymorphism, exceptions, native calls, and dynamic class loading.
 %
-Unlike the C compiler that inlines functions in programs, Integrating veritesting with Java bytecode presents unique challenges: notably, incorporating non-local control jumps caused by runtime polymorphism, exceptions, native calls, and dynamic 3 class loading.
-%
-In this paper we present our robust implementation of Java based veritesting tool that supports dynamic dispatch. 
- 
+If these languages features are not accounted for, the static code regions described by veritesting are often small and may not lead to substantial reduction in paths.  In addition, the use of disjunctive regions forces previously concrete assignments to become symbolic leading to additional solver calls.  
+
+In this paper, we describe \tool, which adds static regions to Java Symbolic Pathfinder.  Unlike previous approaches, it adds support for {\em higher order} Veritesting regions into which we can instantiate static regions for staticly- and dynamically-dispatched function calls.  Although our tool is still an unoptimized prototype, we show that it dramatically outperforms Java Symbolic Pathfinder on a number of benchmark examples, and that support for higher-order regions substantially improves the performance of Veritesting for Java programs.
 \end{abstract}
 
 \keywords{multi-path symbolic execution; veritesting; Symbolic
