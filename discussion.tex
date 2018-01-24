@@ -1,1 +1,13 @@
 \section{Discussion}
+
+\begin{itemize}
+
+\item Small regions cause performance problems, especially when they make previously concrete information symbolic.  This can lead to many more solver calls, even when the number of paths is reduced.
+    
+\item In some models, it is possible to reduce the number of paths to one.  The static region approach essentially constructs a unrolled version of the program, similar to what tools like CBMC construct.   This can only happen on relatively static models that do not have a lot of object construction leading to multiple dispatch paths.  HOSRs are more flexible for these situations and allow specialization depending on dispatch type, which we believe will lead to better performance for highly-dynamic models.
+    
+\item In general, the solver time does not rise dramatically for disjunctive paths. Since (in the limit) we reduce the number of paths exponentially by removing branches, we can perform relatively expensive analyses as preprocessing steps and at instantiation if we are able to instantiate a static region, and still end up with much better performance. 
+    
+\item Other lessons?
+ 
+\end{itemize}
