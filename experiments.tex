@@ -1,1 +1,20 @@
-\section{Experiments}
+\section{Experiment}
+
+We would like to measure the performance of \tool\ against the baseline of single-path exploration using Java Symbolic PathFinder.  This can be examined in several dimensions: the wall-clock time of the solving process, the number of paths explored.  In addition, we would also like to gather metrics about the regions themselves, in order to better understand where static regions are effective.
+
+Therefore, we investigate the following research questions:
+
+\begin{description}
+\item[RQ1:] How much do higher-order static regions (HOSR) improve the performance of symbolic execution?
+\item[RQ2:] How much do HOSRs reduce the number of paths explored?
+\item[RQ3:] How do HOSRs affect the number and expense of calls to the SMT solver?
+\item[RQ4:] How does the size of computed HOSRs affect the performance of the approach?
+\end{description}
+
+For each question, we examine three different configurations of \tool: a version that creates simple regions (one branch) only (\tool-SR), one that creates complex regions with multiple branches but no non-local jumps (\tool-CR), and one that operates over higher-order complex regions containing non-local jumps (\tool-CR+HO).  This allows us to examine (at a coarse level) how each feature impacts the experimental results.
+
+\subsection{Experimental Setup}
+
+\mike{Information here about benchmark models and machine configuration}
+
+\mike{The benchmarks should be a superset of at least one previous paper, and better yet, multiple papers}. 

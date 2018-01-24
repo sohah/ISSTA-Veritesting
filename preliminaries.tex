@@ -1,14 +1,24 @@
 \section{Preliminaries}
+\mike{KEEP?}
 
+In this section, we describe the different technologies that are used to construct \tool.  
+
+\subsection{SPF}
+Symbolic PathFinder (SPF) \cite{spf} combines symbolic execution with model checking and constraint solving for test case generation. In this tool, programs are executed on symbolic inputs representing multiple concrete inputs. Values of variables are represented as numeric constraints, generated from analysis of the code structure. These constraints are then solved to generate test inputs guaranteed to reach that part of code. Essentially SPF performs symbolic execution for Java programs at the bytecode level. Symbolic PathFinder uses the analysis engine of the NASA Ames JPF model checking tool (i.e. jpf-core) \cite{jpf}.
+
+
+\subsection{WALA and SSA Form}
+In order to find the static regions that we compile into disjunctive predicates, we use the open-source WALA library~\cite{}.  WALA can construct several different intermediate representations from Java bytecode including single-static assignment (SSA) form~\cite{}.  The SSA form is particularly attractive for constructing static regions as (for loopless code) there is a unique variable for each assignment, affording a straightforward translation into a predicate representing the region.  
+
+We chose WALA specifically over competing solutions such as Soot~\cite{} because it maintains the bytecode offset of statements and the stack locations of local variables used in the SSA form.  This allows us to easily interface with the existing SPF code, by binding (through equalities) the symbolic or concrete values stored on the stack for inputs and also to store the variables corresponding to final values of computed variables back onto the stack.
+
+\iffalse
 \subsection{WALA/CFG/SSA Form}
 ...something here on WALA
 
 %\subsection{CFG}
 A control flow graph (CFG) in computer science is a representation, using graph notation, of all paths that might be traversed through a program during its execution.
 In a control flow graph each node in the graph represents a basic block, i.e. a straight-line piece of code without any jumps or jump targets; jump targets start a block, and jumps end a block. Directed edges are used to represent jumps in the control flow. There are, in most presentations, two specially designated blocks: the entry block, through which control enters into the flow graph, and the exit block, through which all control flow leaves.
-
-\subsection{SPF}
-Symbolic PathFinder (SPF) \cite{spf} combines symbolic execution with model checking and constraint solving for test case generation. In this tool, programs are executed on symbolic inputs representing multiple concrete inputs. Values of variables are represented as numeric constraints, generated from analysis of the code structure. These constraints are then solved to generate test inputs guaranteed to reach that part of code. Essentially SPF performs symbolic execution for Java programs at the bytecode level. Symbolic PathFinder uses the analysis engine of the Ames JPF model checking tool (i.e. jpf-core) \cite{jpf}.
 
 
 \subsection{Veritesting}
@@ -21,4 +31,5 @@ We will call this formula VeriFormula which captures possible different executio
 The result of this process is a VeriFormula, which can be submitted to a SMT solver.
 %
 If the formula is satisfiable, then there is some path through the code region that reaches the exit point. In this case, dynamic symbolic execution is resumed after updating the PC with the VeriFormula and also updating symbolic values of variable if needed.
+\fi
 
