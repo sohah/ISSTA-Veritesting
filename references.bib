@@ -70,19 +70,13 @@
  address = {Berlin, Heidelberg},
 }
 
-@ARTICLE{adaptorsynth,
+@inproceedings{adaptorsynth,
    author = {{Sharma}, Vaibhav and {Hietala}, Kesha and {McCamant},
 		 Stephen},
-    title = "{Finding Semantically-Equivalent Binary Code By Synthesizing Adaptors}",
-  journal = {ArXiv e-prints},
-archivePrefix = "arXiv",
-   eprint = {1707.01536},
- primaryClass = "cs.SE",
- keywords = {Computer Science - Software Engineering},
-     year = 2017,
-    month = jul,
-   adsurl = {http://adsabs.harvard.edu/abs/2017arXiv170701536S},
-  adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    title = "{Finding Substitutable Binary Code By Synthesizing Adaptors}",
+     year = 2018,
+    month = apr,
+booktitle = "11th IEEE Conference on Software Testing, Validation and Verification (ICST)",
 }
 
 @inproceedings{driller,
@@ -317,22 +311,6 @@ url="https://doi.org/10.1023/A:1022920129859"
   school={PhD thesis, University of British Columbia, Vancouver, Canada}
 }
 
-@inproceedings{green,
- author = {Visser, Willem and Geldenhuys, Jaco and Dwyer, Matthew B.},
- title = {Green: Reducing, Reusing and Recycling Constraints in Program Analysis},
- booktitle = {Proceedings of the ACM SIGSOFT 20th International Symposium on the Foundations of Software Engineering},
- series = {FSE '12},
- year = {2012},
- isbn = {978-1-4503-1614-9},
- location = {Cary, North Carolina},
- pages = {58:1--58:11},
- articleno = {58},
- numpages = {11},
- publisher = {ACM},
- address = {New York, NY, USA},
- keywords = {NoSQL, constraint solving, path feasibility, symbolic execution},
-}
-
 @INPROCEEDINGS{mayhem,
 author={Sang Kil Cha and T. Avgerinos and A. Rebert and D. Brumley},
 booktitle={2012 IEEE Symposium on Security and Privacy},
@@ -417,25 +395,25 @@ url="https://doi.org/10.1007/978-3-540-24723-4_2"
 }
 
 @inproceedings{multise,
-	 author = {Sen, Koushik and Necula, George and Gong, Liang and Choi,
+  author = {Sen, Koushik and Necula, George and Gong, Liang and Choi,
 		 Wontae},
-	  title = {MultiSE: Multi-path Symbolic Execution Using Value
-			Summaries},
-		 booktitle = {Proceedings of the 2015 10th Joint Meeting on
-			 Foundations of Software Engineering},
-		  series = {ESEC/FSE 2015},
-			 year = {2015},
-			  isbn = {978-1-4503-3675-8},
-				 location = {Bergamo, Italy},
-				  pages = {842--853},
-					 numpages = {12},
-					  url = {http://doi.acm.org/10.1145/2786805.2786830},
-						 doi = {10.1145/2786805.2786830},
-						  acmid = {2786830},
-							 publisher = {ACM},
-							  address = {New York, NY, USA},
-								 keywords = {JavaScript, MultiSE, concolic testing,
-									 symbolic execution, test generation, value summary},
+  title = {MultiSE: Multi-path Symbolic Execution Using Value
+		Summaries},
+  booktitle = {Proceedings of the 2015 10th Joint Meeting on
+	 Foundations of Software Engineering},
+  series = {ESEC/FSE 2015},
+  year = {2015},
+  isbn = {978-1-4503-3675-8},
+  location = {Bergamo, Italy},
+  pages = {842--853},
+  numpages = {12},
+  url = {http://doi.acm.org/10.1145/2786805.2786830},
+  doi = {10.1145/2786805.2786830},
+  acmid = {2786830},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+  keywords = {JavaScript, MultiSE, concolic testing,
+	 symbolic execution, test generation, value summary},
 }
 
 @inproceedings{green,
@@ -455,4 +433,81 @@ url="https://doi.org/10.1007/978-3-540-24723-4_2"
  publisher = {ACM},
  address = {New York, NY, USA},
  keywords = {NoSQL, constraint solving, path feasibility, symbolic execution},
+}
+
+@article{King1976,
+  author    = {James C. King},
+  title     = {Symbolic Execution and Program Testing},
+  journal   = {Commun. {ACM}},
+  volume    = {19},
+  number    = {7},
+  pages     = {385--394},
+  year      = {1976},
+  url       = {http://doi.acm.org/10.1145/360248.360252},
+}
+
+@article{Clarke1976,
+  author    = {Lori A. Clarke},
+  title     = {A System to Generate Test Data and Symbolically Execute Programs},
+  journal   = {{IEEE} Trans. Software Eng.},
+  volume    = {2},
+  number    = {3},
+  pages     = {215--222},
+  year      = {1976},
+  url       = {https://doi.org/10.1109/TSE.1976.233817},
+}
+
+@inproceedings{jdart2016,
+  author = {Kasper Luckow and Marko Dimja\v{s}evi\'c and Dimitra Giannakopoulou and Falk Howar
+    and Malte Isberner and Temesghen Kahsai and Zvonimir Rakamari\'c and Vishwanath Raman},
+  title = {{JDart}: A Dynamic Symbolic Analysis Framework},
+  booktitle = {Proceedings of the 22nd International Conference on Tools and Algorithms
+    for the Construction and Analysis of Systems (TACAS)},
+  series = {Lecture Notes in Computer Science},
+  volume = {9636},
+  publisher = {Springer},
+  editor = {Marsha Chechik and Jean-Fran{\c{c}}ois Raskin},
+  year = {2016},
+  pages = {442--459},
+}
+
+@inproceedings{BurnimS2008,
+  author    = {Jacob Burnim and Koushik Sen},
+  title     = {Heuristics for Scalable Dynamic Test Generation},
+  booktitle = {23rd {IEEE/ACM} International Conference on Automated Software Engineering (ASE)},
+  pages     = {443--446},
+  year      = {2008},
+  url       = {https://doi.org/10.1109/ASE.2008.69},
+}
+
+@inproceedings{CadarDE2008,
+  author    = {Cristian Cadar and Daniel Dunbar and Dawson R. Engler},
+  title     = {{KLEE:} Unassisted and Automatic Generation of High-Coverage Tests
+               for Complex Systems Programs},
+  booktitle = {8th {USENIX} Symposium on Operating Systems Design and Implementation (OSDI)s},
+  pages     = {209--224},
+  year      = {2008},
+  url       = {http://www.usenix.org/events/osdi08/tech/full_papers/cadar/cadar.pdf},
+}
+
+@article{ChipounovKC2012,
+  author    = {Vitaly Chipounov and Volodymyr Kuznetsov and George Candea},
+  title     = {The {S2E} Platform: Design, Implementation, and Applications},
+  journal   = {{ACM} Trans. Comput. Syst.},
+  volume    = {30},
+  number    = {1},
+  pages     = {2:1--2:49},
+  year      = {2012},
+  url       = {http://doi.acm.org/10.1145/2110356.2110358},
+}
+
+@inproceedings{BabicMMS2011,
+  author    = {Domagoj Babic and Lorenzo Martignoni and Stephen McCamant and
+               Dawn Song},
+  title     = {Statically-directed dynamic automated test generation},
+  booktitle = {Proceedings of the 20th International Symposium on Software Testing
+               and Analysis (ISSTA)},
+  pages     = {12--22},
+  year      = {2011},
+  url       = {http://doi.acm.org/10.1145/2001420.2001423},
 }

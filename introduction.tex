@@ -7,10 +7,21 @@
 %In this paper we present our robust implementation of Java based veritesting tool that supports dynamic dispatch and
 \section{Introduction}
 %Introduce veritesting, present our simple example and its performance improvement, segue into how veritesting at Java bytecode level is different from binary level
-Symbolic execution is a popular analysis technique that performs non-standard execution of a program by treating each path as a predicate.
+
+Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and the branch constrains along an execution path are combined into a predicate.
 %
-Having been originally proposed in the 1970s, it has many applications
-like test generation~\cite{dart,cute}, equivalence checking~\cite{ramos,adaptorsynth}, finding vulnerabilities~\cite{driller,angr}, checking correctness of transport protocols~\cite{transport}. \mike{More here...explain the `ecosystem' - tools for different languages: KLEE, FuzzBall, Java Symbolic Pathfinder, ...}
+Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution is a convenient building block for program analysis, since arbitrary query predicates can be combined with the logical program representation, and solutions to these constraints are program inputs illustrating the queried behavior.
+%
+Some of the many application of symbolic execution include
+test generation~\cite{dart,cute}, equivalence checking~\cite{ramos,adaptorsynth}, vulnerability finding~\cite{driller,angr}, and protocol correctness checking~\cite{transport}.
+%
+Symbolic execution tools are available for many languages, including
+CREST~\cite{BurnimS2008} for C source code, KLEE~\cite{CadarDE2008}
+for C/C++ via LLVM, JDart~\cite{jdart2016} and Symbolic
+PathFinder~\cite{spf} for Java, and S2E~\cite{ChipounovKC2012},
+FuzzBALL~\cite{BabicMMS2011}, and angr~\cite{angr} for binary code.
+%
+ \mike{More here...explain the `ecosystem' - tools for different languages: KLEE, FuzzBall, Java Symbolic Pathfinder, ...}
 
 Although symbolic analysis is a very popular technique, scalability is a substantial challenge for symbolic execution.
 %
