@@ -100,16 +100,56 @@
 \maketitle
 \begin{abstract}
 
-Scaling symbolic execution to industrial-sized programs is an important open research problem.  Veritesting introduced bounded static regions in symbolic execution to improve scalability by combining the advantages of static symbolic execution with those of dynamic symbolic execution.  Bounded static regions reduce the number of paths to explore in symbolic execution by describing regions of code using disjunctive formulas.
-%
-In previous work, veritesting was applied to binary-level symbolic execution.
+%Scaling symbolic execution to industrial-sized programs is an important open research problem.  Veritesting introduced bounded static regions in symbolic execution to improve scalability by combining the advantages of static symbolic execution with those of dynamic symbolic execution.  Bounded static regions reduce the number of paths to explore in symbolic execution by describing regions of code using disjunctive formulas.
+%%
+%In previous work, veritesting was applied to binary-level symbolic execution.
 
-Integrating veritesting with Java bytecode presents unique challenges, 
-notably, incorporating many more non-local control jumps caused by runtime polymorphism, exceptions, native calls, and dynamic class loading.
-%
-If these languages features are not accounted for, the static code regions described by veritesting are often small and may not lead to substantial reduction in paths.  In addition, the use of disjunctive regions forces previously concrete assignments to become symbolic leading to additional solver calls.  
+%Integrating veritesting with Java bytecode presents unique challenges, 
+%notably, incorporating many more non-local control jumps caused by runtime polymorphism, exceptions, native calls, and dynamic class loading.
+%%
+%If these languages features are not accounted for, the static code regions described by veritesting are often small and may not lead to substantial reduction in paths.  In addition, the use of disjunctive regions forces previously concrete assignments to become symbolic leading to additional solver calls.  
 
-In this paper, we describe \tool, which adds static regions to Java Symbolic Pathfinder.  Unlike previous approaches, it adds support for {\em higher order} Veritesting regions into which we can instantiate static regions for staticly- and dynamically-dispatched function calls.  Although our tool is still an unoptimized prototype, we show that it dramatically outperforms Java Symbolic Pathfinder on a number of benchmark examples, and that support for higher-order regions substantially improves the performance of Veritesting for Java programs.
+%In this paper, we describe \tool, which adds static regions to Java Symbolic Pathfinder.  Unlike previous approaches, it adds support for {\em higher order} Veritesting regions into which we can instantiate static regions for staticly- and dynamically-dispatched function calls.  Although our tool is still an unoptimized prototype, we show that it dramatically outperforms Java Symbolic Pathfinder on a number of benchmark examples, and that support for higher-order regions substantially improves the performance of Veritesting for Java programs.
+
+Merging related execution paths is a powerful technique for reducing
+path explosion in symbolic execution.
+%
+One approach, introduced and dubbed ``veritesting'' by Avgerinos et
+al., works by statically translating a bounded control flow region
+into a single formula.
+%
+This approach is a convenient way to achieve path merging as a
+modification to a pre-existing single-path symbolic execution engine.
+%
+Avgerinos et al. evaluated their approach in a symbolic execution tool
+for binary code, but different design considerations apply when
+building tools for other languages.
+%
+In this paper we explore the best way to use a veritesting approach in
+the symbolic execution of Java.
+
+Because Java code typically contains many small dynamically dispatched
+methods, it is important to include them in veritesting regions; we
+introduce a {\em higher-order} veritesting technique to do so
+modularly.
+%
+Java's typed memory structure is very different from a binary, but we
+show how the idea of static single assignment (SSA) form can be
+applied to object references to statically account for aliasing.
+%
+More formally, we describe our veritesting algorithms as
+syntax-directed transformations of a structured intermediate
+representation, which highlights their logical structure.
+%
+We have implemented our algorithms in \tool, an extension to the
+widely used Symbolic Pathfinder tool for Java bytecode.
+%
+Our empirical evaluation shows that veritesting greatly reduces the
+search space of Java symbolic execution benchmarks, with our expanded
+capabilities provided a significant further improvement.
+
+
+
 \end{abstract}
 
 \keywords{multi-path symbolic execution; veritesting; Symbolic
