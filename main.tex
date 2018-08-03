@@ -1,4 +1,6 @@
-\documentclass{acm_sen_article}
+%\documentclass{acm_sen_article}
+
+\documentclass[10pt,conference]{IEEEtran}
 
 \usepackage{booktabs} % For formal tables
 \usepackage{listings}
@@ -6,7 +8,8 @@
 \usepackage{url}
 \usepackage{color}
 \usepackage{authblk}
-\renewcommand{\baselinestretch}{0.98}
+\usepackage{graphicx}
+%\renewcommand{\baselinestretch}{0.98}
 
 % Copyright
 %\setcopyright{none}
@@ -153,8 +156,8 @@ capabilities provided a significant further improvement.
 
 \end{abstract}
 
-\keywords{multi-path symbolic execution; veritesting; Symbolic
-PathFinder; static analysis}
+%\keywords{multi-path symbolic execution; veritesting; Symbolic
+%PathFinder; static analysis}
 
 
 \input{introduction}
@@ -167,7 +170,8 @@ PathFinder; static analysis}
 \input{related_work}
 \input{conclusion}
 
-\bibliographystyle{ACM-Reference-Format}
+%\bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{IEEEtran}
 \bibliography{references}
 
 \end{document}
