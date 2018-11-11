@@ -1,6 +1,4 @@
-%\documentclass{acm_sen_article}
-
-\documentclass[10pt,conference]{IEEEtran}
+\documentclass[runningheads]{llncs}
 
 \usepackage{booktabs} % For formal tables
 \usepackage{listings}
@@ -10,6 +8,7 @@
 \usepackage{authblk}
 \usepackage{graphicx}
 %\renewcommand{\baselinestretch}{0.98}
+\newcommand*\samethanks[1][\value{footnote}]{\footnotemark[#1]}
 
 % Copyright
 %\setcopyright{none}
@@ -39,6 +38,7 @@
 {numbers=none}
 
 \newcommand{\mike}[1]{\textcolor{red}{#1}}
+\newcommand{\vaibhav}[1]{\textcolor{red}{#1}}
 
 \newcommand{\toolshort}{JR}
 \newcommand{\tool}{Java Ranger}
@@ -98,7 +98,24 @@
 }
 
 \title{\tool: Static Regions for Efficient Symbolic Execution of Java}
-\author[1]{}
+\author{Vaibhav Sharma\inst{1}\thanks{These authors were equal contributors to this work} \and
+Soha Hussein\inst{1}\samethanks \and
+Michael W. Whalen\inst{2} \and
+Stephen McCamant\inst{1} \and
+Willem Visser\inst{3}}
+%
+\authorrunning{F. Author et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{University of Minnesota, Minneapolis, MN, United States of America
+\email{vaibhav@umn.edu, husse200@umn.edu, mccamant@cs.umn.edu}
+\and
+Amazon Web Services,
+\email{mww@amazon.com}
+\and
+University of Stellenbosch, Stellenbosch, South Africa\\
+\email{wvisser@cs.sun.ac.za}}
 
 
 \maketitle
@@ -161,17 +178,16 @@ capabilities provided a significant further improvement.
 
 
 \input{introduction}
-\input{preliminaries}
-\input{challenges}
-\input{architecture}
+%\input{preliminaries}
+%\input{challenges}
+\input{related_work}
+\input{technique}
 \input{experiments}
 \input{results}
 \input{discussion}
-\input{related_work}
 \input{conclusion}
 
-%\bibliographystyle{ACM-Reference-Format}
-\bibliographystyle{IEEEtran}
+\bibliographystyle{splncs04}
 \bibliography{references}
 
 \end{document}

@@ -1,6 +1,10 @@
 \section{Experiment}
+\vaibhav{assigned to Vaibhav}
 
-We would like to measure the performance of \tool\ against the baseline of single-path exploration using Java Symbolic PathFinder.  This can be examined in several dimensions: the wall-clock time of the solving process, the number of paths explored.  In addition, we would also like to gather metrics about the regions themselves, in order to better understand where static regions are effective.
+We would like to measure the performance of \tool\ against the baseline of single-path exploration using Java Symbolic
+PathFinder.  This can be examined in several dimensions: the wall-clock time of the solving process, the number of paths
+explored.  In addition, we would also like to gather metrics about the regions themselves, in order to better understand
+where static regions are effective.
 
 Therefore, we investigate the following research questions:
 
@@ -11,7 +15,10 @@ Therefore, we investigate the following research questions:
 \item[RQ4:] How does the size of computed HOSRs affect the performance of the approach?
 \end{description}
 
-For each question, we examine three different configurations of \tool: a version that creates simple regions (one branch) only (\tool-SR), one that creates complex regions with multiple branches but no non-local jumps (\tool-CR), and one that operates over higher-order complex regions containing non-local jumps (\tool-CR+HO).  This allows us to examine (at a coarse level) how each feature impacts the experimental results.
+For each question, we examine three different configurations of \tool: a version that creates simple regions (one
+branch) only (\tool-SR), one that creates complex regions with multiple branches but no non-local jumps (\tool-CR), and
+one that operates over higher-order complex regions containing non-local jumps (\tool-CR+HO). This allows us to examine
+(at a coarse level) how each feature impacts the experimental results.
 
 \subsection{Experimental Setup}
 
