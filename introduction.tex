@@ -7,6 +7,10 @@
 %In this paper we present our robust implementation of Java based veritesting tool that supports dynamic dispatch and
 \section{Introduction}
 \vaibhav{needs rewriting, assigned to anyone who can find the time to write it}
+\vaibhav{Our primary contributions to multi-path region summarization or path merging is (1) creation of an SSA-form IR
+to represent region summaries, (2) representing stack and heap accesses in Java programs in an IR, (3) extending path
+merging to include method summaries, (4) proposing the Single-Path case as an alternative to transition points as
+defined by the veritesting paper }
 
 Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and the branch constrains along an execution path are combined into a predicate.
 %
@@ -91,26 +95,50 @@ Listing ~\ref{lst:v_ex} using \textit{len} = 2}, label={lst:v_ex_smt2}, language
 \end{figure}
 %
 \subsection{Motivating Example}
-\vaibhav{assigned to Vaibhav}
-%\begin{figure}[h]
-% \centering
-% \begin{subfigure}[b]{0.48\textwidth}
-%  \centering
-%  \includegraphics[width=\textwidth]{figures/example.pdf}
-%  \caption{asdf}
-% \end{subfigure}\hfill%
-% %
-% \begin{subfigure}[b]{0.48\textwidth}
-%  \centering
-%  \includegraphics[width=\textwidth]{figures/example-flow.pdf}
-%  \caption{}
-% \end{subfigure}%
-% \caption{Some caption}
-% \label{fig:mot-example}
-%\end{figure}
 \begin{figure}
     \includegraphics[width=\textwidth]{figures/example-combined.pdf}
-    \caption{Some caption}
+    \caption{An example demonstrating the need for using a multi-path region summary}
     \label{fig:mot-example}
 \end{figure}
-Consider the example shown in Figure \ref{fig:mot-example}.
+Consider the example of Java code shown in Figure \ref{fig:mot-example}.
+%
+The {\tt list} object refers to an {\tt ArrayList} of 200 {\tt Integer} objects which have an unconstrained symbolic
+integer as a field.
+%
+The checking of each even-indexed entry in {\tt list} introduces a branch, which has both sides feasible, and requires
+symbolic execution to explore two execution paths instead of the one it was at.
+%
+Performing this check over the entire {\tt list} makes symbolic execution need $2^{100}$ execution paths to terminate
+(assuming {\tt list} has 200 entries with every even-indexed entry pointing to a new unconstrained symbolic integer).
+%
+A simple way to avoid this path explosion is to merge the two paths arising out of the {\tt i\%2 == 0 \&\& list.get(i) == 42} branch.
+%
+Such path merging requires us to compute a summary of all behaviors arising on both sides of the branch from lines 11 to 13
+until both sides of the branch merge at line 14.
+%
+If we can construct such a summary beforehand, our symbolic executor can instantiate the summary by reading in inputs to
+the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.
+%
+Unfortunately, constructing such a summary for this simple region from lines 11--13 is not straightforward due to the
+call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.get(int)} ({\tt java.util.List<E>.get(int)} is abstract and does not have an implementation).
+%
+{\tt ArrayList<Integer>.get(int)} internally does the following:
+%
+(1) It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling {\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
+%
+(2) It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
+%
+(3) It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses the {\tt value} field of {\tt Integer} to return the integer value of this object.
+%
+The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
+also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
+%
+Our extension to path-merging includes using method summaries as part of region summaries that have method calls.
+%
+The method whose summary is to be included depends on the dynamic type of the object reference on which the method is being invoked.
+%
+In our example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is declared statically as having the type {\tt List}.
+%
+Our extension to path-merging also allows the possibility of exceptional behavior being included in the summary and
+explored separately from unexceptional behavior by performing exploration of exceptional behavior in the region on its
+own execution path.
