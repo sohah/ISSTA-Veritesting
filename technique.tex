@@ -180,6 +180,29 @@ GSA, dropping if-then-else statements from the Ranger IR representation of the r
 semantics and converts it into a stream of GSA and SSA statements.\\
 \textbf{Translation to Green}: \vaibhav{assigned to Soha}\\
 
-\subsection{Checking Correctness}
-\vaibhav{assigned to Vaibhav}
-
+\subsection{Checking Correctness Of Region Summaries}
+The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
+correctly represent the semantics of the summarized region.
+%
+If it doesn't, then using the instantiated region summary can cause symbolic exploration to explore the wrong behavior
+of the subject program.
+%
+We checked the correctness of our instantiated region summaries by using equivalence-checking as defined by Ramos et al.~\cite{ramos}.
+%
+We designed a test harness that first executes the subject program with a set of symbolic inputs using SPF and
+capture the outputs of the subject program.
+%
+Next, the test harness executes the same subject program with the same set of symbolic inputs using Java Ranger and
+capture the outputs of the subject program once again.
+%
+Finally, the test harness compares outputs returned by symbolic execution with SPF and Java Ranger.
+%
+If the outputs do not match, then a region summary used by Java Ranger did not contain all the semantics
+of the region it summarized.
+%
+We symbolically execute all execution paths through this test harness.
+%
+If no mismatch is found between outputs on any execution path, we conclude that all region summaries used by Java Ranger
+must correctly represent the semantics of the regions they summarized.
+%
+We performed correctness-checking on all results reported in this paper.
