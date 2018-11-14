@@ -100,15 +100,85 @@ in Figure~\ref{fig:overview}.
 \mike{MWW: - we should provide an AST of the constraint language}
 
 \subsection{Instantiation-time Transformations}
-\textbf{Alpha Renaming}: assigned to Soha\\
-\textbf{Local Variable Substitution}: assigned to Soha\\
-\textbf{Higher-order Regions}: assigned to Soha\\
-\textbf{Field References SSA form}: assigned to Vaibhav\\
-\textbf{Array References SSA form}: assigned to Vaibhav\\
-\textbf{Simplification of Ranger IR}: assigned to Vaibhav\\
-\textbf{Single Path Cases}: assigned to Soha\\
-\textbf{Linearization}: assigned to Mike or Soha (whoever grabs it first)\\
-\textbf{Translation to Green}: assigned to Soha\\
+\textbf{Alpha Renaming}: \vaibhav{assigned to Soha}\\
+\textbf{Local Variable Substitution}: \vaibhav{assigned to Soha}\\
+\textbf{Higher-order Regions}: \vaibhav{assigned to Soha}\\
+\textbf{Field References SSA form}: The field references transformation translates reads and writes of fields
+in Java bytecode into corresponding Ranger IR statements.
+%
+In order to translate all field accesses to SSA form, this transformation creates a summary of the semantics
+represented by the field accesses in the region.
+%
+This transformation constructs a new field access variable for every field assignment on every path within the region.
+%
+This new field access variable construction makes use of two monotonically increasing subscripts.
+%
+It uses a path subscript to distinguish between assignments to the same field on the same execution path.
+%
+It uses a global subscript to distinguish between assignments to the same field across execution paths.
+%
+At the merge point of the region, field assignments done on the same field are merged using
+Gated Single Assignment (GSA)~\cite{Ottenstein1990}.
+%
+Each merged field access variable has its own path and global subscripts and represents the output of the region into
+its field.
+%
+The path subscript helps us resolve read-after-write operations on the same execution path and find the latest write
+into a field on an execution path.
+%
+The global subscript helps us distinguish between field accesses across multiple execution paths. \\
+\textbf{Array References SSA form}: The array references transformation translates reads and writes of arrays in
+Java bytecode into corresponding Ranger IR statements.
+%
+In order to translate all array accesses to SSA form, this transformation creates an execution path-specific copy of
+every array when it is first accessed within a region.
+%
+Reads and writes of arrays are then done on a path-specific copy of the array.
+%
+All array copies are merged at the merge point of multi-path regions.
+%
+The merged array copy represents array outputs of the region.\\
+\textbf{Simplification of Ranger IR}: The Ranger IR constructed by earlier transformations computes exact semantics
+of all possible behaviors in the region.
+%
+Representation of such semantics as a formula can often lead to unnecessarily large formulas, which has the potential to
+reduce the benefits seen from path merging~\cite{angr}.
+%
+For example, if an entry in an array is never written to inside a region, the array reference transformation can still have an
+array output for that entry that writes a new symbolic variable into it.
+%
+The region summary would then need to have an additional constraint that makes the new symbolic variable equal the
+original value in that array entry.
+%
+Such conjuncts in the region summary can be easily eliminated with constant propagation, copy propagation, and constant
+folding~\cite{dragon-book}.
+%
+Ranger IR also has statement and expression classes that use a predicate for choosing between two statements (similar to
+an {\tt if} statement in Java) and two sub-expressions (similar to the C ternary operator) respectively.
+%
+When both choices are syntactically equal, the predicated statement and expression objects can be substituted with the
+statement or expression on one of their two choices.
+%
+Such statements and expressions were simplified away to use one of their two choices.
+%
+Ranger IR performs these two simplifications on such predicated statements and expressions along with constant folding,
+constant propagation, and copy propagation.\\
+\textbf{Single Path Cases}: \vaibhav{assigned to Soha}\\
+\textbf{Linearization}: \vaibhav{Soha, Mike, please feel free to rewrite.}
+Ranger IR contains translation of branches in the Java bytecode to if-then-else statements defined in the Ranger IR.
+%
+But the if-then-else statement structure needs to be kept only as long as we have more GSA expressions to be
+introduced in the Ranger IR.
+%
+Once all GSA expressions have been computed, the Ranger IR need not have its if-then-else statements anymore.
+%
+In other words, the $\gamma$ functions introduced by GSA are a functional representation of branching, which is what lets us
+capture the semantics of everything happening on both sides of the branch.
+%
+Since the linearization transformation is done after every field and array entry has been unaliased and converted to
+GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
+semantics and converts it into a stream of GSA and SSA statements.\\
+\textbf{Translation to Green}: \vaibhav{assigned to Soha}\\
 
 \subsection{Checking Correctness}
 \vaibhav{assigned to Vaibhav}

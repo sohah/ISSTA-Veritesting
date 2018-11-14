@@ -139,6 +139,8 @@ The method whose summary is to be included depends on the dynamic type of the ob
 %
 In our example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is declared statically as having the type {\tt List}.
 %
+Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt ArrayList<E>.get(i)}.
+%
 Our extension to path-merging also allows the possibility of exceptional behavior being included in the summary and
 explored separately from unexceptional behavior by performing exploration of exceptional behavior in the region on its
 own execution path.
