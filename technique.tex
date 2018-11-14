@@ -1,33 +1,47 @@
 \section{Technique}
-In order to implement veritesting for SPF, we are leveraging existing tools and framework features within SPF.  The
-trickiest implementation aspects involve determining the bounds of static code regions over Java bytecodes and the
-mechanism for switching from ``standard'' symbolic execution using the SPF {\em SymbolicListener} class to one that can
-evaluate these multi-path code regions.
 %
-Integration of veritesting requires changing Symbolic PathFinder so that it can
-use a Soot-based analysis.
+To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
+path and methods.
 %
-This integration assumes our prior Soot-based analyis provides SPF
-with a table that maps instruction offsets~(representing the start of a
-veritesting region) to a set containing (1) the multi-path region predicate to be
-added to the path expression as a conjunction, (2) symbolic store
-updates, (3) exit points, (4) the expression to branch on to one of the exit points.
+To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
 %
-Using SPF\rq s listener mechanism, we add a listener~(named
-\textit{SMPListener} in which listens for instructions that are starting points for a Symbolic Multi-Path~(SMP) region.
+Next, we construct a set containing only the class $C$ that contains $M$.
 %
-On finding such an instruction, \textit{SMPListener}
-(1) updates the path expression, which may involve using the symbolic stack and/or heap,
-(2) updates the symbolic stack and heap,
-(3) creates a branch~(using SPF's \textit{PCChoiceGenerator}) to
-jump to one of the exit points~(which are instructions at offsets 40 and
-41 in Figure~\ref{fig:spf_veritesting}).
+We then get another set of classes, $C'$,
+such that every class in $C'$ has atleast one method that was called by a method in a class in $C$.
 %
-SPF will then continue plain symbolic execution.
+This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
 %
-Thus, veritesting causes SPF to explore fewer branches.
-\vaibhav{We should give an overview here of transformations-based path merging which includes a diagram that shows the
-sequence of our transformations - assigned to Vaibhav}
+We continue this method discovery process up to a call depth of 2.
+%
+While we can increase the call depth in our method discovery process, we found that summarizing
+arbitrary code regions more than 2 calls deep did not lead to practically useful region summaries.
+%
+After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
+explained in Section \ref{sec:static-analysis}.
+%
+To make use of region summaries in Symbolic PathFinder, we use an existing feature of SPF named \textit{listener}.
+%
+A listener is a method defined within SPF that is called for every bytecode instruction executed by SPF.
+%
+Java Ranger adds a path merging listener to SPF that, on every instruction, checks (1) if the instruction involves
+checking a symbolic condition, and (2) if Java Ranger has a pre-computed static summary that begins at that
+instruction\rq s bytecode offset.
+%
+If both of these conditions are satisfied, Java Ranger instantiates the multi-path region summary by reading inputs from
+and writing outputs to the stack and the heap.
+%
+It then conjuncts the instantiated region summary with the path condition and resumes symbolic execution at the
+bytecode offset of the end of the region.
+%
+The instantiation of the region summary is performed as a sequence of transformations described below and summarized
+in Figure~\ref{fig:overview}.
+%
+\begin{figure}[]
+    \caption{Overview of transformations on Ranger IR to create and instantiate multi-path region summaries with higher-order regions}
+    \label{fig:overview}
+    \includegraphics[width=\textwidth]{figures/overview.pdf}
+\end{figure}
 %
 %
 %\subsection{WALA-based analysis for veritesting}
@@ -81,6 +95,7 @@ sequence of our transformations - assigned to Vaibhav}
 %
 
 \subsection{Representation of Static Regions}
+\label{sec:static-analysis}
 \vaibhav{assigned to Mike}
 \mike{MWW: - we should provide an AST of the constraint language}
 
