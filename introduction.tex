@@ -133,7 +133,7 @@ call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.
 The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
 also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
 %
-Our extension to path-merging includes using method summaries as part of region summaries that have method calls.
+Our extension to path-merging includes using method summaries, either with a single return or no return, as part of region summaries that have method calls \footnote{Support of methods with multiple returns is a future work.}.
 %
 The method whose summary is to be included depends on the dynamic type of the object reference on which the method is being invoked.
 %
