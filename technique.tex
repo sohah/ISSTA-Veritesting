@@ -94,15 +94,62 @@ in Figure~\ref{fig:overview}.
 %%
 %
 
-\subsection{Representation of Static Regions}
+\subsection{Statement Recovery}
 \label{sec:static-analysis}
 \vaibhav{assigned to Mike}
 \mike{MWW: - we should provide an AST of the constraint language}
 
+\subsection{Region Definition}
+Once the statement of a Ranger region has been recovered, its corresponding environment is populated. 
+%
+This includes identifying region boundary and creating input, output, type and stack slot tables for the region.\\
+%
+The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR. 
+%
+This is used later to constrain the computation and population of different environment tables. 
+%
+For example, input table is populated with first use in the region boundary that map to a given stack slot.
+%
+The output table is populated with the last def, if a converging statement exits. 
+%
+Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA \cite{} but later undergoes some changes during type propagation transformation \ref{sec:typePropagation}. \vaibhav{@Vaibhav: type propagation is mentioned in the figure but has no reference later in the transformation or in its text.}  \\
+%
+The stack slot table on the other hand, does not use region boundary for its population. 
+%
+The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables. 
+This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot. 
+%
+Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi. 
+%
+This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached. 
+%
+
+
 \subsection{Instantiation-time Transformations}
-\textbf{Alpha Renaming}: \vaibhav{assigned to Soha}\\
-\textbf{Local Variable Substitution}: \vaibhav{assigned to Soha}\\
-\textbf{Higher-order Regions}: \vaibhav{assigned to Soha}\\
+\textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
+%
+This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path, i.e., a region inside a loop will be instantiated multiple times.\\
+%
+\textbf{Local Variable Substitution Transformation}: During this transformation we eagerly bring in all dynamically known constant values, symbolic values and references into the region for further processing. \\
+%
+\textbf{Higher-order Regions Transformation}: This transformation happens as a part of the substitution transformation.
+%
+It is initiated when a method invocation is encountered.\\
+%
+At that point, three things happen. 
+%
+First, the region that corresponds to the called method, \textit{method region}, is retrieved and basic alpha renaming is applied on it. 
+%
+Second, Ranger IR expressions that correspond to the actual parameters are evaluated and used to substitute the formal parameters by repeatedly applying substitution transformation over the method region.
+%
+Then finally, when no more high-order regions could be discovered, the resulting substituted method region is inlined into the outer region.\\
+%
+If the method region has a single return value, then the original method invocation is replaced with an assignment to the returned expression.
+%
+Otherwise, inlining of the method region takes place. 
+%
+Multiple returns are not yet handled for high order region, more information about that is in \vaibhav{@Vaibhav: we need to refer to where we talk about early return}.
+\\
 \textbf{Field References SSA form}: The field references transformation translates reads and writes of fields
 in Java bytecode into corresponding Ranger IR statements.
 %
@@ -163,7 +210,18 @@ Such statements and expressions were simplified away to use one of their two cho
 %
 Ranger IR performs these two simplifications on such predicated statements and expressions along with constant folding,
 constant propagation, and copy propagation.\\
-\textbf{Single Path Cases}: \vaibhav{assigned to Soha}\\
+\textbf{Single Path Cases}: This transformation collects path predicates inside the Ranger region that lead to \textit{non-nominal} exit point. 
+%
+We define non-nominal exit point to be points inside the region that either define exceptional behavior or requires more involvement with the dynamic symbolic execution engine, i.e, object creation and throw instructions.
+%
+The intuition here is that, we want to maximize regions that Ranger can summarize, even if the summarization is only partial. 
+%
+We use this pass of transformation to identify such points, collect their path predicates and prune them away from the Ranger statement. 
+%
+The outcome of this process, is a more simplified and concise statement that represent the nominal behavior of the Ranger region.
+%
+The collected predicate is later used to guide the symbolic execution to explore non-nominal paths, which Ranger had not summarized.  \\
+%
 \textbf{Linearization}: \vaibhav{Soha, Mike, please feel free to rewrite.}
 Ranger IR contains translation of branches in the Java bytecode to if-then-else statements defined in the Ranger IR.
 %
@@ -178,7 +236,15 @@ capture the semantics of everything happening on both sides of the branch.
 Since the linearization transformation is done after every field and array entry has been unaliased and converted to
 GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
 semantics and converts it into a stream of GSA and SSA statements.\\
-\textbf{Translation to Green}: \vaibhav{assigned to Soha}\\
+\textbf{Translation to Green}: 
+%
+At this point Ranger region contains only compositional statements as well as assignment statements that might contain GSA expressions in them.
+%
+This transformation starts off by translating Ranger variables to Green variables of the right type using the region type table. 
+%
+Then Ranger statements are translated. More precisely, compositional statements are translated into conjunction, assignment statements are translated into Green equality expressions.
+%
+For assignment statements that have GSA expressions, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied. \\
 
 \subsection{Checking Correctness Of Region Summaries}
 The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
