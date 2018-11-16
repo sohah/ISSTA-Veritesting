@@ -1,7 +1,16 @@
 \section{Conclusion and Future Work}
 \label{sec:future}
 
-\soha{we need something for the conclusion}
+In this paper we presented Java Ranger as a path merging tool for Java. 
+%
+It works systematically by applying a series of transformations over a recovered statement from the CFG. This representation provides the benefit of modularity and visibility that promotes extension. 
+%
+Java Ranger has its own IR statement and its supports the construction of SSA for fields and arrays.
+%
+in addition Java Ranger supports inlining summaries of high order regions and it support the exploration of exceptional behavior via Single Path Cases. 
+%
+This maximizes portions of regions that could be summarized by Java Ranger. 
+%
 There are five main directions for future work we intend to do:
 \begin{itemize}
 \item Support Multiple Return Regions:  Here we want to support regions with multiple returns. 
@@ -26,16 +35,7 @@ This calls for a study of the best heuristics that would provide a decision proc
 And secondly because using Java Ranger tend to have relatively complex formulas to solve due to summarization. 
 %
 Supporting incremental solver is one direction for our future work. 
+%
 \end{itemize}
-
-
-
-Other improvements:
-\begin{enumerate}
-\item Simplification of the Symbolic PathFinder constraint mechanism
-
-\item Interpolation-based path subsumption checks  (c.f.: "More Effective Interpolations in Software Model Checking" - ASE 2017")
-
-\end{enumerate}
 
 
