@@ -1,25 +1,51 @@
-\section{Discussion}
-\vaibhav{assigned to anyone who has something to say about future work we want do to on Java Ranger}
+\section{Future Work}
+While Java Ranger has the potential to scale to large real-world Java programs, there are a number of directions along
+which it can be further improved.
 \begin{itemize}
 
-\item Small regions cause performance problems, especially when they make previously concrete information symbolic.
-This can lead to many more solver calls, even when the number of paths is reduced.
+\item Java Ranger attempts to perform path merging as aggresively as possible. This path merging strategy doesn't
+optimize towards making fewer solver calls. We plan to work towards implementing heuristics that
+can measure the effect of path merging on the rest of the program.
     
-\item In some models, it is possible to reduce the number of paths to one.  The static region approach essentially
-constructs a unrolled version of the program, similar to what tools like CBMC construct.   This can only happen on
-relatively static models that do not have a lot of object construction leading to multiple dispatch paths.  HOSRs are
-more flexible for these situations and allow specialization depending on dispatch type, which we believe will lead to
-better performance for highly-dynamic models.
-    
-\item In general, the solver time does not rise dramatically for disjunctive paths. Since (in the limit) we reduce the
-number of paths exponentially by removing branches, we can perform relatively expensive analyses as preprocessing steps
-and at instantiation if we are able to instantiate a static region, and still end up with much better performance.
+%\item In some models, it is possible to reduce the number of paths to one.  The static region approach essentially
+%constructs a unrolled version of the program, similar to what tools like CBMC construct.   This can only happen on
+%relatively static models that do not have a lot of object construction leading to multiple dispatch paths.  HOSRs are
+%more flexible for these situations and allow specialization depending on dispatch type, which we believe will lead to
+%better performance for highly-dynamic models.
+%
+%\item In general, the solver time does not rise dramatically for disjunctive paths. Since (in the limit) we reduce the
+%number of paths exponentially by removing branches, we can perform relatively expensive analyses as preprocessing steps
+%and at instantiation if we are able to instantiate a static region, and still end up with much better performance.
 
-\item Talk about the need to have incremental solving or other optimizations to region summaries that can reduce formula
-complexity and make fewer solver calls
-    
-\item Talk about predicting the number of execution paths in regions so that our constructed region summaries can be
-used by other symbolic executors with a knowledge of how much path reduction is being performed by the summary for a
-given number of symbolic inputs
- 
+\item Java Ranger is most useful when it can merge multiple execution paths into one summary. But such merging causes an
+increase in the size of the summary, and consequently, the path condition.
+%
+Once a summary has been communicated to the solver, it need not be sent again as long as it remains the same.
+%
+This requires us to use the solver in an incremental mode, where we use previously-constructed state in the solver for
+future solving.
+%
+Our current implementation of Java Ranger sends the entire path condition to the solver with every query, making every
+query even more expensive in the presence of large multi-path region summaries.
+%
+We plan to integrate incremental solving with Java Ranger in the future.
+%
+\item Multiple return instructions that appear on all execution paths inside a multi-path region can be simplified to a
+single return value of the region.
+%
+We implemented this transformation manually in TCAS but we plan to automate it in the future.
+%
+Such automation would allow us to summarize regions with return instructions.
+%
+\item Support of Test Case Generation: while statically summarizing regions gives dynamic symbolic execution a
+performance boost to explore more paths efficiently, generating test cases that covers all summarized branches is one of
+the fundamental roles of dynamic symbolic execution that is currently unsupported.
+%
+This is an extension that we intend to investigate in our future work.
+%
+\item While path merging can potentially allow symbolic execution to explore interesting parts of a program sooner, the
+effect of path merging on search strategies, such as depth-first search and breadth-first search commonly used with
+symbolic execution, remains to be investigated.
+%
+We plan to explore the integration of such guidance heuristics with path merging in the future.
 \end{itemize}

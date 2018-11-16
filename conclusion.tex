@@ -1,41 +1,23 @@
-\section{Conclusion and Future Work}
+\section{Conclusion}
 \label{sec:future}
 
-In this paper we presented Java Ranger as a path merging tool for Java. 
+We presented Java Ranger as a path merging tool for Java.
 %
-It works systematically by applying a series of transformations over a recovered statement from the CFG. This representation provides the benefit of modularity and visibility that promotes extension. \\
+It works by systematically applying a series of transformations over a statement recovered from the CFG. This
+representation provides the benefit of modularity and makes path-merging for Java symbolic execution more accessible to
+end users.
 %
 Java Ranger has its own IR statement and its supports the construction of SSA for fields and arrays.
 %
-in addition Java Ranger supports inlining summaries of high order regions and it support the exploration of exceptional behavior via Single Path Cases. 
+Java Ranger provides evidence that inlining summaries of higher-order regions can lead to a further reduction in the
+number of execution paths that need to be explored with path merging.
 %
-This maximizes portions of regions that could be summarized by Java Ranger. \\
+It supports the exploration of exceptional behavior in multi-path regions via Single Path Cases.
 %
-There are five main directions for future work we intend to do:
-\begin{itemize}
-\item Support Multiple Return Regions:  Here we want to support regions with multiple returns. 
+It provides an alternative method using which a symbolic executor can summarize unexceptional behavior of a multi-path
+region while simultaneously capturing exceptional behavior in the region.
 %
-We want to do this by supporting another transformation that would take a multiple return region and turns it into a single return region. 
-
-\item Support of Test Case Generation: while statically summarizing regions gives dynamic symbolic execution a performance boost to explore more paths efficiently, generating test cases that covers all summarized branches is one of the fundamental roles of dynamic symbolic execution that is currently unsupported. 
-%
-This is one of the extension that we intend to investigate in our future work. 
-%
-
-\item Heuristics for Instantiation: as shown in the experiments section, instantiating regions might not always be the best option in terms of performance.
-%
-For instance, region instantiation could in fact turn concrete values into symbolic values thus increasing the number of explored paths. 
-%
-This is particularly problematic if that happened for a small region on an early branch point, and the symbolic variable is later used in multiple conditions.
-%
-This calls for a study of the best heuristics that would provide a decision procedure as to when instantiation a region.
-
-\item Using Incremental Solver: this seems intuitive for two main reasons: firstly because as we go down one path the query sent to the solver is incrementally defined for every branch and yet it is repeatedly being sent to the solver. 
-%
-And secondly because using Java Ranger tend to have relatively complex formulas to solve due to summarization. 
-%
-Supporting incremental solver is one direction for our future work. 
-%
-\end{itemize}
+Java Ranger reinterprets path merging for symbolic execution of Java bytecode and has the potential to allow symbolic
+execution to scale up to exploration of real-world Java programs.
 
 
