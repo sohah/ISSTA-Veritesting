@@ -28,8 +28,8 @@ Our implementation, named Java Ranger, wraps around SPF and can be configured to
 (4) In mode 4, it uses single-path cases along with multi-path region and method summaries used in mode 3.
 %
 \subsection{Evaluation}
+\input{static-analysis-results}
 \input{results-big-table}
-%\input{static-analysis-results}
 %
 In order to evaluate the performance of Java Ranger, we used the following benchmarking programs commonly used to evaluate symbolic
 execution performance.
@@ -54,19 +54,37 @@ We refer to this variant of TCAS as TCAS-SR (TCAS with Single Returns).
 We also created variants of WBS, TCAS, and TCAS-SR by running them for multiple steps.
 %
 
-We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger.
+We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger and first report the result of static analysis on these
+three benchmarks in Table~\ref{table:static-analysis}.
 %
-%Our static analysis results for analyzing WBS, TCAS, and Replace are shown in Table \ref{table:static-analysis}.
+The number of static regions summarized for WBS and TCAS is dominated by region summaries found in the Java standard
+library used by WBS and TCAS.
 %
+Replace doesn't use the Java standard library, which is reflect in Table~\ref{table:static-analysis}.
 %
+We also report the most number of branches seen in our static regions with each benchmark.
+%
+Being able to instantiate static summaries of such regions potentially increases the path reduction we get from path-merging.
+
 We present our results from instantiating region summaries in Table~\ref{table:results}.
 %
 Table~\ref{table:results} shows that Java Ranger achieves a significant improvement using path-merging with WBS.
 %
+The ``\# exec paths'' column is the number of execution paths required to completely explore the benchmark.
+%
+``runtime (msec)'' is the time taken for dynamic analysis (excludes static analysis time).
+%
+``\# inst. regs'' is the total number of regions that were instantiated at least once when running each benchmark.
+%
+``\# inst. methods'' is the number of higher-order regions that were used and ``inst.'' is the total number of
+instantiations that was done when running the benchmark.
+%
+Table~\ref{table:results} shows that we achieve a significant improvement using path-merging with WBS.
+%
 Java Ranger outperforms SPF when running TCAS too but it doesn't allow path merging to summarize the entire program
 to a single execution path, as in the case with WBS.
 %
-We analyzed the source code of TCAS and found the only barrier to our path-merging was the presence of several code
+We manually analyzed TCAS and found the only barrier to our path-merging was the presence of several code
 regions containing a return instruction on every execution path.
 %
 We manually performed a semantics-preserving transformation to the source code of TCAS to create another version, TCAS-SR,
@@ -76,8 +94,25 @@ We plan to automate this transformation in the future, see future work section~\
 %
 Table~\ref{table:results} shows the benefit of such a \textit{multiple-returns-to-single-return} transformation.
 %
-It basically allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
+It allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
 %
+This is made possible by the use of higher-order regions as shown in Table~\ref{table:results}.
+%
+In mode 2, Java Ranger explores 18 execution paths with TCAS-SR, whereas in mode 3~(mode 2 + higher-order region support), it needs to only explore a single
+execution path because it can instantiate 28 higher-order method summaries.
+%
+The bottom half of Table~\ref{table:results} also shows the benefits of path-merging with Java Ranger increase as we run
+more steps of WBS, TCAS, and TCAS-SR.
+%
+We ran as many steps of each of these 3 benchmarks as possible with a 6 hour timeout using Java Ranger in modes
+1 (runs Java Ranger without path merging) and 3 (runs Java Ranger with multi-path region summaries and higher-order region summaries).
+%
+While, in mode 1, Java Ranger can only run 5 steps of WBS in less than 6 hours, in mode 4 (path merging with multi-path regions, higher-order regions, and single-path cases),
+Java Ranger can easily execute up to 10 steps in less than 4 seconds.
+%
+A similar benefit is seen with TCAS-SR where Java Ranger in mode 1 can only run 2 steps of TCAS-SR in 6 hours, but in
+mode 4, it can easily run up to 10 steps of TCAS-SR in about 1 second.
+
 However, the performance of Java Ranger when running Replace is quite different from that seen when running WBS, TCAS, and TCAS-SR.
 %
 While Java Ranger reduces the total number of execution paths with every increase in mode, the path reduction isn't as significant.
