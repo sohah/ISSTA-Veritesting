@@ -1,26 +1,26 @@
 \section{Technique}
 %
 To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
-path and methods.
+path and we also pre-compute method summaries.\\
 %
 To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
 %
 Next, we construct a set containing only the class $C$ that contains $M$.
 %
 We then get another set of classes, $C'$,
-such that every class in $C'$ has atleast one method that was called by a method in a class in $C$.
+such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
 %
 This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
 %
-We continue this method discovery process up to a call depth of 2.
+We continue this method discovery process up to a call depth of 2.\\
 %
 While we can increase the call depth in our method discovery process, we found that summarizing
-arbitrary code regions more than 2 calls deep did not lead to practically useful region summaries.
+arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.\\
 %
 After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
 explained in Section \ref{sec:static-analysis}.
 %
-After computing static region and method summaries, we instantiate them as a sequence of transformations described below and summarized
+After computing static region and method summaries, we process them as a sequence of transformations described in the next section~\ref{sec:instantiationTransformations} and summarized
 in Figure~\ref{fig:overview}.
 %
 \begin{figure}[]
@@ -88,7 +88,7 @@ in Figure~\ref{fig:overview}.
 %%
 %We call this interface \textit{Statement Recovery} transformation. \\
 %%
-%In this transformations visits nodes in topological order by walking normal edges of a branching points until a \textit{minimum convergent node} is encountered. We define a minimum convergent node as the last immediate successor of blocks following a branching node.
+%In this transformation we visit nodes in topological order by walking normal edges of a branching points until a \textit{minimum convergent node} is encountered. We define a minimum convergent node as the last immediate successor of blocks following a branching node.
 %%
 %Note that exceptional edges are ignored during this transformation, however exceptional behavior is later identified and handled through the single path cases.
 %%
@@ -136,40 +136,23 @@ stmt ::= stmt ;
 \fi 
 
 \subsection{Region Definition}
-Once the statement of a Ranger region has been recovered, its corresponding environment is populated.
-%
-This includes identifying region boundary and creating input, output, type and stack slot tables for the region.\\
-%
-The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR.
-%
-This is used later to constrain the computation and population of different environment tables.
-%
-For example, input table is populated with first use in the region boundary that map to a given stack slot.
-%
-The output table is populated with the last def, if a converging statement exits.
-%
-Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. \\
-%
-The stack slot table on the other hand, does not use region boundary for its population.
-%
-The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables.
-This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot.
-%
-Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi.
-%
-This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached.
-%
+Once the statement of a Ranger region has been recovered, its corresponding environment is populated. This includes identifying region boundary and creating input, output, type and stack slot tables for the region.
+
+The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR. This is used later to constrain the computation and population of different environment tables. For example, input table is populated with first use in the region boundary that map to a given stack slot. The output table is populated with the last def, if a converging statement exits. Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{Wala} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. 
+
+The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables. This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot. Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi. This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached.
 
 
 \subsection{Instantiation-time Transformations}
 \label{sec:instantiationTransformations}
-\textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
+\begin{itemize}
+\item {Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
 %
 This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path, i.e., a region inside a loop will be instantiated multiple times.\\
 %
-\textbf{Local Variable Substitution Transformation}: During this transformation we eagerly bring in all dynamically known constant values, symbolic values and references into the region for further processing. \\
+\item{Local Variable Substitution Transformation}: During this transformation we eagerly bring in all dynamically known constant values, symbolic values and references into the region for further processing. \\
 %
-\textbf{Higher-order Regions Transformation}: This transformation happens as a part of the substitution transformation.
+\item{Higher-order Regions Transformation}: This transformation happens as a part of the substitution transformation.
 %
 It is initiated when a method invocation is encountered.\\
 %
@@ -189,7 +172,7 @@ The case where the method region has multiple returns, is currently not supporte
 %
 It requires another transformation, we talk more about this in future work in section~\ref{sec:future}.
 \\
-\textbf{Field References SSA form}: The field references transformation translates reads and writes of fields
+\item{Field References SSA form}: The field references transformation translates reads and writes of fields
 in Java bytecode into corresponding Ranger IR statements.
 %
 In order to translate all field accesses to SSA form, this transformation creates a summary of the semantics
@@ -213,7 +196,7 @@ The path subscript helps us resolve read-after-write operations on the same exec
 into a field on an execution path.
 %
 The global subscript helps us distinguish between field accesses across multiple execution paths. \\
-\textbf{Array References SSA form}: The array references transformation translates reads and writes of arrays in
+\item{Array References SSA form}: The array references transformation translates reads and writes of arrays in
 Java bytecode into corresponding Ranger IR statements.
 %
 In order to translate all array accesses to SSA form, this transformation creates an execution path-specific copy of
@@ -224,7 +207,7 @@ Reads and writes of arrays are then done on a path-specific copy of the array.
 All array copies are merged at the merge point of multi-path regions.
 %
 The merged array copy represents array outputs of the region.\\
-\textbf{Type Propagation}: Ranger IR needs to have type information for its variables so that it can construct
+\item{Type Propagation}: Ranger IR needs to have type information for its variables so that it can construct
 corresponding correctly-typed Green variables during the final transformation of the region summary to a Green formula.
 %
 Having accurate type information is also important for looking up the correct higher-order method summary.
@@ -238,7 +221,7 @@ and array reference variables are inferred during their respective transformatio
 Using these inferred types, the type propagation transformation propagates type information across assignment
 statements, binary operations, and variables at leaf nodes of $\gamma$ functions.\\
 %
-\textbf{Simplification of Ranger IR}: The Ranger IR constructed by earlier transformations computes exact semantics
+\item{Simplification of Ranger IR}: The Ranger IR constructed by earlier transformations computes exact semantics
 of all possible behaviors in the region.
 %
 Representation of such semantics as a formula can often lead to unnecessarily large formulas, which has the potential to
@@ -263,7 +246,7 @@ Such statements and expressions were simplified away to use one of their two cho
 %
 Ranger IR performs these two simplifications on such predicated statements and expressions along with constant folding,
 constant propagation, and copy propagation.\\
-\textbf{Single Path Cases}: This transformation collects path predicates inside the Ranger region that lead to \textit{non-nominal} exit point.
+\item{Single Path Cases}: This transformation collects path predicates inside the Ranger region that lead to \textit{non-nominal} exit point.
 %
 This is an alternative approach to that was presented in \cite{veritesting}.
 %
@@ -277,7 +260,7 @@ The outcome of this process, is a more simplified and concise statement that rep
 %
 The collected predicate is later used to guide the symbolic execution to explore non-nominal paths, which Ranger had not summarized.  \\
 %
-\textbf{Linearization}:
+\item{Linearization}:
 Ranger IR contains translation of branches in the Java bytecode to if-then-else statements defined in the Ranger IR.
 %
 But the if-then-else statement structure needs to be kept only as long as we have more GSA expressions to be
@@ -291,7 +274,7 @@ capture the semantics of everything happening on both sides of the branch.
 Since the linearization transformation is done after every field and array entry has been unaliased and converted to
 GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
 semantics and converts it into a stream of GSA and SSA statements.\\
-\textbf{Translation to Green}:
+\item{Translation to Green}:
 %
 At this point Ranger region contains only compositional statements as well as assignment statements that might contain GSA expressions in them.
 %
@@ -301,11 +284,13 @@ Then Ranger statements are translated. More precisely, compositional statements 
 %
 For assignment statements that have GSA expressions, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied. \\
 
+\end{itemize}
+
 \subsection{Checking Correctness Of Region Summaries}
 The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
 correctly represent the semantics of the summarized region.
 %
-If it doesn't, then using the instantiated region summary can cause symbolic exploration to explore the wrong behavior
+If it does not, then using the instantiated region summary can cause symbolic exploration to explore the wrong behavior
 of the subject program.
 %
 We checked the correctness of our instantiated region summaries by using equivalence-checking as defined by Ramos et al.~\cite{ramos}.

@@ -7,7 +7,7 @@
 %In this paper we present our robust implementation of Java based veritesting tool that supports dynamic dispatch and
 \section{Introduction}
 %
-Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and the branch constrains along an execution path are combined into a predicate.
+Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and  branch constraints along an execution path are combined into a predicate.
 %
 Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution is a convenient building block for program analysis, since arbitrary query predicates can be combined with the logical program representation, and solutions to these constraints are program inputs illustrating the queried behavior.
 %
@@ -97,14 +97,14 @@ extending to add support for new features such as heap accesses, higher-order re
 (2) It allows for simplifications such as constant propagation, copy propagation, constant folding to be performed on region summaries.
 %
 (3) It makes the construction of region summaries more accessible to users of the symbolic execution tool, thereby making
-path merging more useful to end-users.
+path merging more useful to end-users.\\
 %
 In this paper, we present Java Ranger, an extension of Symbolic PathFinder, that computes such region summaries over
 Ranger IR.
 %
-Ranger IR has support for inlining method summaries and constructs SSA form for heap accesses.
+Ranger IR has support for inlining method summaries and for constructing SSA form for heap accesses.
 %
-It also proposing the Single-Path case as an alternative to transition points as
+It also proposes Single-Path case as an alternative to transition points as
 defined by Avgerinos et al.~\cite{veritesting}.
 %
 \subsection{Motivating Example}
@@ -119,7 +119,7 @@ The {\tt list} object refers to an {\tt ArrayList} of 200 {\tt Integer} objects 
 integer as a field.
 %
 The checking of each even-indexed entry in {\tt list} introduces a branch, which has both sides feasible, and requires
-symbolic execution to explore two execution paths instead of the one it was at.
+symbolic execution to explore two execution paths instead of the one it was at.\\
 %
 Performing this check over the entire {\tt list} makes symbolic execution need $2^{100}$ execution paths to terminate
 (assuming {\tt list} has 200 entries with every even-indexed entry pointing to a new unconstrained symbolic integer).
@@ -130,19 +130,22 @@ Such path merging requires us to compute a summary of all behaviors arising on b
 until both sides of the branch merge at line 14.
 %
 If we can construct such a summary beforehand, our symbolic executor can instantiate the summary by reading in inputs to
-the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.
+the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.\\
 %
 Unfortunately, constructing such a summary for this simple region from lines 11--13 is not straightforward due to the
 call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.get(int)} ({\tt java.util.List<E>.get(int)} is abstract and does not have an implementation).
 %
 {\tt ArrayList<Integer>.get(int)} internally does the following:
 %
-(1) It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling {\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
+\begin{enumerate}
+\item It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling {\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
 %
-(2) It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
+\item It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
 %
-(3) It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses the {\tt value} field of {\tt Integer} to return the integer value of this object.
+\item It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses the {\tt value} field of {\tt Integer} to return the integer value of this object.
 %
+\end{enumerate}
+
 The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
 also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
 %
@@ -152,7 +155,7 @@ The method whose summary is to be included depends on the dynamic type of the ob
 %
 In our example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is declared statically as having the type {\tt List}.
 %
-Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt ArrayList<E>.get(i)}.
+Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt ArrayList<E>.get(i)}.\\
 %
 Our extension to path-merging also allows the possibility of exceptional behavior being included in the summary and
 explored separately from unexceptional behavior by performing exploration of exceptional behavior in the region on its
