@@ -1,23 +1,34 @@
-\section{Conclusion}
-\vaibhav{assigned to the one who gets to it first}
+\section{Conclusion and Future Work}
+\label{sec:future}
 
-\mike{Future work: }
+\soha{we need something for the conclusion}
+There are five main directions for future work we intend to do:
+\begin{itemize}
+\item Support Multiple Return Regions:  Here we want to support regions with multiple returns. 
+%
+We want to do this by supporting another transformation that would take a multiple return region and turns it into a single return region. 
 
-Extensions: 
-\begin{enumerate}
-\item Simplification of static regions at instantiation time using constant propagation, code specialization, etc.
+\item Support of Test Case Generation: while statically summarizing regions gives dynamic symbolic execution a performance boost to explore more paths efficiently, generating test cases that covers all summarized branches is one of the fundamental roles of dynamic symbolic execution that is currently unsupported. 
+%
+This is one of the extension that we intend to investigate in our future work. 
+%
 
-\item Adding support for parallel Java programs with static regions
+\item Heuristics for Instantiation: as shown in the experiments section, instantiating regions might not always be the best option in terms of performance.
+%
+For instance, region instantiation could in fact turn concrete values into symbolic values thus increasing the number of explored paths. 
+%
+This is particularly problematic if that happened for a small region on an early branch point, and the symbolic variable is later used in multiple conditions.
+%
+This calls for a study of the best heuristics that would provide a decision procedure as to when instantiation a region.
 
-\item Adaptation of metric-based test-case generation for static regions: statement, branch, MCDC, observable metrics.
+\item Using Incremental Solver: this seems intuitive for two main reasons: firstly because as we go down one path the query sent to the solver is incrementally defined for every branch and yet it is repeatedly being sent to the solver. 
+%
+And secondly because using Java Ranger tend to have relatively complex formulas to solve due to summarization. 
+%
+Supporting incremental solver is one direction for our future work. 
+\end{itemize}
 
-\item Parallelization of the analysis process (similar to Staats work in 2011)
 
-\item Adding support for bypass of complex expressions: {\em symcrete} execution involving regions.
-
-\item Integration with the Green constraint solver
-
-\end{enumerate}
 
 Other improvements:
 \begin{enumerate}
