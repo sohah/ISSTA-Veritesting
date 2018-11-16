@@ -20,21 +20,7 @@ arbitrary code regions more than 2 calls deep did not lead to practically useful
 After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
 explained in Section \ref{sec:static-analysis}.
 %
-To make use of region summaries in Symbolic PathFinder, we use an existing feature of SPF named \textit{listener}.
-%
-A listener is a method defined within SPF that is called for every bytecode instruction executed by SPF.
-%
-Java Ranger adds a path merging listener to SPF that, on every instruction, checks (1) if the instruction involves
-checking a symbolic condition, and (2) if Java Ranger has a pre-computed static summary that begins at that
-instruction\rq s bytecode offset.
-%
-If both of these conditions are satisfied, Java Ranger instantiates the multi-path region summary by reading inputs from
-and writing outputs to the stack and the heap.
-%
-It then conjuncts the instantiated region summary with the path condition and resumes symbolic execution at the
-bytecode offset of the end of the region.
-%
-The instantiation of the region summary is performed as a sequence of transformations described below and summarized
+After computing static region and method summaries, we instantiate them as a sequence of transformations described below and summarized
 in Figure~\ref{fig:overview}.
 %
 \begin{figure}[]
@@ -281,7 +267,7 @@ The outcome of this process, is a more simplified and concise statement that rep
 %
 The collected predicate is later used to guide the symbolic execution to explore non-nominal paths, which Ranger had not summarized.  \\
 %
-\textbf{Linearization}: \vaibhav{Soha, Mike, please feel free to rewrite.}
+\textbf{Linearization}:
 Ranger IR contains translation of branches in the Java bytecode to if-then-else statements defined in the Ranger IR.
 %
 But the if-then-else statement structure needs to be kept only as long as we have more GSA expressions to be

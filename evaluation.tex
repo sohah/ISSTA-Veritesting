@@ -1,0 +1,118 @@
+\section{Evaluation}
+\label{sec:results}
+\subsection{Experimental Setup}
+We implemented the above mentioned transformations as a wrapper around the Symbolic PathFinder~\cite{spf} tool.
+%
+To make use of region summaries in Symbolic PathFinder, we use an existing feature of SPF named \textit{listener}.
+%
+A listener is a method defined within SPF that is called for every bytecode instruction executed by SPF.
+%
+Java Ranger adds a path merging listener to SPF that, on every instruction, checks (1) if the instruction involves
+checking a symbolic condition, and (2) if Java Ranger has a pre-computed static summary that begins at that
+instruction\rq s bytecode offset.
+%
+If both of these conditions are satisfied, Java Ranger instantiates the multi-path region summary corresponding to that
+bytecode offset by reading inputs from and writing outputs to the stack and the heap.
+%
+It then conjuncts the instantiated region summary with the path condition and resumes symbolic execution at the
+bytecode offset of the end of the region.
+%
+Our implementation, named Java Ranger, wraps around SPF and can be configured to run in four modes.
+%
+(1) In mode 1, it runs vanilla SPF without any path merging enabled.
+%
+(2) In mode 2, it summarizes multi-path regions only and instantiates them if they are encountered.
+%
+(3) In mode 3, it summarizes and instantiates methods along with multi-path regions as done in mode 2.
+%
+(4) In mode 4, it uses single-path cases along with multi-path region and method summaries used in mode 3.
+%
+\subsection{Evaluation}
+\input{results-big-table}
+%\input{static-analysis-results}
+%
+In order to evaluate the performance of Java Ranger, we used the following benchmarking programs commonly used to evaluate symbolic
+execution performance.
+%
+(1) Wheel Brake System (WBS)~\cite{yang2014directed} is a synchronous reactive
+component developed to make aircraft brake safely when taxing, landing, and during a rejected take-off.
+%
+(2) Traffic Collision Avoidance System (TCAS) is part of a suite of programs commonly referred to as the Siemens
+suite~\cite{siemens-benchmarks}. TCAS is a system that maintains altitude separation between aircraft to avoid mid-air
+collisions.
+%
+(3) Replace is another program that\rq s part of the Siemens suite. Replace searches for a pattern in a given input and
+replaces it with another input string.
+%
+We used the translation of the Siemens suite to Java as made available by Wang et al.~\cite{dgse}.
+%
+We also manually created a variant of TCAS by converting regions of code with return statements on
+every execution path to regions of code with a single return statement at the merge point of the region.
+%
+We refer to this variant of TCAS as TCAS-SR (TCAS with Single Returns).
+%
+We also created variants of WBS, TCAS, and TCAS-SR by running them for multiple steps.
+%
+
+We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger.
+%
+%Our static analysis results for analyzing WBS, TCAS, and Replace are shown in Table \ref{table:static-analysis}.
+%
+%
+We present our results from instantiating region summaries in Table~\ref{table:results}.
+%
+Table~\ref{table:results} shows that we achieve a significant improvement using path-merging with WBS.
+%
+We outperform SPF when running TCAS too but our improvement doesn't allow path merging to summarize the entire program
+to a single execution path, as is the case with WBS.
+%
+We analyzed the source code of TCAS and found the only barrier to our path-merging was the presence of several code
+regions containing a return instruction on every execution path.
+%
+We manually performed a semantics-preserving transformation to the source code of TCAS to create another version, TCAS-SR,
+that has a single return value at the end of all such multi-path regions.
+%
+We plan to automate this transformation in the future.
+%
+Table~\ref{table:results} shows the benefit of such a \textit{multiple-returns-to-single-return} transformation.
+%
+This transformation allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
+%
+The performance of Java Ranger when running Replace is quite different from that seen when running WBS, TCAS, and TCAS-SR.
+%
+While Java Ranger reduces the total number of execution paths with every increase in mode, the path reduction isn't as significant.
+%
+More importantly, it also makes an order of magnitude more solver calls thereby increasing the total runtime.
+
+We further investigated this drop in performance of Java Ranger when running Replace by exploring the space of potential
+regions to instantiate.
+%
+We obtained the list of regions that are instantiated at least once when running Replace with Java Ranger in mode 3~(using
+method and multi-path region summaries).
+%
+This step produced a list of 24 regions.
+%
+Next, we sampled the space of all possible subsets of this set of 24 regions by
+%
+(1) randomly enumerating the space up to 4000 subsets of all possible subsets of 24 regions,
+%
+(2) enumerating the space in the order of subset sizes up to all subsets of 3 regions from a set of 24 regions.
+%
+With both methods of enumeration, we searched for the least amount of time Java Ranger needs to instantiate at least one
+region with Replace.
+%
+We found this least time to be 26.3 seconds which is still more than the 3.47 seconds Java Ranger needs to run
+Replace in mode 1 (running vanilla SPF with no path merging).\vaibhav{update these numbers before submission}
+%
+In the fastest runs with at least one region instantiation in both methods of enumeration, Java Ranger finished
+exploration with the same number of execution paths as that explored during mode 1.
+%
+The result of this analysis, combined with a significant increase in the number of solver queries with Java Ranger's
+path-merging modes, points toward the conclusion that every instantiation of a multi-path region in Replace causes another branch to be
+symbolic.
+%
+This conclusion is also in alignment with the observation made by Kuznetsov et al.~\cite{kuznetsov} that path merging can
+sometimes have a net negative effect on the performance of symbolic execution.
+%
+We plan to integrate heuristics for estimating the side-effects of introducing new symbolic state as a result of
+path merging on symbolic execution performance with Java Ranger in the future.

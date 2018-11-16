@@ -35,10 +35,10 @@
         WBS-6steps                                                  & mode 4                                                       & 1                                                          & 3239                                                         & 80                                                             & 2479                                                                   & 16                                                            & 0                                                                      & 80       \\ \midrule
         WBS-7steps                                                  & mode 4                                                       & 1                                                          & 3326                                                         & 95                                                             & 2392                                                                   & 16                                                            & 0                                                                      & 95       \\ \bottomrule
     \end{tabular}
-    \caption{The results from running Java Ranger on the WBS, TCAS, and Replace benchmarks. We created variants of WBS
-    and TCAS by running them for multiple steps and present results from running Java Ranger on these variants too.
-    mode 1 refers to Java Ranger running without any path-merging. mode 2 refers to Java Ranger running with path-merging
-    for multi-path regions. mode 3 adds support for higher-order regions to mode 2. mode 4 adds support for single-path
-    cases to mode 3.}
+    \caption{The results from running Java Ranger on the WBS, TCAS, and Replace benchmarks. The ``\# exec paths'' column
+    is the number of execution paths required to completely explore the benchmark. ``dyn. time (msec)'' is the time taken
+    for dynamic analysis (excludes static analysis time). ``inst. regions'' is the total number of regions that were
+    instantiated at least once when running each benchmark. ``\# higher-order regions'' is the number of higher-order regions
+    that were used and ``inst.'' is the total number of instantiations that was done when running the benchmark.}
     \label{table:results}
 \end{table}
