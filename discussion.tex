@@ -45,7 +45,10 @@ This is an extension that we intend to investigate in our future work.
 %
 \item While path merging can potentially allow symbolic execution to explore interesting parts of a program sooner, the
 effect of path merging on search strategies, such as depth-first search and breadth-first search commonly used with
-symbolic execution, remains to be investigated.
+symbolic execution, remains to be investigated. We plan to explore the integration of such guidance heuristics with path merging in the future.
 %
-We plan to explore the integration of such guidance heuristics with path merging in the future.
+\item Java Ranger can summarize methods and regions in Java standard libraries. This creates potential for automatically
+constructing summaries of standard libraries so that Java symbolic execution engines can prevent path explosion
+originating from standard libraries.
+%
 \end{itemize}
