@@ -19,7 +19,7 @@ test generation~\cite{dart,cute}, equivalence checking~\cite{ramos,adaptorsynth}
 Symbolic execution tools are available for many languages, including
 CREST~\cite{BurnimS2008} for C source code, KLEE~\cite{CadarDE2008}
 for C/C++ via LLVM, JDart~\cite{jdart2016} and Symbolic
-PathFinder~\cite{spf} for Java, and S2E~\cite{ChipounovKC2012},
+PathFinder (SPF)~\cite{spf} for Java, and S2E~\cite{ChipounovKC2012},
 FuzzBALL~\cite{BabicMMS2011}, and {\tt angr}~\cite{angr} for binary code.
 %
 %Some of these tools, such as {\tt angr} and Mayhem~\cite{mayhem} that operate at the binary-level, are used for finding
@@ -124,7 +124,19 @@ This paper extends our initial investigations of Java veritesting
 reported in a paper at the 2017 JPF
 workshop~\cite{sharma-veritesting}.
 %
-\smcc{Add a few sentences explaining what's old vs. new.}
+Our workshop paper motivated some of the ways in which Java
+veritesting is different from veritesting for binary code and the
+value that veritesting could provide, but it did not describe an
+end-to-end automated implementation.
+%
+The present paper describes a number of conceptual improvements that
+are new since the workshop paper, including the Ranger IR, single-path
+cases, and the details of our higher-order region approach.
+%
+We have also made a number of architectural changes, such as switching
+from Soot to Wala for static analysis and using Green for formula
+representation, and we have integrated \tool\ as an extension to SPF
+and evaluated it in several case studies.
 
 \subsection{Motivating Example}
 \begin{figure}
