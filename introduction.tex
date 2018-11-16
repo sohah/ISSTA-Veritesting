@@ -6,12 +6,7 @@
 %%
 %In this paper we present our robust implementation of Java based veritesting tool that supports dynamic dispatch and
 \section{Introduction}
-\vaibhav{needs rewriting, assigned to anyone who can find the time to write it}
-\vaibhav{Our primary contributions to multi-path region summarization or path merging is (1) creation of an SSA-form IR
-to represent region summaries, (2) representing stack and heap accesses in Java programs in an IR, (3) extending path
-merging to include method summaries, (4) proposing the Single-Path case as an alternative to transition points as
-defined by the veritesting paper }
-
+%
 Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and the branch constrains along an execution path are combined into a predicate.
 %
 Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution is a convenient building block for program analysis, since arbitrary query predicates can be combined with the logical program representation, and solutions to these constraints are program inputs illustrating the queried behavior.
@@ -23,76 +18,94 @@ Symbolic execution tools are available for many languages, including
 CREST~\cite{BurnimS2008} for C source code, KLEE~\cite{CadarDE2008}
 for C/C++ via LLVM, JDart~\cite{jdart2016} and Symbolic
 PathFinder~\cite{spf} for Java, and S2E~\cite{ChipounovKC2012},
-FuzzBALL~\cite{BabicMMS2011}, and angr~\cite{angr} for binary code.
+FuzzBALL~\cite{BabicMMS2011}, and {\tt angr}~\cite{angr} for binary code.
 %
- \mike{More here...explain the `ecosystem' - tools for different languages: KLEE, FuzzBall, Java Symbolic Pathfinder, ...}
+Some of these tools, such as {\tt angr} and Mayhem~\cite{mayhem} that operate at the binary-level, are used for finding
+security bugs.
+%
+Others, such as KLEE, are used for exploring system-level programs for software engineering purposes.
+
+% \mike{More here...explain the `ecosystem' - tools for different languages: KLEE, FuzzBall, Java Symbolic Pathfinder, ...}
 
 Although symbolic analysis is a very popular technique, scalability is a substantial challenge for symbolic execution.
 %
 Dynamic state merging~\cite{kuznetsov} provides one way to
 alleviate scalability challenges by opportunistically merging dynamic
-symbolic executors, which can be performed on paths~\mike{Add std. cite} or on environments~\mike{FM paper from 2014 on Javascript?}.  
-Other techniques include CEGAR/subsumption~\mike{Add references from ASE 2017 paper: More Effective Interpolations in Software Model Checking}.
+symbolic executors. %, which can be performed on paths or even on environments~\mike{FM paper from 2014 on Javascript?}., not sure what Mike meant to say here - Vaibhav
+%
+Other techniques such as subsumption checking~\cite{Tian:2017:MEI:3155562.3155589} make use of interpolants to find
+guarantees about safety properties on an execution path.
  
 %
 Veritesting~\cite{veritesting} is a different recently proposed technique that can dramatically improve the performance of symbolic execution.  Rather than explicitly merge paths or check subsumption relationships, Veritesting simply encodes a local region of a program containing branches as a disjunctive region for symbolic analysis.  If any path within the region meets an exit point, then the disjunctive formula is satisfiable.  This often allows many paths to be collapsed into a single path involving the region.  
 %
-In previous work~\cite{veritesting}, bounded static code regions have been shown to find more bugs, and achieve more node and path coverage, when implemented at the X86 binary level for compiled C programs.
+In previous work~\cite{veritesting}, bounded static code regions have been shown to find more bugs, and achieve more
+node and path coverage, when implemented at the X86 binary level for compiled C programs.
 %
-This provides motivation for investigating integration of introducing static regions with symbolic execution at the Java bytecode level.
+This provides motivation for investigating integration of introducing static regions with symbolic execution at the Java
+bytecode level.
 
-\lstinputlisting[caption={An example to loop through a symbolic array with three execution paths through the loop body},
-label={lst:v_ex}]{code_samples/VeritestingPerf.java}
+Java programmers who follow best software engineering practices attempt to write code in an object-oriented
+form with common functionality implemented as a Java class and multiple not-too-large methods used to implement small
+sub-units of functionality.
+%
+This causes Java programs to make several calls to methods, such as getters and setters, to re-use small common sub-units
+of functionality.
+%
+Merging paths within regions in such Java programs using techniques described in current literature is limited by not having the ability
+to inline method summaries.
+%
+This is not an impediment for compiled C code, as the C compiler will usually automatically inline the code for short
+methods such as \texttt{get}.
+%
+However, Java has an {\em open world} assumption, and most methods are {\em dynamically dispatched}, meaning that the code to be
+run is not certain until resolved at runtime, so the compiler is unable to perform these optimizations.
+%
+Not being able to summarize such dynamically dispatch methods can lead to poor performance for
+n\"aive implementations of bounded static regions.
+%
+Thus, to be successful, we must be able to inject the static regions associated with the calls into the dispatching
+region.
+%
+We call such regions {\em higher order} as they require a region as an argument and can return a region that may need
+to be further interpreted.
+%
+In our experiments, we demonstrate exponential speedups on benchmarks (in general, the more paths contained within a
+program, the larger the speedup) over the unmodified Java SPF tool using this approach.
 
+Another common feature of Java code that represents the boundary of path merging is \textit{exceptions}.
+%
+If an exception can potentially be raised in a region, the symbolic executor needs to explore that exceptional behavior.
+%
+But, it is possible for other unexceptional behavior to also exist in the same region.
+%
+For example, it can be in the form of a branch nested inside another branch that raises an exception on the other side.
+%
+Summarizing such unexceptional behavior while simultaneously guiding the symbolic executor towards potential exceptional
+behavior increases the reduction in branching a symbolic executor has to perform.
+%
+We propose a technique named \textit{Single-Path Cases} for spliting a region summary into its exceptional and
+unexceptional parts.
 
-
-%Symbolic Pathfinder~(SPF)~\cite{spf} is a tool that performs symbolic execution of Java bytecode.
+While summarizing higher-order regions and finding single-path cases is useful to improve scalability,
+representing such summaries in an Intermediate Representation~(IR) that has Static Single Assignment~(SSA) form
+provides a few key advantages.
 %
-%SPF is tightly integrated with Java PathFinder~(JPF)~\cite{jpf} and uses JPF extensions to replace concrete execution with symbolic execution.
+(1) It allows region summaries to be constructed by using a sequence of transformations, with each transformation
+extending to add support for new features such as heap accesses, higher-order regions, and single-path cases.
 %
-We present an example demonstrating the potential benefit of integrating static code regions with SPF in Listing~\ref{lst:v_ex}.
+(2) It allows for simplifications such as constant propagation, copy propagation, constant folding to be performed on region summaries.
 %
-The example checks if positive or negative integers occur more frequently in the
-list~\textit{x}, and it contains a bug if \textit{x} contains an
-equal number of positive and negative integers.
+(3) It makes the construction of region summaries more accessible to users of the symbolic execution tool, thereby making
+path merging more useful to end-users.
 %
-The three-way branch on lines 5, 6 causes the total number of execution
-paths required to cover the \textit{for} loop to be $3^{\textit{len}}$.
+In this paper, we present Java Ranger, an extension of Symbolic PathFinder, that computes such region summaries over
+Ranger IR.
 %
-However, this three-way branch can be combined into a multi-path region
-and represented as a disjunctive predicate.
-We present such predicates in SMT2 notation in
-Listing~\ref{lst:v_ex_smt2} assuming \textit{x} to contain two symbolic
-integers named \textit{x0} and \textit{x1}~(\textit{len} equals 2).
+Ranger IR has support for inlining method summaries and constructs SSA form for heap accesses.
 %
-The updates to \textit{sum} in the two loop iterations are captured by
-\textit{sum0} and \textit{sum1}.
-%
-Using such predicates to represent the three-way branch on lines 5, 6 of
-Listing~\ref{lst:v_ex} allows us to have only one execution path through
-the loop body.
-%
-Figure~\ref{fig:v_ex_plot} shows a comparison of the number of execution
-paths explored to find the bug on line 11 of Listing~\ref{lst:v_ex}.
-%
-The exponential speed-up from our predicates, representing a multi-path
-region, allows us to find
-the bug using just three test cases.
-
-Unfortunately, as originally proposed, Veritesting would be unable to create a static region for this loop because it involves non-local control jumps (the calls to the \texttt{get} methods).  This is not an impediment for compiled C code, as the C compiler will usually automatically inline the code for short methods such as \texttt{get}.  However, Java has an {\em open world} assumption, and most methods are {\em dynamically dispatched}, meaning that the code to be run is not certain until resolved at runtime, so the compiler is unable to perform these optimizations.
-
-In Java, programs often consist of many small methods that are dynamically dispatched, leading to poor performance for n\"aive implementations of bounded static regions.  Thus, to be successful, we must be able to inject the static regions associated with the calls into the dispatching region.  We call such regions {\em higher order} as they require a region as an argument and can return a region that may need to be further interpreted.
-Given support for such regions, we can make analysis of programs such as~\ref{lst:v_ex} trivial for large loop depths.  In our experiments, we demonstrate 100x speedups on several models (in general, the more paths contained within a program, the larger the speedup) over the unmodified Java SPF tool using this approach.
- 
-%
-\lstinputlisting[caption={SMT2 representation of multi-path execution in
-Listing ~\ref{lst:v_ex} using \textit{len} = 2}, label={lst:v_ex_smt2}, language=lisp]{code_samples/ex.smt2.snippet}
-%
-\begin{figure}[]
-\caption{Comparing number of execution paths from Listing~\ref{lst:v_ex} using vanilla SPF and SPF with static unrolling}
-\label{fig:v_ex_plot}
-\includegraphics[width=\columnwidth]{figures/veritesting_example_semilogy}
-\end{figure}
+It also proposing the Single-Path case as an alternative to transition points as
+defined by Avgerinos et al.~\cite{veritesting}.
 %
 \subsection{Motivating Example}
 \begin{figure}
