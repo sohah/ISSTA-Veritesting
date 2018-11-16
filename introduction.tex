@@ -13,7 +13,7 @@ Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution
 program analysis, since arbitrary query predicates can be combined with the logical program representation, and
 solutions to these constraints are program inputs illustrating the queried behavior.
 %
-Some of the many application of symbolic execution include
+Some of the applications of symbolic execution include
 test generation~\cite{dart,cute}, equivalence checking~\cite{ramos,adaptorsynth}, vulnerability finding~\cite{driller,angr}, and protocol correctness checking~\cite{transport}.
 %
 Symbolic execution tools are available for many languages, including
@@ -22,30 +22,40 @@ for C/C++ via LLVM, JDart~\cite{jdart2016} and Symbolic
 PathFinder~\cite{spf} for Java, and S2E~\cite{ChipounovKC2012},
 FuzzBALL~\cite{BabicMMS2011}, and {\tt angr}~\cite{angr} for binary code.
 %
-Some of these tools, such as {\tt angr} and Mayhem~\cite{mayhem} that operate at the binary-level, are used for finding
-security bugs.
+%Some of these tools, such as {\tt angr} and Mayhem~\cite{mayhem} that operate at the binary-level, are used for finding
+%security bugs.
 %
-Others, such as KLEE, are used for exploring system-level programs for software engineering purposes.
+%Others, such as KLEE, are used for exploring system-level programs for software engineering purposes.
 
 % \mike{More here...explain the `ecosystem' - tools for different languages: KLEE, FuzzBall, Java Symbolic Pathfinder, ...}
 
-Although symbolic analysis is a very popular technique, scalability is a substantial challenge for symbolic execution.
+Although symbolic analysis is a popular technique, scalability is a substantial challenge for many applications.
 %
-Dynamic state merging~\cite{kuznetsov} provides one way to
+In particular it can suffer from a {\em path explosion}: complex
+software has exponentially many execution paths, and baseline symbolic
+execution techniques that explore one path at a time are unable to
+cover all paths.
+%
+Dynamic state merging~\cite{HansenSS2009,kuznetsov} provides one way to
 alleviate scalability challenges by opportunistically merging dynamic
-symbolic executors. %, which can be performed on paths or even on environments~\mike{FM paper from 2014 on Javascript?}., not sure what Mike meant to say here - Vaibhav
+symbolic executors, effectively merging the paths they represent.
 %
-Other techniques such as subsumption checking~\cite{Tian:2017:MEI:3155562.3155589} make use of interpolants to find
-guarantees about safety properties on an execution path.
+Avoiding even a single branch point can provide a multiplicative
+savings in the number of execution paths, though at the potential cost
+of making symbolic state representations more complex.
+
+ %, which can be performed on paths or even on environments~\mike{FM paper from 2014 on Javascript?}., not sure what Mike meant to say here - Vaibhav % He may have meant MultiSE? - Stephen
+%
+%Other techniques such as subsumption checking~\cite{Tian:2017:MEI:3155562.3155589} make use of interpolants to find
+%guarantees about safety properties on an execution path.
  
 %
-Veritesting~\cite{veritesting} is a different recently proposed technique that can dramatically improve the performance of symbolic execution.  Rather than explicitly merge paths or check subsumption relationships, Veritesting simply encodes a local region of a program containing branches as a disjunctive region for symbolic analysis.  If any path within the region meets an exit point, then the disjunctive formula is satisfiable.  This often allows many paths to be collapsed into a single path involving the region.  
+Veritesting~\cite{veritesting} is another recently proposed technique that can dramatically improve the performance of symbolic execution by effectively merging paths.  Rather than explicitly merging state representations, veritesting encodes a local region of a program containing branches as a disjunctive region for symbolic analysis. This often allows many paths to be collapsed into a single path involving the region.  
 %
-In previous work~\cite{veritesting}, bounded static code regions have been shown to find more bugs, and achieve more
+In previous work~\cite{veritesting}, constructing bounded static code regions was shown to allow symbolic execution to find more bugs, and achieve more
 node and path coverage, when implemented at the X86 binary level for compiled C programs.
 %
-This provides motivation for investigating integration of introducing static regions with symbolic execution at the Java
-bytecode level.
+This motivates us to investigate using static regions for symbolic execution of Java software (at the Java bytecode level).
 
 Java programmers who follow best software engineering practices attempt to write code in an object-oriented
 form with common functionality implemented as a Java class and multiple not-too-large methods used to implement small
@@ -55,14 +65,14 @@ This causes Java programs to make several calls to methods, such as getters and 
 of functionality.
 %
 Merging paths within regions in such Java programs using techniques described in current literature is limited by not having the ability
-to inline method summaries~\cite{sharma-veritesting}.
+to inline method summaries.
 %
-This is not an impediment for compiled C code, as the C compiler will usually automatically inline the code for short
+This is not a major impediment for compiled C code, as the C compiler will usually automatically inline the code for short
 methods such as \texttt{get}.
 %
 However, Java has an {\em open world} assumption, and most methods are {\em dynamically dispatched}, meaning that the code to be
-run is not certain until resolved at runtime, so the compiler is unable to perform these optimizations.
-%
+run is not certain until a method is resolved at runtime; if inlining is performed at all, it is by the JRE, so it is not reflected in bytecode.
+
 Not being able to summarize such dynamically dispatch methods can lead to poor performance for
 n\"aive implementations of bounded static regions.
 %
@@ -90,7 +100,7 @@ We propose a technique named \textit{Single-Path Cases} for splitting a region s
 unexceptional parts.
 
 While summarizing higher-order regions and finding single-path cases is useful to improve scalability,
-representing such summaries in an Intermediate Representation~(IR) that has Static Single Assignment~(SSA) form
+representing such summaries in an intermediate representation~(IR) that uses static single-assignment~(SSA) form
 provides a few key advantages.
 %
 (1) It allows region summaries to be constructed by using a sequence of transformations, with each transformation
@@ -102,14 +112,20 @@ region summaries.
 (3) It makes the construction of region summaries more accessible to users of the symbolic execution tool, thereby making
 path merging more useful to end-users.\\
 %
-In this paper, we present Java Ranger, an extension of Symbolic PathFinder, that computes such region summaries over
+In this paper, we present Java Ranger, an extension of Symbolic PathFinder, that computes such region summaries over a representation we call
 Ranger IR.
 %
 Ranger IR has support for inlining method summaries and for constructing SSA form for heap accesses.
 %
-It also proposes Single-Path case as an alternative to transition points as
+It also proposes Single-Path Cases as an alternative to multiple transition points as
 defined by Avgerinos et al.~\cite{veritesting}.
+
+This paper extends our initial investigations of Java veritesting
+reported in a paper at the 2017 JPF
+workshop~\cite{sharma-veritesting}.
 %
+\smcc{Add a few sentences explaining what's old vs. new.}
+
 \subsection{Motivating Example}
 \begin{figure}
     \includegraphics[width=\textwidth]{figures/example-combined.pdf}
