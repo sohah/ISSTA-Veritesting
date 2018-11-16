@@ -96,8 +96,32 @@ in Figure~\ref{fig:overview}.
 
 \subsection{Statement Recovery}
 \label{sec:static-analysis}
-\vaibhav{assigned to Mike}
-\mike{MWW: - we should provide an AST of the constraint language}
+%Java Ranger has its own AST that captures the statement of regions.
+%%
+%The choice of having a separate AST for Java Ranger, enables the integration of Java Ranger with any static analysis framework by implementing the transformation that transforms the CFG of a given IR into the corresponding Java Ranger AST representation. 
+%%
+%We call this interface \textit{Statement Recovery} transformation. \\
+%%
+%In this transformations visits nodes in topological order by walking normal edges of a branching points until a \textit{minimum convergent node} is encountered. We define a minimum convergent node as the last immediate successor of blocks following a branching node.
+%%
+%Note that exceptional edges are ignored during this transformation, however exceptional behavior is later identified and handled through the single path cases.
+%%
+%We discuss more about this in section~\ref{sec:instantiationTransformations}.
+%%
+%There are two other things that this transformation takes care of: recovering of complex if-then-else and construction of Gated Single Assignment (GSA).
+%%
+%Recovering of complex conditions in an if-statement restores its form in the source code. 
+%% 
+%This is done by identifying \textit{immediate self-contained subgraphs}, that is, subgraphs where the initial node is immediately pre-dominated by the initial node and for the static region and whose successor nodes (up to the region terminus) are dominated (not necessarily immediately) by the initial node.
+%%
+%
+%Construction of Gated Single Assignment (GSA) on the other hand is done by keeping track of the current "conditional path" during translation. More precisely this is done by keeping a stack of  {\tt(Expression x enum \{Then, Else\})} pairs. 
+%%
+%In addition to that, for each edge between blocks in the block structure, the associated "conditional path" is recorded.  
+%%
+%So the type of this map (the blockConditionMap) is: {\tt(ISSABasicBlock x ISSABasicBlock) --> List of (Expression x enum \{Then, Else\})}.
+%%
+%Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
 
 \subsection{Region Definition}
 Once the statement of a Ranger region has been recovered, its corresponding environment is populated. 
@@ -126,6 +150,7 @@ This requires visiting all variables and phi statements of the IR to maximize th
 
 
 \subsection{Instantiation-time Transformations}
+\label{sec:instantiationTransformations}
 \textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
 %
 This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path, i.e., a region inside a loop will be instantiated multiple times.\\
