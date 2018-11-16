@@ -23,7 +23,7 @@ Our implementation, named Java Ranger, wraps around SPF and can be configured to
 %
 (2) In mode 2, it summarizes multi-path regions only and instantiates them if they are encountered.
 %
-(3) In mode 3, it summarizes and instantiates methods along with multi-path regions as done in mode 2.
+(3) In mode 3, it summarizes and instantiates methods, by utilizing high ordder regions, along with multi-path regions as done in mode 2.
 %
 (4) In mode 4, it uses single-path cases along with multi-path region and method summaries used in mode 3.
 %
@@ -61,10 +61,10 @@ We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger.
 %
 We present our results from instantiating region summaries in Table~\ref{table:results}.
 %
-Table~\ref{table:results} shows that we achieve a significant improvement using path-merging with WBS.
+Table~\ref{table:results} shows that Java Ranger achieves a significant improvement using path-merging with WBS.
 %
-We outperform SPF when running TCAS too but our improvement doesn't allow path merging to summarize the entire program
-to a single execution path, as is the case with WBS.
+Java Ranger outperforms SPF when running TCAS too but it doesn't allow path merging to summarize the entire program
+to a single execution path, as in the case with WBS.
 %
 We analyzed the source code of TCAS and found the only barrier to our path-merging was the presence of several code
 regions containing a return instruction on every execution path.
@@ -72,13 +72,13 @@ regions containing a return instruction on every execution path.
 We manually performed a semantics-preserving transformation to the source code of TCAS to create another version, TCAS-SR,
 that has a single return value at the end of all such multi-path regions.
 %
-We plan to automate this transformation in the future.
+We plan to automate this transformation in the future, see future work section~\ref{sec:futureWork}.
 %
 Table~\ref{table:results} shows the benefit of such a \textit{multiple-returns-to-single-return} transformation.
 %
-This transformation allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
+It basically allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
 %
-The performance of Java Ranger when running Replace is quite different from that seen when running WBS, TCAS, and TCAS-SR.
+However, the performance of Java Ranger when running Replace is quite different from that seen when running WBS, TCAS, and TCAS-SR.
 %
 While Java Ranger reduces the total number of execution paths with every increase in mode, the path reduction isn't as significant.
 %
@@ -88,7 +88,7 @@ We further investigated this drop in performance of Java Ranger when running Rep
 regions to instantiate.
 %
 We obtained the list of regions that are instantiated at least once when running Replace with Java Ranger in mode 3~(using
-method and multi-path region summaries).
+high order and multi-path region summaries).
 %
 This step produced a list of 24 regions.
 %
