@@ -148,7 +148,7 @@ For example, input table is populated with first use in the region boundary that
 %
 The output table is populated with the last def, if a converging statement exits.
 %
-Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. \vaibhav{@Vaibhav: type propagation is mentioned in the figure but has no reference later in the transformation or in its text.}  \\
+Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. \\
 %
 The stack slot table on the other hand, does not use region boundary for its population.
 %
@@ -162,12 +162,8 @@ This requires visiting all variables and phi statements of the IR to maximize th
 
 
 \subsection{Instantiation-time Transformations}
-<<<<<<< HEAD
 \label{sec:instantiationTransformations}
 \textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
-=======
-\textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place.
->>>>>>> 1006ac5a6a3622f8ab31a1405909d8d8c5a72f6a
 %
 This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path, i.e., a region inside a loop will be instantiated multiple times.\\
 %
@@ -228,6 +224,20 @@ Reads and writes of arrays are then done on a path-specific copy of the array.
 All array copies are merged at the merge point of multi-path regions.
 %
 The merged array copy represents array outputs of the region.\\
+\textbf{Type Propagation}: Ranger IR needs to have type information for its variables so that it can construct
+corresponding correctly-typed Green variables during the final transformation of the region summary to a Green formula.
+%
+Having accurate type information is also important for looking up the correct higher-order method summary.
+%
+As part of region instantiation, Java Ranger infers types of Ranger IR variables in the region summary by
+using JPF's runtime environment.
+%
+Types of local variables are inferred during the local variable substitution transformation and types of field reference
+and array reference variables are inferred during their respective transformations.
+%
+Using these inferred types, the type propagation transformation propagates type information across assignment
+statements, binary operations, and variables at leaf nodes of $\gamma$ functions.\\
+%
 \textbf{Simplification of Ranger IR}: The Ranger IR constructed by earlier transformations computes exact semantics
 of all possible behaviors in the region.
 %
