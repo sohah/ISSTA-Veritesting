@@ -129,15 +129,15 @@ This step produced a list of 24 regions.
 %
 Next, we sampled the space of all possible subsets of this set of 24 regions by
 %
-(1) randomly enumerating the space up to 4000 subsets of all possible subsets of 24 regions,
+(1) randomly enumerating the space up to 11500 subsets of all possible subsets of 24 regions,
 %
-(2) enumerating the space in the order of subset sizes up to all subsets of 3 regions from a set of 24 regions.
+(2) enumerating the space in the order of set size up to all subsets of 3 regions from a set of 24 regions.
 %
 With both methods of enumeration, we searched for the least amount of time Java Ranger needs to instantiate at least one
 region with Replace.
 %
 We found this least time to be 26.3 seconds which is still more than the 3.47 seconds Java Ranger needs to run
-Replace in mode 1 (running vanilla SPF with no path merging).\vaibhav{update these numbers before submission}
+Replace in mode 1 (running vanilla SPF with no path merging).
 %
 In the fastest runs with at least one region instantiation in both methods of enumeration, Java Ranger finished
 exploration with the same number of execution paths as that explored during mode 1.
