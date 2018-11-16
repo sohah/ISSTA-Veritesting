@@ -1,5 +1,4 @@
 \section{Related Work}
-\vaibhav{in progress}
 
 Path explosion is a major cause of scalability limitations for
 symbolic execution, so an appealing direction for optimization is to
@@ -35,7 +34,7 @@ along a continuum towards all-paths techniques used in verification.
 %
 A veritesting-style technique is a convenient way to add path merging
 to a symbolic execution system that maintains only one execution
-state, which is one reason we chose it for use in SPF.
+state, which is one reason we chose it when extending SPF.
 %
 Avgerinos et al. designed and implemented their veritesting system
 MergePoint for the application of binary-level symbolic execution for
@@ -108,6 +107,32 @@ But static region summaries are more important as an optimization to
 speed up symbolic execution on software that is too large and/or
 complex to be explored exhaustively.
 
+A wide variety of other enhancements to symbolic execution have been
+proposed to improve its performance, including caching and simplifying
+constraints, summarizing repetitive behavior in loops, heuristic
+guidance towards interesting code, pruning paths that are repetitive
+or unproductive, and many domain-specific ideas.
+%
+A recent survey by Baldoni et. al.~\cite{SurveySymExec-CSUR18}
+provides a number of pointers into the large literature.
+%
+One approach that is most related to our higher-order static regions
+is the function-level compositional approach called SMART proposed by
+Godefroid~\cite{Godefroid2007}.
+%
+Like \tool's function summaries, SMART summarizes the behavior of a
+function in isolation from its calling context so that the summary can
+be reused at points where the function is used.
+%
+But SMART uses single-path symbolic execution to compute its
+summaries, whereas \tool\ uses static analysis: this makes \tool's
+summary more compact at the expense of requiring more reasoning by the
+SMT solver.
+%
+Because SMART was implemented for C, it does not address dynamic
+dispatch between multiple call targets.
+
+
 % %Talk about other symbolic execution performance improvements.
 % %mentioned in Christopher Kruegel's ISSTA keynote talk as Static Analysis support
 % Other static analysis techniques also provide support for dynamic symbolic execution.
@@ -131,8 +156,8 @@ complex to be explored exhaustively.
 %
 %Other techniques for static analysis at the Java bytecode level can also benefit dynamic symbolic execution.
 %
-Finding which reflective method call is being used, or handling dynamic class loading are known problems for static analysis tools.
+%Finding which reflective method call is being used, or handling dynamic class loading are known problems for static analysis tools.
 %
-TamiFlex~\cite{tamiflex} provides an answer that is sound with respect to a set of previously seen program runs.
+%TamiFlex~\cite{tamiflex} provides an answer that is sound with respect to a set of previously seen program runs.
 %
-Integrating veritesting runs into similar problems, and using techniques from TamiFlex would allow static predicate construction beyond exit points caused by reflection or dynamic class loading. 
+%Integrating veritesting runs into similar problems, and using techniques from TamiFlex would allow static predicate construction beyond exit points caused by reflection or dynamic class loading. 
