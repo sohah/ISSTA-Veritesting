@@ -136,6 +136,7 @@ stmt ::= stmt ;
 \fi 
 
 \subsection{Region Definition}
+
 Once the statement of a Ranger region has been recovered, its corresponding environment is populated. This includes identifying region boundary and creating input, output, type and stack slot tables for the region.
 
 The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR. This is used later to constrain the computation and population of different environment tables. For example, input table is populated with first use in the region boundary that map to a given stack slot. The output table is populated with the last def, if a converging statement exits. Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{Wala} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. 

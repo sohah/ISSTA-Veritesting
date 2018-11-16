@@ -9,7 +9,9 @@
 %
 Symbolic execution is a popular analysis technique that performs non-standard execution of a program: data operations generate formulas over inputs, and  branch constraints along an execution path are combined into a predicate.
 %
-Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution is a convenient building block for program analysis, since arbitrary query predicates can be combined with the logical program representation, and solutions to these constraints are program inputs illustrating the queried behavior.
+Originally developed in the 1970s~\cite{King1976,Clarke1976}, symbolic execution is a convenient building block for
+program analysis, since arbitrary query predicates can be combined with the logical program representation, and
+solutions to these constraints are program inputs illustrating the queried behavior.
 %
 Some of the many application of symbolic execution include
 test generation~\cite{dart,cute}, equivalence checking~\cite{ramos,adaptorsynth}, vulnerability finding~\cite{driller,angr}, and protocol correctness checking~\cite{transport}.
@@ -53,7 +55,7 @@ This causes Java programs to make several calls to methods, such as getters and 
 of functionality.
 %
 Merging paths within regions in such Java programs using techniques described in current literature is limited by not having the ability
-to inline method summaries.
+to inline method summaries~\cite{sharma-veritesting}.
 %
 This is not an impediment for compiled C code, as the C compiler will usually automatically inline the code for short
 methods such as \texttt{get}.
@@ -84,7 +86,7 @@ For example, it can be in the form of a branch nested inside another branch that
 Summarizing such unexceptional behavior while simultaneously guiding the symbolic executor towards potential exceptional
 behavior increases the reduction in branching a symbolic executor has to perform.
 %
-We propose a technique named \textit{Single-Path Cases} for spliting a region summary into its exceptional and
+We propose a technique named \textit{Single-Path Cases} for splitting a region summary into its exceptional and
 unexceptional parts.
 
 While summarizing higher-order regions and finding single-path cases is useful to improve scalability,
@@ -94,7 +96,8 @@ provides a few key advantages.
 (1) It allows region summaries to be constructed by using a sequence of transformations, with each transformation
 extending to add support for new features such as heap accesses, higher-order regions, and single-path cases.
 %
-(2) It allows for simplifications such as constant propagation, copy propagation, constant folding to be performed on region summaries.
+(2) It allows for simplifications such as constant propagation, copy propagation, constant folding to be performed on
+region summaries.
 %
 (3) It makes the construction of region summaries more accessible to users of the symbolic execution tool, thereby making
 path merging more useful to end-users.\\
@@ -149,7 +152,7 @@ call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.
 The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
 also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
 %
-Our extension to path-merging includes using method summaries, either with a single return or no return, as part of region summaries that have method calls \footnote{Support of methods with multiple returns is a future work.}.
+Our extension to path-merging includes using method summaries, either with a single return or no return, as part of region summaries that have method calls \footnote{We plan to support methods with multiple returns in the future.}.
 %
 The method whose summary is to be included depends on the dynamic type of the object reference on which the method is being invoked.
 %
@@ -157,6 +160,7 @@ In our example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is
 %
 Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt ArrayList<E>.get(i)}.\\
 %
-Our extension to path-merging also allows the possibility of exceptional behavior being included in the summary and
-explored separately from unexceptional behavior by performing exploration of exceptional behavior in the region on its
-own execution path.
+Our \textit{Single-Path Cases} extension to path-merging also allows the possibility of exceptional behavior being
+included in the summary and explored separately from unexceptional behavior by performing exploration of exceptional
+behavior in the region on its own execution path.
+%

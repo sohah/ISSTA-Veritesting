@@ -66,8 +66,47 @@ slowed down the SMT solver enough that total performance was degraded.
 %
 We have also observed complex expressions to be a potential cost of
 veritesting, but we believe that optimizations of the SMT solver
-interface and potentially heuristics to choose when to use veritesting
-can allow it to be a net asset.
+interface and potentially heuristics to choose when to use static
+regions can allow them to be a net asset.
+
+The way that \tool\ and similar tools convert statically convert code
+regions into formulas is similar to techniques used in verification.
+%
+In the limit where all of the relevant code in a program can be
+summarized, such as with WBS and TCAS-SR in Section~\ref{sec:results},
+\tool\ performs similarly to a bounded symbolic model checker for
+Java.
+%
+SPF and \tool\ build on Java Pathfinder (JPF)~\cite{jpf}, which is
+widely used for explicit-state model checking of Java and provides
+core infrastructure for instrumentation and state backtracking.
+%
+Another family of Java analysis tools that use formula translation
+(also called verification condition generation) are
+ESC/Java~\cite{FlanaganLLNSS2002}, ESC/Java2~\cite{CokK2004}, and
+OpenJML~\cite{Cok2011}, though these tools target static error
+checking and verification of annotated specifications.
+
+Perhaps the most closely related Java model checking tool is
+JBMC~\cite{CordeiroKKST2018}, which has recently been built sharing
+infrastructure with the similar C tool CBMC.
+%
+JBMC performs symbolic bounded model checking of Java code,
+transforming code and a supported subset of the standard library into
+SMT or SAT formulas that represent all possible execution paths.
+%
+(The process by which JBMC transforms its internal code representation
+into SMT formulas is sometimes described as (static) symbolic
+execution, but it has more in common with how \tool\ constructs static
+regions than with the symbolic execution that vanilla SPF performs.)
+%
+In cases that \tool\ can completely summarize, we would expect its
+performance to be comparable to JBMC's; an experimental comparison is
+future work.
+%
+But static region summaries are more important as an optimization to
+speed up symbolic execution on software that is too large and/or
+complex to be explored exhaustively.
 
 % %Talk about other symbolic execution performance improvements.
 % %mentioned in Christopher Kruegel's ISSTA keynote talk as Static Analysis support
