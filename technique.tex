@@ -96,37 +96,61 @@ in Figure~\ref{fig:overview}.
 
 \subsection{Statement Recovery}
 \label{sec:static-analysis}
+
+The regions of interest for our technique are bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of loops is driven by conditional logic within the loop, rather than the loop itself.
+Starting from an SSA form, the first transformation recovers a tree-shaped AST for the subgraphs of interest.  While this step is not strictly necessary, it substantially simplifies subsequent transformations.  
+
+The algorithms are similar to those used for those used for decompilation~\cite{Yakdan15@decompilation} but with slightly different goals: 
+\begin{itemize}
+    \item The algorithm must be {\em accurate} but need not be {\em complete}.  That is, obfuscated regions of code need not be translated into a tree form.
+    \item The algorithm must be {\em lightweight} in order to be efficiently performed during analysis.  Thus, algorithms that use global fixpoint computations are 
+        too expensive to be used for our purposes.
+\end{itemize}
+
+Starting from an initial SSA node, the algorithm first finds the immediate post-dominator of all {\em normal} control paths, that is, paths that do not end in an exception or return instruction.  It then looks for nested self-contained subgraphs.  If for any graph, the post-dominator is also a predecessor of the node, we consider it a loop and discard the region.  
+
+The algorithm systematically attempts to build regions for every branch instruction, even if the branch is already contained within another region.  The reason is that it may not be possible to instantiate the larger region depending on whether summaries can be found for {\em dynamically-dispatched} functions, and whether references are {\em uniquely determinable} for region outputs.
+
+\iffalse
+\begin{verbatim}
+
+stmt ::= stmt ; 
+   
+
+\end{verbatim}
+
 \vaibhav{assigned to Mike}
 \mike{MWW: - we should provide an AST of the constraint language}
+\fi 
 
 \subsection{Region Definition}
-Once the statement of a Ranger region has been recovered, its corresponding environment is populated. 
+Once the statement of a Ranger region has been recovered, its corresponding environment is populated.
 %
 This includes identifying region boundary and creating input, output, type and stack slot tables for the region.\\
 %
-The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR. 
+The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR.
 %
-This is used later to constrain the computation and population of different environment tables. 
+This is used later to constrain the computation and population of different environment tables.
 %
 For example, input table is populated with first use in the region boundary that map to a given stack slot.
 %
-The output table is populated with the last def, if a converging statement exits. 
+The output table is populated with the last def, if a converging statement exits.
 %
 Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{} but later undergoes some changes during type propagation transformation~\ref{sec:typePropagation}. \vaibhav{@Vaibhav: type propagation is mentioned in the figure but has no reference later in the transformation or in its text.}  \\
 %
-The stack slot table on the other hand, does not use region boundary for its population. 
+The stack slot table on the other hand, does not use region boundary for its population.
 %
-The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables. 
-This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot. 
+The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables.
+This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot.
 %
-Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi. 
+Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi.
 %
-This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached. 
+This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached.
 %
 
 
 \subsection{Instantiation-time Transformations}
-\textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
+\textbf{Alpha Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place.
 %
 This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path, i.e., a region inside a loop will be instantiated multiple times.\\
 %
@@ -136,9 +160,9 @@ This is particularly important not only to ensure uniqueness of variables among 
 %
 It is initiated when a method invocation is encountered.\\
 %
-At that point, three things happen. 
+At that point, three things happen.
 %
-First, the region that corresponds to the called method, \textit{method region}, is retrieved and basic alpha renaming is applied on it. 
+First, the region that corresponds to the called method, \textit{method region}, is retrieved and basic alpha renaming is applied on it.
 %
 Second, Ranger IR expressions that correspond to the actual parameters are evaluated and used to substitute the formal parameters by repeatedly applying substitution transformation over the method region.
 %
@@ -146,9 +170,9 @@ Then finally, when no more high-order regions could be discovered, the resulting
 %
 If the method region has a single return value, then the original method invocation is replaced with an assignment to the returned expression.
 %
-Otherwise, inlining of the method region takes place. 
+Otherwise, inlining of the method region takes place.
 %
-The case where the method region has multiple returns, is currently not supported as candidate for high order region. 
+The case where the method region has multiple returns, is currently not supported as candidate for high order region.
 %
 It requires another transformation, we talk more about this in future work in section~\ref{sec:future}.
 \\
@@ -212,16 +236,16 @@ Such statements and expressions were simplified away to use one of their two cho
 %
 Ranger IR performs these two simplifications on such predicated statements and expressions along with constant folding,
 constant propagation, and copy propagation.\\
-\textbf{Single Path Cases}: This transformation collects path predicates inside the Ranger region that lead to \textit{non-nominal} exit point. 
+\textbf{Single Path Cases}: This transformation collects path predicates inside the Ranger region that lead to \textit{non-nominal} exit point.
 
 %
 This is an alternative approach to that was presented in \cite{veritesting}.
 %
 In our work we define non-nominal exit point to be points inside the region that either define exceptional behavior or requires more involvement with the dynamic symbolic execution engine, i.e, object creation and throw instructions.
 %
-The intuition here is that, we want to maximize regions that Ranger can summarize, even if the summarization is only partial. 
+The intuition here is that, we want to maximize regions that Ranger can summarize, even if the summarization is only partial.
 %
-We use this pass of transformation to identify such points, collect their path predicates and prune them away from the Ranger statement. 
+We use this pass of transformation to identify such points, collect their path predicates and prune them away from the Ranger statement.
 %
 The outcome of this process, is a more simplified and concise statement that represent the nominal behavior of the Ranger region.
 %
@@ -241,11 +265,11 @@ capture the semantics of everything happening on both sides of the branch.
 Since the linearization transformation is done after every field and array entry has been unaliased and converted to
 GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
 semantics and converts it into a stream of GSA and SSA statements.\\
-\textbf{Translation to Green}: 
+\textbf{Translation to Green}:
 %
 At this point Ranger region contains only compositional statements as well as assignment statements that might contain GSA expressions in them.
 %
-This transformation starts off by translating Ranger variables to Green variables of the right type using the region type table. 
+This transformation starts off by translating Ranger variables to Green variables of the right type using the region type table.
 %
 Then Ranger statements are translated. More precisely, compositional statements are translated into conjunction, assignment statements are translated into Green equality expressions.
 %
