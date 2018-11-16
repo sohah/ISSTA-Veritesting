@@ -1,41 +1,73 @@
 \section{Related Work}
 \vaibhav{in progress}
 
-%Talk about veritesting in Mayhem, Angr.
+Path explosion is a major cause of scalability limitations for
+symbolic execution, so an appealing direction for optimization is to
+combine the representations of similar execution paths, which we refer
+to generically as {\em path merging.}
 %
-The original idea for veritesting was presented by Avgerinos et al.~\cite{veritesting}.
+If a symbolic execution tool already concurrently maintains objects
+representing multiple execution states, a natural approach is to merge
+these states, especially ones with the same control-flow location.
 %
-They implemented veritesting on top of MAYHEM~\cite{mayhem}, a system for finding bugs at the X86 binary level which uses symbolic execution.
+Hansen et al.~\cite{HansenSS2009} explored this technique but found
+mixed results on its benefits.
 %
-Their implementation demonstrated dramatic performance improvements and allowed them to find more bugs, and have better node and path coverage.
+Kuznetsov et al.~\cite{kuznetsov} developed new algorithms and
+heuristics to control when to perform such state merging profitably.
 %
-Veritesting has also been integrated with another binary level symbolic execution engine named {\tt angr}~\cite{angr}.
+A larger departure in the architecture of symbolic execution systems
+is the MultiSE approach proposed by Sen et al.~\cite{multise}, which
+represents values including the program counter with a two-level
+guarded structure, in which the guard expressions are optimized with
+BDDs.
 %
-Veritesting was added to {\tt angr} with similar goals of statically and selectively merging paths to mitigate path explosion.
+The MultiSE approach achieves effects similar to state merging
+automatically, and provides some architectural advantages such as in
+representing values that are not supported by the SMT solver.
+
+Another approach to achieve path merging is to statically summarize
+regions that contain branching control flow.
 %
-However, path merging from veritesting integration with {\tt angr} caused complex expressions to be introduced which overloaded the constraint solver.
+This approach was proposed by Avgerinos et al.~\cite{veritesting} and
+dubbed ``veritesting'' because it pushes symbolic execution further
+along a continuum towards all-paths techniques used in verification.
 %
-Using the Green~\cite{green} solver may alleviate such problems when implementing veritesting with SPF.
+A veritesting-style technique is a convenient way to add path merging
+to a symbolic execution system that maintains only one execution
+state, which is one reason we chose it for use in SPF.
 %
-Another technique named \textit{MultiSE} for merging symbolic execution states incrementally
-was proposed by Sen et al.~\cite{multise}.
+Avgerinos et al. designed and implemented their veritesting system
+MergePoint for the application of binary-level symbolic execution for
+bug finding.
 %
-MultiSE computes a set of guarded symbolic expressions for every
-assignment and does not require identification of points where
-previously forked dynamic symbolic executors need to be merged.
+They found that veritesting provided a dramatic performance
+improvement, allowing their system to find more bugs and have better
+node and path coverage in a given exploration time.
 %
-MultiSE complements predicate construction for multi-path regions beyond
-standard exit points~(such as
-\textit{invokevirtual},~\textit{invokeinterface},~\textit{return}
-statements).
+The static regions used by MergePoint are intra-procedural, but they
+can have any number of ``transition points'' at which control can be
+returned to regular symbolic execution.
 %
-Combining both techniques, while a substantial implementation effort, has the potential
-to amplify the benefits from both techniques.
-%This observation became even more apparent for longer paths.
+Avgerinos et al. do not provide details about how MergePoint
+represents memory accesses or integrates them with veritesting, though
+since MergePoint was built as an extension of the same authors' Mayhem
+system, it may reuse techniques such as symbolic representation of
+loads from bounded memory regions~\cite{mayhem}.
+
+The veritesting approach has been integrated with another binary level
+symbolic execution engine named {\tt angr}~\cite{angr}.
 %
-%Integrating veritesting with SPF may expose a similar trade-off.
+However angr's authors found that their veritesting implementation did
+not provide an overall improvement over their dynamic symbolic
+execution baseline: though veritesting allowed some new crashes to be
+found, they observed that giving more complex symbolic expressions
+slowed down the SMT solver enough that total performance was degraded.
 %
-%But we expect this problem to be less severe for when doing static symbolic execution of Java bytecode because Java bytecode instructions have fewer behaviors to be statically analyzed than X86 architecture instructions.
+We have also observed complex expressions to be a potential cost of
+veritesting, but we believe that optimizations of the SMT solver
+interface and potentially heuristics to choose when to use veritesting
+can allow it to be a net asset.
 
 % %Talk about other symbolic execution performance improvements.
 % %mentioned in Christopher Kruegel's ISSTA keynote talk as Static Analysis support
