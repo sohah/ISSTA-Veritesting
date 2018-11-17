@@ -1,6 +1,7 @@
 % Please add the following required packages to your document preamble:
 % \usepackage{booktabs}
-\begin{table}[]
+\begin{table*}[]
+    \centering
     \begin{tabular}{@{}ccccccccc@{}}
         \toprule
         \begin{tabular}[c]{@{}c@{}}Bench\\ mark\\ Name\end{tabular} & \begin{tabular}[c]{@{}c@{}}Java\\ Ranger\\ mode\end{tabular} & \begin{tabular}[c]{@{}c@{}}\# \\ exec\\ paths\end{tabular} & \begin{tabular}[c]{@{}c@{}}run\\ time\\ (msec)\end{tabular} & \begin{tabular}[c]{@{}c@{}}\# \\ solver\\ queries\end{tabular} & \begin{tabular}[c]{@{}c@{}}solver\\ time\\ (msec)\end{tabular} & \begin{tabular}[c]{@{}c@{}}\# \\ inst.\\ regs\end{tabular} & \begin{tabular}[c]{@{}c@{}}\# \\ inst.\\ methods\end{tabular} & \# inst. \\ \midrule
@@ -37,4 +38,4 @@
     \end{tabular}
     \caption{Java Ranger Performance on WBS, TCAS, TCAS-SR, and Replace}
     \label{table:results}
-\end{table}
+\end{table*}
