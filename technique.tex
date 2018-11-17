@@ -1,7 +1,7 @@
 \section{Technique}
 %
 To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
-path and we also pre-compute method summaries.\\
+path and we also pre-compute method summaries.
 %
 To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
 %
@@ -12,10 +12,10 @@ such that every class in $C'$ has at least one method that was called by a metho
 %
 This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
 %
-We continue this method discovery process up to a call depth of 2.\\
+We continue this method discovery process up to a call depth of 2.
 %
 While we can increase the call depth in our method discovery process, we found that summarizing
-arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.\\
+arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.
 %
 After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
 explained in Section \ref{sec:static-analysis}.
@@ -137,11 +137,48 @@ stmt ::= stmt ;
 
 \subsection{Region Definition}
 
-Once the statement of a Ranger region has been recovered, its corresponding environment is populated. This includes identifying region boundary and creating input, output, type and stack slot tables for the region.
+Once the statement of a multi-path region has been recovered, its corresponding environment is populated.
+%
+This includes identifying region boundary and creating local variable inputs, outputs, type, and stack slot tables for
+the region.
+%
+The region boundary is used to identify boundaries of the region w.r.t local variables.
+%
+This is used later to constrain the computation and population of Ranger IR environment tables.
+%
+For example, the local variable input table is populated with first \textit{use} in the region boundary that map to a given stack slot.
+%
+The output table is populated with the last \textit{def} of a local variable at merge point of the region.
+%
+The local variable type table is populated for all variables that lay within the boundaries of the region, this is initially done by
+inquiring the static analysis framework, WALA~\cite{Wala} but is later changed by inferring types of local variables
+at instantiation and during type propagation transformation~\ref{sec:instantiationTransformations}.
 
-The region boundary is used to identify boundaries of the region as opposed to exploring the whole IR. This is used later to constrain the computation and population of different environment tables. For example, input table is populated with first use in the region boundary that map to a given stack slot. The output table is populated with the last def, if a converging statement exits. Type table is populated for all variables that lay within the boundaries of the region, this is initially done by inquiring the static analysis framework, WALA~\cite{Wala} but later undergoes some changes during type propagation transformation~\ref{sec:instantiationTransformations}. 
+We also construct a stack slot table as part of a region\rq s Ranger IR summary.
+%
+The stack slot table maps Ranger IR variables to a stack slot, if they correspond to a local variable in the source code.
+%
+We populate the stack slot table by obtaining a variable to stack slot mapping from WALA.
+%
+We also assume that, if at least one variable used in a $\phi$-expression is a local variable, then all variables
+used in that $\phi$-expression must belong to the same stack slot.
+%
+We use this assumption to further propagate stack slot information in the stack slot table across all $\phi$-expressions
+encountered at merge points of regions.
 
-The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that, the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate variables. This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic representation onto the stack slot. Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the def of the phi. This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is repeatedly done until a fix point is reached.
+%The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
+%the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
+%variables.
+%%
+%This is particularly problematic in our case because the def of a phi is both an intermediate variable, and so we do
+%not know its stack slot, yet it is also an output of the region for which we want to populate its symbolic
+%representation onto the stack slot.
+%%
+%Therefore, our stack slot table uses stack slot inference by propagating the stack slots of vars used in a phi onto the
+%def of the phi.
+%%
+%This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is
+%repeatedly done until a fix point is reached.
 
 
 \subsection{Instantiation-time Transformations}

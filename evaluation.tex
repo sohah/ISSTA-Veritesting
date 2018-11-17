@@ -28,7 +28,7 @@ Our implementation, named Java Ranger, wraps around SPF and can be configured to
 (4) In mode 4, it uses single-path cases along with multi-path region and method summaries used in mode 3.
 %
 \subsection{Evaluation}
-\input{static-analysis-results}
+%\input{static-analysis-results}
 \input{results-big-table}
 %
 In order to evaluate the performance of Java Ranger, we used the following benchmarking programs commonly used to evaluate symbolic
@@ -54,19 +54,20 @@ We refer to this variant of TCAS as TCAS-SR (TCAS with Single Returns).
 We also created variants of WBS, TCAS, and TCAS-SR by running them for multiple steps.
 %
 
-We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger and first report the result of static analysis on these
-three benchmarks in Table~\ref{table:static-analysis}.
+%We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger and first report the result of static analysis on these
+%three benchmarks in Table~\ref{table:static-analysis}.
 %
-The number of static regions summarized for WBS and TCAS is dominated by region summaries found in the Java standard
-library used by WBS and TCAS.
-%
-Replace doesn't use the Java standard library, which is reflect in Table~\ref{table:static-analysis}.
-%
-We also report the most number of branches seen in our static regions with each benchmark.
-%
-Being able to instantiate static summaries of such regions potentially increases the path reduction we get from path-merging.
+%The number of static regions summarized for WBS and TCAS is dominated by region summaries found in the Java standard
+%library used by WBS and TCAS.
+%%
+%Replace doesn't use the Java standard library, which is reflect in Table~\ref{table:static-analysis}.
+%%
+%We also report the most number of branches seen in our static regions with each benchmark.
+%%
+%Being able to instantiate static summaries of such regions potentially increases the path reduction we get from path-merging.
 
-We present our results from instantiating region summaries in Table~\ref{table:results}.
+We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger and present our results from instantiating region summaries
+in Table~\ref{table:results}.
 %
 Table~\ref{table:results} shows that Java Ranger achieves a significant improvement using path-merging with WBS.
 %
