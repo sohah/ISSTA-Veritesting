@@ -1,0 +1,775 @@
+---------- STARTING Transformations for conditional region: VeritestingPerf.countBs(I)I#80
+w28 := (% w43 2 ); 
+if ((! (!= w28 0 ) )) {
+   30 = invokeinterface < Application, Ljava/util/List, get(I)Ljava/lang/Object; > 5,43 @86 exception:29
+   31 = checkcast <Application,Ljava/lang/Integer>30 <Application,Ljava/lang/Integer>
+   33 = invokevirtual < Application, Ljava/lang/Integer, intValue()I > 31 @94 exception:32
+   if ((! (!= w33 42 ) )) {
+      w35 := (+ w42 1 ); 
+   } else {
+      skip; 
+   }
+} else {
+   skip; 
+}
+w36 := (Gamma !(w28!=0) (Gamma !(w33!=42) w35 w42) w42); 
+
+
+
+Region Stack Slot Map (var -> slot)
+@w25 --------- [4]
+@w5 --------- [3]
+@w24 --------- [4]
+@w43 --------- [5]
+@w42 --------- [4]
+@w36 --------- [4]
+@w41 --------- [5]
+@w35 --------- [4]
+
+printing Region Input Table (var->slot)
+@w43 --------- 5
+@w5 --------- 3
+@w42 --------- 4
+
+printing Region Output Table (slot->var)
+4 --------- @w36
+
+printing WalaVarTypeTable ( var ->type)
+@w5 --------- java.util.ArrayList
+@w25 --------- int
+@w8 --------- java.lang.StringBuilder
+@w10 --------- java.lang.String
+@w12 --------- java.lang.StringBuilder
+@w14 --------- java.lang.StringBuilder
+@w16 --------- java.lang.String
+@w18 --------- int
+@w20 --------- java.lang.Integer
+@w22 --------- boolean
+@w23 --------- int
+@w24 --------- int
+@w27 --------- int
+@w43 --------- int
+@w28 --------- int
+@w7 --------- int
+@w30 --------- java.lang.Object
+@w31 --------- java.lang.Integer
+@w33 --------- int
+@w34 --------- int
+@w42 --------- int
+@w35 --------- int
+@w36 --------- int
+@w37 --------- int
+@w38 --------- java.lang.Object
+@w39 --------- java.lang.String
+@w41 --------- int
+
+--------------- UNIQUENESS TRANSFORMATION ---------------
+w28$23 := (% w43$23 2 ); 
+if ((! (!= w28$23 0 ) )) {
+   
+[w30$23] = invoke [w5$23, w43$23]
+   
+w31$23 = checkCast(w30$23,[<Application,Ljava/lang/Integer>])
+   
+[w33$23] = invoke [w31$23]
+   if ((! (!= w33$23 42 ) )) {
+      w35$23 := (+ w42$23 1 ); 
+   } else {
+      skip; 
+   }
+} else {
+   skip; 
+}
+w36$23 := (Gamma !(w28$23!=0) (Gamma !(w33$23!=42) w35$23 w42$23) w42$23); 
+
+
+printing stack-slot table (var->slot)
+w5$23 --------- [3]
+w24$23 --------- [4]
+w25$23 --------- [4]
+w35$23 --------- [4]
+w36$23 --------- [4]
+w41$23 --------- [5]
+w42$23 --------- [4]
+w43$23 --------- [5]
+
+printing Region Input Table (var->slot)
+w5$23 --------- 3
+w42$23 --------- 4
+w43$23 --------- 5
+
+printing WalaVarTypeTable ( var ->type)
+w5$23 --------- java.util.ArrayList
+w7$23 --------- int
+w8$23 --------- java.lang.StringBuilder
+w10$23 --------- java.lang.String
+w12$23 --------- java.lang.StringBuilder
+w14$23 --------- java.lang.StringBuilder
+w16$23 --------- java.lang.String
+w18$23 --------- int
+w20$23 --------- java.lang.Integer
+w22$23 --------- boolean
+w23$23 --------- int
+w24$23 --------- int
+w25$23 --------- int
+w27$23 --------- int
+w28$23 --------- int
+w30$23 --------- java.lang.Object
+w31$23 --------- java.lang.Integer
+w33$23 --------- int
+w34$23 --------- int
+w35$23 --------- int
+w36$23 --------- int
+w37$23 --------- int
+w38$23 --------- java.lang.Object
+w39$23 --------- java.lang.String
+w41$23 --------- int
+w42$23 --------- int
+w43$23 --------- int
+
+printing Region Output Table (slot->var)
+4 --------- w36$23
+constant type not supported for @w10
+constant type not supported for @w39
+
+********** High Order Region Discovered for region: java.util.ArrayList.get(I)Ljava/lang/Object;
+
+
+---------- STARTING Inlining Transformation for region: ---------------
+
+[] = invoke [w1, w2]
+
+[w6] = invoke [w1, w2]
+
+ return w6
+
+
+
+--------------- UNIQUENESS TRANSFORMATION ---------------
+
+[] = invoke [w1$24, w2$24]
+
+[w6$24] = invoke [w1$24, w2$24]
+
+ return w6$24
+
+
+printing stack-slot table (var->param)
+w1$24 --------- [0]
+w2$24 --------- [1]
+
+printing Region Input Table (var->param)
+w1$24 --------- 0
+w2$24 --------- 1
+
+printing WalaVarTypeTable ( var ->type)
+w1$24 --------- java.util.ArrayList
+w2$24 --------- int
+w6$24 --------- java.lang.Object
+
+printing Region Output Table (return->var)
+
+********** High Order Region Discovered for region: java.util.ArrayList.rangeCheck(I)V
+
+
+---------- STARTING Inlining Transformation for region: ---------------
+
+w4 = get(w1.< Primordial, Ljava/util/ArrayList, size, <Primordial,I> >)
+if ((! (< w2 w4 ) )) {
+   new Instruction
+   
+[w7] = invoke [w1, w2]
+   
+[] = invoke [w5, w7]
+   Throw Instruction
+} else {
+   skip; 
+}
+
+ return w-1
+
+
+
+--------------- UNIQUENESS TRANSFORMATION ---------------
+
+w4$25 = get(w1$25.< Primordial, Ljava/util/ArrayList, size, <Primordial,I> >)
+if ((! (< w2$25 w4$25 ) )) {
+   new Instruction
+   
+[w7$25] = invoke [w1$25, w2$25]
+   
+[] = invoke [w5$25, w7$25]
+   Throw Instruction
+} else {
+   skip; 
+}
+
+ return w-1$25
+
+
+printing stack-slot table (var->param)
+w1$25 --------- [0]
+w2$25 --------- [1]
+
+printing Region Input Table (var->param)
+w1$25 --------- 0
+w2$25 --------- 1
+
+printing WalaVarTypeTable ( var ->type)
+w1$25 --------- java.util.ArrayList
+w2$25 --------- int
+w4$25 --------- int
+w5$25 --------- java.lang.IndexOutOfBoundsException
+w7$25 --------- java.lang.String
+
+printing Region Output Table (return->var)
+
+********** High Order Region Discovered for region: java.util.ArrayList.elementData(I)Ljava/lang/Object;
+
+
+---------- STARTING Inlining Transformation for region: ---------------
+
+w4 = get(w1.< Primordial, Ljava/util/ArrayList, elementData, <Primordial,[Ljava/lang/Object> >)
+w5 = w4[w2:<Primordial,Ljava/lang/Object>]
+
+ return w5
+
+
+
+--------------- UNIQUENESS TRANSFORMATION ---------------
+
+w4$26 = get(w1$26.< Primordial, Ljava/util/ArrayList, elementData, <Primordial,[Ljava/lang/Object> >)
+w5$26 = w4$26[w2$26:<Primordial,Ljava/lang/Object>]
+
+ return w5$26
+
+
+printing stack-slot table (var->param)
+w1$26 --------- [0]
+w2$26 --------- [1]
+
+printing Region Input Table (var->param)
+w1$26 --------- 0
+w2$26 --------- 1
+
+printing WalaVarTypeTable ( var ->type)
+w1$26 --------- java.util.ArrayList
+w2$26 --------- int
+w4$26 --------- java.lang.Object
+w5$26 --------- java.lang.Object
+
+printing Region Output Table (return->var)
+
+********** High Order Region Discovered for region: java.lang.Integer.intValue()I
+
+
+---------- STARTING Inlining Transformation for region: ---------------
+
+w3 = get(w1.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+
+ return w3
+
+
+
+--------------- UNIQUENESS TRANSFORMATION ---------------
+
+w3$27 = get(w1$27.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+
+ return w3$27
+
+
+printing stack-slot table (var->param)
+w1$27 --------- [0]
+
+printing Region Input Table (var->param)
+w1$27 --------- 0
+
+printing WalaVarTypeTable ( var ->type)
+w1$27 --------- java.lang.Integer
+w3$27 --------- int
+
+printing Region Output Table (return->var)
+
+--------------- SUBSTITUTION TRANSFORMATION ---------------
+
+w28$23 := (% w43$23 2 ); 
+if ((! (!= w28$23 0 ) )) {
+   
+[w30$23] = invoke [w5$23, w43$23]
+   
+w31$23 = checkCast(w30$23,[<Application,Ljava/lang/Integer>])
+   
+[w33$23] = invoke [w31$23]
+   if ((! (!= w33$23 42 ) )) {
+      w35$23 := (+ w42$23 1 ); 
+   } else {
+      skip; 
+   }
+} else {
+   skip; 
+}
+w36$23 := (Gamma !(w28$23!=0) (Gamma !(w33$23!=42) w35$23 w42$23) w42$23); 
+
+
+printing stack-slot table (var->slot)
+w5$23 --------- [3]
+w24$23 --------- [4]
+w25$23 --------- [4]
+w35$23 --------- [4]
+w36$23 --------- [4]
+w41$23 --------- [5]
+w42$23 --------- [4]
+w43$23 --------- [5]
+
+printing Region Output Table (slot->var)
+4 --------- w36$23
+
+printing WalaVarTypeTable ( var ->type)
+w5$23 --------- Ljava/util/ArrayList;
+w7$23 --------- int
+w8$23 --------- java.lang.StringBuilder
+w10$23 --------- java.lang.String
+w12$23 --------- java.lang.StringBuilder
+w14$23 --------- java.lang.StringBuilder
+w16$23 --------- java.lang.String
+w18$23 --------- int
+w20$23 --------- java.lang.Integer
+w22$23 --------- boolean
+w23$23 --------- int
+w24$23 --------- int
+w25$23 --------- int
+w27$23 --------- int
+w28$23 --------- int
+w30$23 --------- java.lang.Object
+w31$23 --------- java.lang.Integer
+w33$23 --------- int
+w34$23 --------- int
+w35$23 --------- int
+w36$23 --------- int
+w37$23 --------- int
+w38$23 --------- java.lang.Object
+w39$23 --------- java.lang.String
+w41$23 --------- int
+w42$23 --------- int
+w43$23 --------- int
+w1$24 --------- java.util.ArrayList
+w2$24 --------- int
+w6$24 --------- java.lang.Object
+w1$25 --------- java.util.ArrayList
+w2$25 --------- int
+w4$25 --------- int
+w5$25 --------- java.lang.IndexOutOfBoundsException
+w7$25 --------- java.lang.String
+w1$26 --------- java.util.ArrayList
+w2$26 --------- int
+w4$26 --------- java.lang.Object
+w5$26 --------- java.lang.Object
+w1$27 --------- java.lang.Integer
+w3$27 --------- int
+
+--------------- AFTER SUBSTITUTION TRANSFORMATION ---------------
+
+w28$23 := (% 0 2 ); 
+if ((! (!= w28$23 0 ) )) {
+   
+w4$25 = get(374.< Primordial, Ljava/util/ArrayList, size, <Primordial,I> >)
+   if ((! (< 0 w4$25 ) )) {
+      new Instruction
+      
+[w7$25] = invoke [374, 0]
+      
+[] = invoke [w5$25, w7$25]
+      Throw Instruction
+   } else {
+      skip; 
+   }
+   skip; 
+   
+w4$26 = get(374.< Primordial, Ljava/util/ArrayList, elementData, <Primordial,[Ljava/lang/Object> >)
+   w5$26 = w4$26[0:<Primordial,Ljava/lang/Object>]
+   skip; 
+   w6$24 := w5$26; 
+   skip; 
+   w30$23 := w6$24; 
+   
+w31$23 = checkCast(w30$23,[<Application,Ljava/lang/Integer>])
+   
+w3$27 = get(w31$23.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+   skip; 
+   w33$23 := w3$27; 
+   if ((! (!= w33$23 42 ) )) {
+      w35$23 := (+ 0 1 ); 
+   } else {
+      skip; 
+   }
+} else {
+   skip; 
+}
+w36$23 := (Gamma !(w28$23!=0) (Gamma !(w33$23!=42) w35$23 0) 0); 
+
+
+printing stack-slot table (var->slot)
+w5$23 --------- [3]
+w24$23 --------- [4]
+w25$23 --------- [4]
+w35$23 --------- [4]
+w36$23 --------- [4]
+w41$23 --------- [5]
+w42$23 --------- [4]
+w43$23 --------- [5]
+
+printing Region Output Table (slot->var)
+4 --------- w36$23
+
+printing WalaVarTypeTable ( var ->type)
+w5$23 --------- Ljava/util/ArrayList;
+w7$23 --------- int
+w8$23 --------- java.lang.StringBuilder
+w10$23 --------- java.lang.String
+w12$23 --------- java.lang.StringBuilder
+w14$23 --------- java.lang.StringBuilder
+w16$23 --------- java.lang.String
+w18$23 --------- int
+w20$23 --------- java.lang.Integer
+w22$23 --------- boolean
+w23$23 --------- int
+w24$23 --------- int
+w25$23 --------- int
+w27$23 --------- int
+w28$23 --------- int
+w30$23 --------- java.lang.Object
+w31$23 --------- java.lang.Integer
+w33$23 --------- int
+w34$23 --------- int
+w35$23 --------- int
+w36$23 --------- int
+w37$23 --------- int
+w38$23 --------- java.lang.Object
+w39$23 --------- java.lang.String
+w41$23 --------- int
+w42$23 --------- int
+w43$23 --------- int
+w1$24 --------- java.util.ArrayList
+w2$24 --------- int
+w6$24 --------- java.lang.Object
+w1$25 --------- java.util.ArrayList
+w2$25 --------- int
+w4$25 --------- int
+w5$25 --------- java.lang.IndexOutOfBoundsException
+w7$25 --------- java.lang.String
+w1$26 --------- java.util.ArrayList
+w2$26 --------- int
+w4$26 --------- java.lang.Object
+w5$26 --------- java.lang.Object
+w1$27 --------- java.lang.Integer
+w3$27 --------- int
+
+--------------- FIELD REFERENCE TRANSFORMATION ---------------
+
+
+--------------- ARRAY TRANSFORMATION ---------------
+
+w28$23 := (% 0 2 ); 
+if ((! (!= w28$23 0 ) )) {
+   w4$25 := 2; 
+   if ((! (< 0 w4$25 ) )) {
+      new Instruction
+      
+[w7$25] = invoke [374, 0]
+      
+[] = invoke [w5$25, w7$25]
+      Throw Instruction
+   } else {
+      skip; 
+   }
+   skip; 
+   w4$26 := 375; 
+   w5$26 = w4$26[0:<Primordial,Ljava/lang/Object>]
+   skip; 
+   w6$24 := w5$26; 
+   skip; 
+   w30$23 := w6$24; 
+   
+w31$23 = checkCast(w30$23,[<Application,Ljava/lang/Integer>])
+   
+w3$27 = get(w31$23.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+   skip; 
+   w33$23 := w3$27; 
+   if ((! (!= w33$23 42 ) )) {
+      w35$23 := (+ 0 1 ); 
+   } else {
+      skip; 
+   }
+} else {
+   skip; 
+}
+w36$23 := (Gamma !(w28$23!=0) (Gamma !(w33$23!=42) w35$23 0) 0); 
+
+Array Outputs Table
+
+
+--------------- AFTER SIMPLIFICATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+w5$26 = 375[0:<Primordial,Ljava/lang/Object>]
+skip; 
+skip; 
+skip; 
+skip; 
+w31$23 := w5$26; 
+
+w3$27 = get(w5$26.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+skip; 
+skip; 
+if ((== w3$27 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma w3$27==42 1 0); 
+
+Constants Table:
+w28$23: 0
+w4$25: 2
+w4$26: 375
+w6$24: w5$26
+w30$23: w5$26
+w31$23: w5$26
+w33$23: w3$27
+w35$23: 1
+
+--------------- FIELD REFERENCE TRANSFORMATION ---------------
+
+
+--------------- ARRAY TRANSFORMATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+if ((&& (< 0 2 ) (>= 0 0 ) )) {
+   w5$26 := 391; 
+} else {
+   Throw Instruction
+}
+skip; 
+skip; 
+skip; 
+skip; 
+w31$23 := w5$26; 
+
+w3$27 = get(w5$26.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+skip; 
+skip; 
+if ((== w3$27 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma w3$27==42 1 0); 
+
+Array Outputs Table
+for array reference: 375, expressions = 
+0: 391
+1: 396
+
+
+--------------- AFTER SIMPLIFICATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+
+w3$27 = get(391.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
+skip; 
+skip; 
+if ((== w3$27 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma w3$27==42 1 0); 
+
+Constants Table:
+w28$23: 0
+w4$25: 2
+w4$26: 375
+w6$24: w5$26
+w30$23: w5$26
+w31$23: 391
+w33$23: w3$27
+w35$23: 1
+w5$26: 391
+
+--------------- FIELD REFERENCE TRANSFORMATION ---------------
+
+
+--------------- ARRAY TRANSFORMATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+w3$27 := c0; 
+skip; 
+skip; 
+if ((== w3$27 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma w3$27==42 1 0); 
+
+Array Outputs Table
+for array reference: 375, expressions = 
+0: 391
+1: 396
+
+
+--------------- AFTER SIMPLIFICATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+if ((== c0 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma c0==42 1 0); 
+
+Constants Table:
+w28$23: 0
+w4$25: 2
+w4$26: 375
+w6$24: w5$26
+w30$23: w5$26
+w31$23: 391
+w33$23: w3$27
+w35$23: 1
+w5$26: 391
+w3$27: c0
+
+--------------- FIELD REFERENCE TRANSFORMATION ---------------
+
+
+--------------- ARRAY TRANSFORMATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+if ((== c0 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma c0==42 1 0); 
+
+Array Outputs Table
+for array reference: 375, expressions = 
+0: 391
+1: 396
+
+
+--------------- AFTER SIMPLIFICATION ---------------
+
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+if ((== c0 42 )) {
+   skip; 
+} else {
+   skip; 
+}
+w36$23 := (Gamma c0==42 1 0); 
+
+Constants Table:
+w28$23: 0
+w4$25: 2
+w4$26: 375
+w6$24: w5$26
+w30$23: w5$26
+w31$23: 391
+w33$23: w3$27
+w35$23: 1
+w5$26: 391
+w3$27: c0
+
+--------------- LINEARIZATION TRANSFORMATION ---------------
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+skip; 
+w36$23 := (Gamma c0==42 1 0); 
+
+
+--------------- NO-SKIP OPTIMIZATION ---------------
+w36$23 := (Gamma c0==42 1 0); 
+
+------------- Region was successfully veritested --------------- 
+
