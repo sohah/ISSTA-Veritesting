@@ -12,10 +12,8 @@ Java Ranger has its own IR statement and it supports the construction of SSA for
 Java Ranger provides evidence that inlining summaries of higher-order regions can lead to a further reduction in the
 number of execution paths that need to be explored with path merging.
 %
-It supports the exploration of exceptional behavior in multi-path regions via Single Path Cases.
-%
-It provides an alternative method using which a symbolic executor can summarize unexceptional behavior of a multi-path
-region while simultaneously capturing exceptional behavior in the region.
+It supports the exploration of exceptional behavior in multi-path regions via Single Path Cases which is an alternative
+technique for summarizing unexceptional behavior while simultaneously capturing exceptional behavior of a region.
 %
 Java Ranger reinterprets path merging for symbolic execution of Java bytecode and has the potential to allow symbolic
 execution to scale up to exploration of real-world Java programs.

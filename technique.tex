@@ -330,7 +330,14 @@ This transformation starts off by translating Ranger variables to Green variable
 %
 Then Ranger statements are translated. More precisely, compositional statements are translated into conjunction, assignment statements are translated into Green equality expressions.
 %
-For assignment statements that have GSA expressions, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied. 
+For assignment statements that have GSA expressions, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied.
+
+The sequence in which these Ranger IR transformations are performed should not matter.
+%
+This sequence of transformations should be run up to a fixed point so that we can have resolve local
+variable, field, and array inputs in an arbitrary order, as was seen with the motivating example described in Figure~\ref{fig:mot-example}.
+%
+Currently Java Ranger does not support such a fixed point computation, but we plan to automate this computation in the future.
 
 \subsection{Checking Correctness Of Region Summaries}
 The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
