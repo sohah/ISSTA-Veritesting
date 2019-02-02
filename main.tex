@@ -1,4 +1,5 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[sigconf,review, anonymous]{acmart}
+\acmConference[ESEC/FSE 2019]{The 27th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering}{26--30 August, 2019}{Tallinn, Estonia}
 
 \usepackage{booktabs} % For formal tables
 \usepackage{listings}
@@ -46,60 +47,45 @@
 \newcommand{\toolfull}{Java Ranger}
 
 \title{\tool: Static Regions for Efficient Symbolic Execution of Java}
-%\author{\IEEEauthorblockN{Vaibhav Sharma}
-%\IEEEauthorblockA{Department of Computer Science and\\Engineering\\
-%University of Minnesota\\
-%Minneapolis, MN 55455\\
-%vaibhav@umn.edu}
-%\and
-%\IEEEauthorblockN{Soha Hussein}
-%\IEEEauthorblockA{Department of Computer Science and\\Engineering\\
-%University of Minnesota\\
-%Minneapolis, MN 55455\\
-%husse200@umn.edu}
-%\and
-%\IEEEauthorblockN{Michael W. Whalen}
-%\IEEEauthorblockA{Amazon Web Services\\
-%mww@amazon.com}
-%\and
-%\IEEEauthorblockN{Stephen McCamant}
-%\IEEEauthorblockA{Department of Computer Science and\\Engineering\\
-%University of Minnesota\\
-%Minneapolis, MN 55455\\
-%mccamant@cs.umn.edu}
-%\and
-%\IEEEauthorblockN{Willem Visser}
-%\IEEEauthorblockA{Computer Science Division\\
-%University of Stellenbosch\\
-%Stellenbosch, South Africa\\
-%wvisser@cs.sun.ac.za}
-%}
 
-%\author{
-%\IEEEauthorblockN{{\bf Vaibhav Sharma}\IEEEauthorrefmark{1}\\ \tt\footnotesize vaibhav@umn.edu} \and
-%\IEEEauthorblockN{{\bf Soha Hussein}\IEEEauthorrefmark{1}\\ \tt\footnotesize husse200@umn.edu} \and
-%\IEEEauthorblockN{{\bf Michael W. Whalen}\IEEEauthorrefmark{2}\\ \tt\footnotesize mww@amazon.com} \and
-%\IEEEauthorblockN{{\bf Stephen McCamant}\IEEEauthorrefmark{1}\\ \tt\footnotesize mccamant@cs.umn.edu} \and
-%\IEEEauthorblockN{{\bf Willem Visser}\IEEEauthorrefmark{3}\\ \tt\footnotesize wvisser@cs.sun.ac.za} \and
-%\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science and Engineering,  University of Minnesota, Minneapolis, MN 55455}
-%\IEEEauthorblockA{\IEEEauthorrefmark{2}Amazon Web Services}
-%\IEEEauthorblockA{\IEEEauthorrefmark{3}University of Stellenbosch, Stellenbosch, South Africa}
-%}
-
-\author{\IEEEauthorblockN{Vaibhav Sharma\IEEEauthorrefmark{1},
-Soha Hussein\IEEEauthorrefmark{1},
-Michael W. Whalen\IEEEauthorrefmark{2},
-Stephen McCamant\IEEEauthorrefmark{1} and
-Willem Visser\IEEEauthorrefmark{3}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science and Engineering,  University of Minnesota, Minneapolis, MN 55455\\
-Email: \{vaibhav, husse200, smccaman\}@umn.edu}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}Amazon Web Services,\\
-Email: mww@amazon.com}
-\IEEEauthorblockA{\IEEEauthorrefmark{3}Computer Science Division,
-University of Stellenbosch,
-Stellenbosch, South Africa,\\
-Email: wvisser@cs.sun.ac.za}
+\author{Vaibhav Sharma}
+\authornote{Both authors contributed equally to this research.}
+\email{vaibhav@umn.edu}
+\author{Soha Hussein}
+\authornotemark[1]
+\email{husse200@umn.edu}
+\affiliation{%
+\institution{University of Minnesota}
+\city{Minneapolis}
+\state{MN}
+\postcode{55455}
+\country{USA}
 }
+
+\author{Michael W. Whalen}
+\affiliation{%
+\institution{Amazon Web Services}
+\city{Minneapolis}
+\state{MN}
+\country{USA}}
+\email{mww@amazon.com}
+
+\author{Stephen McCamant}
+\affiliation{%
+\institution{University of Minnesota}
+\city{Minneapolis}
+\state{MN}
+\postcode{55455}
+\country{USA}
+}
+\email{smccaman@umn.edu}
+
+\author{Willem Visser}
+\affiliation{%
+\institution{Computer Science Division, University of Stellenbosch}
+\city{Stellenbosch}
+\country{South Africa}}
+\email{wvisser@cs.sun.ac.za}
 
 \maketitle
 \begin{abstract}
