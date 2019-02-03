@@ -1,5 +1,48 @@
 \section{Technique}
 %
+\begin{grammar}
+<stmt> ::= <stmt> ';' <stmt>
+\alt 'if' <exp> 'then' <exp> 'else' <exp>
+\alt <var> '=' <exp> | 'new' 'type'
+\alt <invokeStmt> <class-type> <method-type>
+\alt <var> '=' <invokeStmt> <class-type> <method-type>
+\alt 'throw' 'exception' | 'skip' | 'return'
+
+<invokeStmt> ::= 'invokeVirtual' | 'invokeStatic' | 'invokeSpecial' | 'invokeInterface'
+
+<exp> ::= <var> | <exp> $\diamond_b$ <exp> | $\diamond_u$ <exp> | <gamma-exp>
+
+<gamma-exp> ::= <exp> $\diamond_b$ <exp> '?' <exp> ':' <exp>
+
+<var> ::= <local-var> | <field-var> | <array-var> | <intermediate-var> | <constant>
+
+<local-var> ::= <intermediate-var> '_' <stack-slot>
+
+<field-var> ::= 'f' <var> <class-type> <field-name> <path-subscript> <global-subscript>
+
+<array-var> ::= 'a' <var> <var> <path-subscript> <global-subscript>
+
+<intermediate-var> ::= 'w' <id>
+
+<$\diamond_b$> ::= '+' | '-' | '*' | '/' | '\&' | '|' | '\^{}' | '$\ll$' | '$\gg$' | '$\gg_{arith}$' | '\%' | '==' | '$\neq$' | '<' | '<=' | '>' | '>=' | '\&\&' | '||'
+
+<$\diamond_u$> ::= '-' | '!'
+
+%<class-type> ::= canonical class name
+%
+%<method-type> ::= JVM-internal method signature
+%
+%<stack-slot> ::= integer stack slot value for <local-var>
+%
+%<field-name> ::= name of a field within a class
+%
+%<path-subscript> ::= integer subscript incremented for each field access in a path
+%
+%<global-subscript> ::= integer subscript incremented for each field access in a region
+%
+%<constant> ::= integer or real constant value
+\end{grammar}
+%
 To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
 path and we also pre-compute method summaries.
 %
@@ -26,7 +69,7 @@ in Figure~\ref{fig:overview}.
 \begin{figure*}[]
     \caption{Overview of transformations on Ranger IR to create and instantiate multi-path region summaries with higher-order regions}
     \label{fig:overview}
-    \includegraphics[width=\textwidth]{figures/overview.pdf}
+    \includegraphics[width=0.7\columnwidth]{figures/overview.pdf}
 \end{figure*}
 %
 %

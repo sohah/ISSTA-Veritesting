@@ -2,13 +2,19 @@
 \acmConference[ESEC/FSE 2019]{The 27th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering}{26--30 August, 2019}{Tallinn, Estonia}
 
 \usepackage{booktabs} % For formal tables
+%\usepackage{backnaur}
+\usepackage{syntax}
+\usepackage{calc}
 \usepackage{listings}
 \usepackage{url}
 \usepackage{color}
-%\usepackage{authblk}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
+
+%\newenvironment{bnfsplit}[1][0.7\textwidth]
+%{\minipage[t]{#1}$}
+%{$\endminipage}
 
 
 %\renewcommand{\baselinestretch}{0.945}
@@ -149,14 +155,14 @@ capabilities provided a significant further improvement.
 \input{introduction}
 %\input{preliminaries}
 %\input{challenges}
-\input{related_work}
+\input{related-work}
 \input{technique}
 %\input{experiments}
 \input{evaluation}
 \input{discussion}
 \input{conclusion}
 
-\bibliographystyle{splncs04}
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
 \end{document}
