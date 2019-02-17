@@ -67,9 +67,9 @@ We also created variants of WBS, TCAS, and TCAS-SR by running them for multiple 
 %Being able to instantiate static summaries of such regions potentially increases the path reduction we get from path-merging.
 
 We ran WBS, TCAS, TCAS-SR, and Replace using Java Ranger and present our results from instantiating region summaries
-in Table~\ref{table:results}.
+in Table~\ref{table:results1},~\ref{table:results2}.
 %
-Table~\ref{table:results} shows that Java Ranger achieves a significant improvement using path-merging with WBS.
+Table~\ref{table:results1},~\ref{table:results2} shows that Java Ranger achieves a significant improvement using path-merging with WBS.
 %
 The ``\# exec paths'' column is the number of execution paths required to completely explore the benchmark.
 %
@@ -80,7 +80,7 @@ The ``\# exec paths'' column is the number of execution paths required to comple
 ``\# inst. methods'' is the number of higher-order regions that were used and ``inst.'' is the total number of
 instantiations that was done when running the benchmark.
 %
-Table~\ref{table:results} shows that we achieve a significant improvement using path-merging with WBS.
+Table~\ref{table:results1},~\ref{table:results2} shows that we achieve a significant improvement using path-merging with WBS.
 %
 Java Ranger outperforms SPF when running TCAS too but it doesn't allow path merging to summarize the entire program
 to a single execution path, as in the case with WBS.
@@ -93,16 +93,16 @@ that has a single return value at the end of all such multi-path regions.
 %
 We plan to automate this transformation in the future, see future work section~\ref{sec:futureWork}.
 %
-Table~\ref{table:results} shows the benefit of such a \textit{multiple-returns-to-single-return} transformation.
+Table~\ref{table:results1},~\ref{table:results2} shows the benefit of such a \textit{multiple-returns-to-single-return} transformation.
 %
 It allows Java Ranger to summarize the entire TCAS-SR program into a single execution path.
 %
-This is made possible by the use of higher-order regions as shown in Table~\ref{table:results}.
+This is made possible by the use of higher-order regions as shown in Table~\ref{table:results1},~\ref{table:results2}.
 %
 In mode 2, Java Ranger explores 18 execution paths with TCAS-SR, whereas in mode 3~(mode 2 + higher-order region support), it needs to only explore a single
 execution path because it can instantiate 28 higher-order method summaries.
 %
-The bottom half of Table~\ref{table:results} also shows the benefits of path-merging with Java Ranger increase as we run
+The bottom half of Table~\ref{table:results1},~\ref{table:results2} also shows the benefits of path-merging with Java Ranger increase as we run
 more steps of WBS, TCAS, and TCAS-SR.
 %
 We ran as many steps of each of these 3 benchmarks as possible with a 6 hour timeout using Java Ranger in modes
