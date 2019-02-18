@@ -144,26 +144,22 @@ and evaluated it in several case studies.
     \caption{An example demonstrating the need for using a multi-path region summary}
     \label{fig:mot-example}
 \end{figure*}
-Consider the example of Java code shown in Figure \ref{fig:mot-example}.
+Consider the example of Java code shown in Figure \ref{fig:mot-example}. The example is used to count number of words where characters are represented with 1 and 0 represents space. 
 %
 The {\tt list} object refers to an {\tt ArrayList} of 200 {\tt Integer} objects which have an unconstrained symbolic
-integer as a field.
-%
-The checking of each even-indexed entry in {\tt list} introduces a branch, which has both sides feasible, and requires
-symbolic execution to explore two execution paths instead of the one it was at.\\
+integer as a field. Checking the first element to be a zero or one introduces a symbolic branch, that requires the symbolic execution to explore both paths. Therefore loop checking for each indexed entry in {\tt list} introduces a branch, which has both sides feasible and which requires the symbolic execution to explore both paths again. \\
 %
 Performing this check over the entire {\tt list} makes symbolic execution need $2^{100}$ execution paths to terminate
 (assuming {\tt list} has 200 entries with every even-indexed entry pointing to a new unconstrained symbolic integer).
 %
-A simple way to avoid this path explosion is to merge the two paths arising out of the {\tt i\%2 == 0 \&\& list.get(i) == 42} branch.
+A simple way to avoid this path explosion is to merge the two paths arising out of the {\tt list.get(i) == 0} branch.
 %
-Such path merging requires us to compute a summary of all behaviors arising on both sides of the branch from lines 11 to 13
-until both sides of the branch merge at line 14.
+Such path merging requires us to compute a summary of all behaviors arising on both sides of the branch of the if-statement inside the for loop.
 %
 If we can construct such a summary beforehand, our symbolic executor can instantiate the summary by reading in inputs to
 the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.\\
 %
-Unfortunately, constructing such a summary for this simple region from lines 11--13 is not straightforward due to the
+Unfortunately, constructing such a summary for this simple region is not straightforward due to the
 call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.get(int)} ({\tt java.util.List<E>.get(int)} is abstract and does not have an implementation).
 %
 {\tt ArrayList<Integer>.get(int)} internally does the following:
@@ -190,5 +186,7 @@ Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt A
 %
 Our \textit{Single-Path Cases} extension to path-merging also allows the possibility of exceptional behavior being
 included in the summary and explored separately from unexceptional behavior by performing exploration of exceptional
-behavior in the region on its own execution path.
+behavior in the region on its own execution path.\\
+
+We will use this example throughout the reset of the paper to show how different transformations changes the region of interest until a summarization of the region is obtained. 
 %

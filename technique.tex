@@ -39,27 +39,6 @@ After reaching a fixed point, single path cases are determined, then flattening 
 
 In the following sections, we describe each of the transformations performed by Java Ranger both formally by defining the semantics of each transformation and informally by showing how each transformation is realized on our example~\ref{fig:mot-example}
 
-%%
-%To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
-%%
-%Next, we construct a set containing only the class $C$ that contains $M$.
-%%
-%We then get another set of classes, $C'$,
-%such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
-%%
-%This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
-%%
-%We continue this method discovery process up to a call depth of 2.
-%%
-%While we can increase the call depth in our method discovery process, we found that summarizing
-%arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.
-%%
-%After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
-%explained in Section \ref{sec:static-analysis}.
-%%
-%After computing static region and method summaries, we process them as a sequence of transformations described in the next section~\ref{sec:instantiationTransformations} and summarized
-%in Figure~\ref{fig:overview}.
-%%
 
 
 \begin{figure*}[]
@@ -121,6 +100,31 @@ In the following sections, we describe each of the transformations performed by 
 
 \subsection{Statement Recovery}
 \label{sec:static-analysis}
+
+\subsubsection{Statement Recovery Setup}
+%
+To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
+%
+Next, we construct a set containing only the class $C$ that contains $M$.
+%
+We then get another set of classes, $C'$,
+such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
+%
+This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
+%
+We continue this method discovery process up to a call depth of 2.
+%
+While we can increase the call depth in our method discovery process, we found that summarizing
+arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.
+%
+After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
+explained in Section \ref{sec:static-analysis}.
+%
+After computing static region and method summaries, we process them as a sequence of transformations described in the next section~\ref{sec:instantiationTransformations} and summarized
+in Figure~\ref{fig:overview}.
+%
+
+
 \begin{figure}
 \begin{grammar}
 <stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
@@ -199,7 +203,7 @@ $$
 %So the type of this map (the blockConditionMap) is: {\tt(ISSABasicBlock x ISSABasicBlock) --> List of (Expression x enum \{Then, Else\})}.
 %%
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
-
+\subsubsection{IR-Statement Recovery}
 In this step, a Java Ranger is created from the corresponding CFG. Since regions of interest for our technique are bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of loops is driven by conditional logic within the loop, rather than the loop itself.
 Starting from an SSA form, the first transformation recovers a tree-shaped AST for the subgraphs of interest.  While this step is not strictly necessary, it substantially simplifies subsequent transformations.  
 
