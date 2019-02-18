@@ -1,47 +1,135 @@
 \section{Technique}
 %
 \begin{grammar}
-<stmt> ::= <stmt> ';' <stmt>
-\alt 'if' <exp> 'then' <exp> 'else' <exp>
-\alt <var> '=' <exp> | 'new' 'type'
-\alt <invokeStmt> <class-type> <method-type>
-\alt <var> '=' <invokeStmt> <class-type> <method-type>
-\alt 'throw' 'exception' | 'skip' | 'return'
+<stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
+\alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
+\alt new $\tau$ | invoke( <exp>, <exp>, <exp> )  | exit
 
-<invokeStmt> ::= 'invokeVirtual' | 'invokeStatic' | 'invokeSpecial' | 'invokeInterface'
+<exit-stmt> ::=  return <exp> |  throw <exp> 
 
-<exp> ::= <var> | <exp> $\diamond_b$ <exp> | $\diamond_u$ <exp> | <gamma-exp>
+<exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
+\alt get_field( <exp>, <exp> ) | put_field( <exp>, <exp> )
+\alt array_load( <exp>, <exp>, <exp> )  
+\alt array_store( <exp>, <exp>, <exp> ) 
+\alt gamma( <exp>, <exp>, <exp> ) 
 
-<gamma-exp> ::= <exp> $\diamond_b$ <exp> '?' <exp> ':' <exp>
+<$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
 
-<var> ::= <local-var> | <field-var> | <array-var> | <intermediate-var> | <constant>
+<$op_u$> ::= $-$ | \textasciitilde
 
-<local-var> ::= <intermediate-var> '_' <stack-slot>
+<val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$
 
-<field-var> ::= 'f' <var> <class-type> <field-name> <path-subscript> <global-subscript>
-
-<array-var> ::= 'a' <var> <var> <path-subscript> <global-subscript>
-
-<intermediate-var> ::= 'w' <id>
-
-<$\diamond_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | $||$ | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
-
-<$\diamond_u$> ::= $-$ | \textasciitilde
-
-%<class-type> ::= canonical class name
-%
-%<method-type> ::= JVM-internal method signature
-%
-%<stack-slot> ::= integer stack slot value for <local-var>
-%
-%<field-name> ::= name of a field within a class
-%
-%<path-subscript> ::= integer subscript incremented for each field access in a path
-%
-%<global-subscript> ::= integer subscript incremented for each field access in a region
-%
-%<constant> ::= integer or real constant value
+<var> ::= ID_$\mathbb{N}$
 \end{grammar}
+
+Environment
+$$
+\begin{array}{llll}
+\Delta_r: loc \rightarrow & ( val, exp) &  \Delta_s: loc \rightarrow & ( val, exp)
+\\
+\Gamma_r: var \rightarrow & \tau &  \Gamma_s: ref \rightarrow & \tau
+\\
+\Psi: \tau \rightarrow & x.s &  \Theta: var \rightarrow & loc
+\\
+C: var \rightarrow & \tau & &
+\\
+\Sigma: \{exp\} &  &  & 
+\\
+\Sigma_{early}: \{exp\} &  &  & 
+\end{array}
+$$
+
+\begin{figure*}[t]
+\fbox{%
+\parbox{0.98\textwidth}{%
+$$
+\infer[\rn{substitution}]
+ {\step{\Theta, \Delta_s}{x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}}
+ {\lookup{\Theta}{x} = l , \quad \lookup{\Delta_s}{l}=(v,e)}
+\qquad 
+\infer[\rn{high-order_1}]
+ {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v} \quad \lookup{\Gamma_s}{v} = \tau , \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}}
+$$
+$$
+\infer[\rn{high-order_2}]
+ {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}, \quad \lookup{\Gamma_s}{v} = \tau, \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s; \return{e'}, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}}
+$$
+$$
+\infer[\rn{single-path_1}]
+ {\step{}{throw e}{}{exit}}
+ {}
+$$
+$$
+\infer[\rn{single-path_2}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2}}{(\Sigma \vee e)}{s_2}}
+ {}
+\qquad
+\infer[\rn{single-path_3}]
+ {\step{\Sigma}{\ifr{e}{s_1}{(s_2 ; exit ; s_2')}}{(\Sigma \vee !e)}{s_1}}
+ {}
+$$
+$$
+\infer[\rn{single-path_4}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2 ; exit ; s_2'}}{(\Sigma \vee true)}{skip}}
+ {}
+ \qquad
+\infer[\rn{linearlization}]
+ {\step{\Sigma}{\ifr{e}{s_1}{s_2}}{\Sigma}{\compose{s_1}{s_2}}}
+ {}
+$$
+$$
+\infer[\rn{greenlization}]
+ {\step{\Sigma}{x := gamma(e_1, e_2, e_3)}{\Sigma}{( e_1 \wedge x = e_2) \vee ( !e_1 \wedge x = e_3)}}
+ {}
+$$
+$$
+\infer[\rn{early-return_1}]
+ {\step{\Sigma}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}}{\Sigma \vee e_1}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2} ; x = e_2}}
+ {gen\_id(\_) = x}
+$$
+$$
+\infer[\rn{early-return_2}]
+ {\step{\Sigma}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma \vee !e_1}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2} ; x := e_2}}
+ {gen\_id(\_) = x}
+$$
+$$
+\infer[\rn{early-return_3}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})}}{\Sigma \vee true}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})} ; x := gamma(e1, e_2, e_3)}}
+ {gen\_id(\_) = x}
+$$
+}}
+\caption{Evaluation Rules for Ranger Transformations}
+\label{fig:semantics}
+\end{figure*}
+
+
+\begin{algorithm}[]
+\SetAlgoLined
+%\KwResult{Write here the result }
+Input: Region R
+ somethingChanged = true\;
+ execute early-return transformation(R)\;
+ execute alpha-renaming transformation(R)\;
+ \Repeat{!(somethingChanged)}
+ {
+	\While{(somethingChanged)}{
+		execute substitution transformation(R)\;
+		execute high-order transformation(R)\;
+		execute fields transformation(R)\;
+		execute arrays transformation(R)\;
+		execute references alpha-renaming transformation(R)\;
+		execute simplification transformation(R)\;}
+	execute high-order transformation(R)\;}
+	execute single-path cases(R)\;
+	execute linearlization transformation(R)\;
+	execute to-green transformation(R);
+	populate output\;
+ \caption{Ranger Algorithm for Altering Transformations}
+\end{algorithm}
+
+
 %
 To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
 path and we also pre-compute method summaries.
@@ -67,9 +155,9 @@ After computing static region and method summaries, we process them as a sequenc
 in Figure~\ref{fig:overview}.
 %
 \begin{figure*}[]
-    \caption{Overview of transformations on Ranger IR to create and instantiate multi-path region summaries with higher-order regions}
+    \caption{Overview of transformations on Ranger IR to create and instantiate regions up to a fix-point.}
     \label{fig:overview}
-    \includegraphics[width=0.7\columnwidth]{figures/overview.pdf}
+    \includegraphics[width=1.5\columnwidth]{figures/transformations.pdf}
 \end{figure*}
 %
 %

@@ -11,6 +11,9 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
+\usepackage{amssymb,proof}
+\usepackage[]{algorithm2e}
+
 
 %\newenvironment{bnfsplit}[1][0.7\textwidth]
 %{\minipage[t]{#1}$}
@@ -39,9 +42,19 @@
 
 %\acmPrice{15.00}
 
+\newcommand{\unit}{ ( ) }
+\newcommand{\rn}[1]{\scriptscriptstyle\mathtt{#1}}
+\newcommand{\compose}[2]{#1 \; ; \; #2}
+\newcommand{\return}[1]{return\: #1}
+\newcommand{\throw}[1]{throw\: #1}
+\newcommand{\ifr}[3]{if \; #1 \; then \; #2 \; else \: #3}
+\newcommand{\rstate}[2]{#1 \:,\: #2}
+\newcommand{\step}[4]{\rstate{#1}{#2}\ \mapsto\ \rstate{#3}{#4}}
+\newcommand{\lookup}[2]{#1(#2)}
+\newcommand{\sub}[3]{[#1/#2]#3}
+
 
 \begin{document}
-
 
 \newcommand{\mike}[1]{\textcolor{red}{#1}}
 \newcommand{\vaibhav}[1]{\textcolor{red}{#1}}
