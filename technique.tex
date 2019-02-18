@@ -1,114 +1,11 @@
 \section{Technique}
 %
-\begin{grammar}
-<stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
-\alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
-\alt new $\tau$ | invoke( <exp>, <exp>, <exp> )  | exit
 
-<exit-stmt> ::=  return <exp> |  throw <exp> 
-
-<exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
-\alt get_field( <exp>, <exp> ) | put_field( <exp>, <exp> )
-\alt array_load( <exp>, <exp>, <exp> )  
-\alt array_store( <exp>, <exp>, <exp> ) 
-\alt gamma( <exp>, <exp>, <exp> ) 
-
-<$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
-
-<$op_u$> ::= $-$ | \textasciitilde
-
-<val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$
-
-<var> ::= ID_$\mathbb{N}$
-\end{grammar}
-
-Environment
-$$
-\begin{array}{llll}
-\Delta_r: loc \rightarrow & ( val, exp) &  \Delta_s: loc \rightarrow & ( val, exp)
-\\
-\Gamma_r: var \rightarrow & \tau &  \Gamma_s: ref \rightarrow & \tau
-\\
-\Psi: \tau \rightarrow & x.s &  \Theta: var \rightarrow & loc
-\\
-C: var \rightarrow & \tau & &
-\\
-\Sigma: \{exp\} &  &  & 
-\\
-\Sigma_{early}: \{exp\} &  &  & 
-\end{array}
-$$
-
-\begin{figure*}[t]
-\fbox{%
-\parbox{0.98\textwidth}{%
-$$
-\infer[\rn{substitution}]
- {\step{\Theta, \Delta_s}{x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}}
- {\lookup{\Theta}{x} = l , \quad \lookup{\Delta_s}{l}=(v,e)}
-\qquad 
-\infer[\rn{high-order_1}]
- {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v} \quad \lookup{\Gamma_s}{v} = \tau , \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}}
-$$
-$$
-\infer[\rn{high-order_2}]
- {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}, \quad \lookup{\Gamma_s}{v} = \tau, \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s; \return{e'}, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}}
-$$
-$$
-\infer[\rn{single-path_1}]
- {\step{}{throw e}{}{exit}}
- {}
-$$
-$$
-\infer[\rn{single-path_2}]
- {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2}}{(\Sigma \vee e)}{s_2}}
- {}
-\qquad
-\infer[\rn{single-path_3}]
- {\step{\Sigma}{\ifr{e}{s_1}{(s_2 ; exit ; s_2')}}{(\Sigma \vee !e)}{s_1}}
- {}
-$$
-$$
-\infer[\rn{single-path_4}]
- {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2 ; exit ; s_2'}}{(\Sigma \vee true)}{skip}}
- {}
- \qquad
-\infer[\rn{linearlization}]
- {\step{\Sigma}{\ifr{e}{s_1}{s_2}}{\Sigma}{\compose{s_1}{s_2}}}
- {}
-$$
-$$
-\infer[\rn{greenlization}]
- {\step{\Sigma}{x := gamma(e_1, e_2, e_3)}{\Sigma}{( e_1 \wedge x = e_2) \vee ( !e_1 \wedge x = e_3)}}
- {}
-$$
-$$
-\infer[\rn{early-return_1}]
- {\step{\Sigma}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}}{\Sigma \vee e_1}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2} ; x = e_2}}
- {gen\_id(\_) = x}
-$$
-$$
-\infer[\rn{early-return_2}]
- {\step{\Sigma}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma \vee !e_1}{\ifr{e_1}{(s_1 ; \return{e_2})}{s_2} ; x := e_2}}
- {gen\_id(\_) = x}
-$$
-$$
-\infer[\rn{early-return_3}]
- {\step{\Sigma}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})}}{\Sigma \vee true}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})} ; x := gamma(e1, e_2, e_3)}}
- {gen\_id(\_) = x}
-$$
-}}
-\caption{Evaluation Rules for Ranger Transformations}
-\label{fig:semantics}
-\end{figure*}
-
-
+%\begin{figure}
 \begin{algorithm}[]
 \SetAlgoLined
 %\KwResult{Write here the result }
-Input: Region R
+Input: Region R\;
  somethingChanged = true\;
  execute early-return transformation(R)\;
  execute alpha-renaming transformation(R)\;
@@ -124,36 +21,47 @@ Input: Region R
 	execute high-order transformation(R)\;}
 	execute single-path cases(R)\;
 	execute linearlization transformation(R)\;
-	execute to-green transformation(R);
+	execute to-green transformation(R)\;
+	\eIf{R successfully transformed}{populate output\;}{abort\;}
 	populate output\;
- \caption{Ranger Algorithm for Altering Transformations}
+ \label{fig:algorithm}
+  \caption{Ranger general pesudo-code}
 \end{algorithm}
-
+%\end{figure}
 
 %
 To add path merging to SPF, we first pre-compute static summaries of arbitrary code regions with more than one execution
-path and we also pre-compute method summaries.
-%
-To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
-%
-Next, we construct a set containing only the class $C$ that contains $M$.
-%
-We then get another set of classes, $C'$,
-such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
-%
-This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
-%
-We continue this method discovery process up to a call depth of 2.
-%
-While we can increase the call depth in our method discovery process, we found that summarizing
-arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.
-%
-After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
-explained in Section \ref{sec:static-analysis}.
-%
-After computing static region and method summaries, we process them as a sequence of transformations described in the next section~\ref{sec:instantiationTransformations} and summarized
-in Figure~\ref{fig:overview}.
-%
+path and we also pre-compute method summaries. 
+
+Figure~\ref{fig:algorithm} describes the main steps that Java Ranger deploys to summarize the region. Intuitively, Java Ranger starts with a symbolic multi-path region expressed in Ranger grammar~\ref{fig:grammar} (described in section~\ref{sec:static-analysis}). Java Ranger then proceeds as follows, first it performs early return transformation, by eliminating eliminating return statements, this is followed by alpha-renaming on variables in the region. Then Java Ranger enters two fix-point loops, the inner loop terminates when no further changes is detected on the region after repeatedly applying substitution, high-order, fields, arrays, reference alpha-renaming and simplification transformations. can be made on the region. The outer loop ensures that at least one step of high order region was attempt without further changes before it declares reaching a fixed point. 
+
+After reaching a fixed point, single path cases are determined, then flattening the IR of the region to a sequence of assignment statements followed by a transformation that transforms the region into the corresponding solver syntax using Green. Finally if all transformations were successful then Java Ranger populates the output to SPF and advances it to the right position, otherwise it aborts. 
+
+In the following sections, we describe each of the transformations performed by Java Ranger both formally by defining the semantics of each transformation and informally by showing how each transformation is realized on our example~\ref{fig:mot-example}
+
+%%
+%To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
+%%
+%Next, we construct a set containing only the class $C$ that contains $M$.
+%%
+%We then get another set of classes, $C'$,
+%such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
+%%
+%This step which goes from $C$ to $C'$ discovers all the classes at a call depth of 1 from $C$.
+%%
+%We continue this method discovery process up to a call depth of 2.
+%%
+%While we can increase the call depth in our method discovery process, we found that summarizing
+%arbitrary code regions with more than 2 calls deep, did not lead to practically useful region summaries.
+%%
+%After obtaining a list of methods, we computed static summaries of regions in these methods and method summaries as
+%explained in Section \ref{sec:static-analysis}.
+%%
+%After computing static region and method summaries, we process them as a sequence of transformations described in the next section~\ref{sec:instantiationTransformations} and summarized
+%in Figure~\ref{fig:overview}.
+%%
+
+
 \begin{figure*}[]
     \caption{Overview of transformations on Ranger IR to create and instantiate regions up to a fix-point.}
     \label{fig:overview}
@@ -213,6 +121,57 @@ in Figure~\ref{fig:overview}.
 
 \subsection{Statement Recovery}
 \label{sec:static-analysis}
+\begin{figure}
+\begin{grammar}
+<stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
+\alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
+\alt invoke( <exp>, <exp>, <exp> )  | exit
+
+<exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
+
+<exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
+\alt get_field( <exp>, <exp> ) | put_field( <exp>, <exp> )
+\alt array_load( <exp>, <exp>, <exp> )  
+\alt array_store( <exp>, <exp>, <exp> ) 
+\alt gamma( <exp>, <exp>, <exp> ) 
+
+<$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
+
+<$op_u$> ::= $-$ | \textasciitilde
+
+<val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$
+
+<var> ::= ID_$\mathbb{N}$
+\end{grammar}
+\caption{Context Free Grammar for Java Ranger IR}
+\label{fig:grammar}
+\end{figure}
+
+
+\begin{figure}
+$$
+\begin{array}{lllll}
+\text{value-maps} & \Delta_r: loc \rightarrow & ( val, exp) &&
+\\
+& \Delta_s: loc \rightarrow & ( val, exp) &&
+\\
+\text{type-maps}  & \Gamma_r: var \rightarrow & \tau & &
+\\
+& \Gamma_s: ref \rightarrow & \tau&&
+\\
+\text{region-map} & \Psi: \tau \rightarrow & x.s &&
+\\
+& \Theta: var \rightarrow & loc &&
+\\
+\text{single-path-constraints} & \Sigma: \{exp\} &  &  & 
+\\
+\text{early-return-constraints} & \Sigma_{ret}: x_{ret} & \{exp\} &  & 
+\end{array}
+$$
+\caption{Environments used in Ranger.}
+\label{fig:environment}
+\end{figure}
+
 %Java Ranger has its own AST that captures the statement of regions.
 %%
 %The choice of having a separate AST for Java Ranger, enables the integration of Java Ranger with any static analysis framework by implementing the transformation that transforms the CFG of a given IR into the corresponding Java Ranger AST representation. 
@@ -240,7 +199,7 @@ in Figure~\ref{fig:overview}.
 %%
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
 
-The regions of interest for our technique are bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of loops is driven by conditional logic within the loop, rather than the loop itself.
+In this step, a Java Ranger is created from the corresponding CFG. Since regions of interest for our technique are bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of loops is driven by conditional logic within the loop, rather than the loop itself.
 Starting from an SSA form, the first transformation recovers a tree-shaped AST for the subgraphs of interest.  While this step is not strictly necessary, it substantially simplifies subsequent transformations.  
 
 The algorithms are similar to those used for those used for decompilation~\cite{Yakdan15@decompilation} but with slightly different goals: 
@@ -254,6 +213,12 @@ Starting from an initial SSA node, the algorithm first finds the immediate post-
 
 The algorithm systematically attempts to build regions for every branch instruction, even if the branch is already contained within another region.  The reason is that it may not be possible to instantiate the larger region depending on whether summaries can be found for {\em dynamically-dispatched} functions, and whether references are {\em uniquely determinable} for region outputs.
 
+The outcome of this step is a statement in Java Ranger grammar~\ref{fig:grammar}. Basically the grammar is composed of statements $stmt$ and expressions $exp$. Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\; \tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$ statement to bookmark exit point of a region/statement. 
+
+Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and characters $\mathbb{C}$) , variables (these are subscripted with integers to facilitate having ssa form for vars D_$\mathbb{N}$), binary operations $op_b$, unary operations $op_u$,  $get-field(exp, exp, exp)$ and $put-field(exp, exp, exp)$ for accessing and changing fields,  $array-load(exp, exp, exp)$ and  $array-store(exp, exp, exp)$ for accessing and changing array elements, a special gamma expression, $gamma(exp, exp, exp)$, that operates like $?:$ in Java. Gamma expression are fundamentally important to Java Ranger because it is how Java Ranger determines the conditions of different paths as well as the evaluation of variables along these paths.  
+It worth pointing out that Java Ranger defines 3 types of variables, a field or array variable (created to maintain fields and arrays ssa), an early return variable (to carry early return values) and any other type of variables. We assume the existance of a special function $gen_var$ that would generate one variable in the right sequence for each of these types. 
+
+In the remaining sections we will use $x$ to range over any type of variable, $x_{ref}$ to variables constructed for fields and arrays and $x_{ret}$ for variables constructed for early return construction. Similarly we will use $s$ to range over statements, $e$ to range over expressions and $v$ to range over values.
 \iffalse
 \begin{verbatim}
 
@@ -265,6 +230,7 @@ stmt ::= stmt ;
 \vaibhav{assigned to Mike}
 \mike{MWW: - we should provide an AST of the constraint language}
 \fi 
+
 
 \subsection{Region Definition}
 
@@ -297,6 +263,14 @@ used in that $\phi$-expression must belong to the same stack slot.
 We use this assumption to further propagate stack slot information in the stack slot table across all $\phi$-expressions
 encountered at merge points of regions.
 
+
+Formally we define the following structures: \\
+\textbf{value-map}: Java Ranger and SPF value map $\Delta_r$ and $\Delta_s$  that maps location, i.e., stack slots, to concrete values $val$ or symbolic values $exp$. \\
+\textbf{type-map}: Java Ranger and SPF value map $\Gamma_r$ and $\Gamma_s$  that maps vars or references, to types $\tau$.\\
+\textbf{region-map}: Java Ranger defines a map $\Psi$ from type $\tau$  to a parametric statement $x.s$ that defines the parameteric statement region in Java Ranger.\\
+\textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints.\\
+\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints.
+
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
 %variables.
@@ -312,17 +286,90 @@ encountered at merge points of regions.
 %repeatedly done until a fix point is reached.
 
 
+\begin{figure*}[t]
+\fbox{%
+\parbox{0.98\textwidth}{%
+$$
+\infer[\rn{substitution}]
+ {\step{\Theta, \Delta_s}{x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}{sub}}
+ {\lookup{\Theta}{x} = l , \quad \lookup{\Delta_s}{l}=(v,e)}
+\qquad
+ \infer[\rn{single-path_1}]
+ {\step{}{throw e}{}{exit}{single}}
+ {}
+$$
+$$
+\infer[\rn{high-order_1}]
+ {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \quad \lookup{\Gamma_s}{v_1} = \tau , \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+$$
+$$
+\infer[\rn{high-order_2}]
+ {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \quad \lookup{\Gamma_s}{v} = \tau, \quad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}), \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+$$
+$$
+\infer[\rn{single-path_2}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2}}{(\Sigma \vee e)}{s_2}{}}
+ {}
+\qquad
+\infer[\rn{single-path_3}]
+ {\step{\Sigma}{\ifr{e}{s_1}{(s_2 ; exit ; s_2')}}{(\Sigma \vee !e)}{s_1}{}}
+ {}
+$$
+$$
+\infer[\rn{single-path_4}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2 ; exit ; s_2'}}{(\Sigma \vee true)}{skip}{}}
+ {}
+ \qquad
+\infer[\rn{linearlization}]
+ {\step{\Sigma}{\ifr{e}{s_1}{s_2}}{\Sigma}{\compose{s_1}{s_2}}{}}
+ {}
+$$
+$$
+\infer[\rn{to-green}]
+ {\step{\Sigma}{x := gamma(e_1, e_2, e_3)}{\Sigma}{( e_1 \wedge x = e_2) \vee ( !e_1 \wedge x = e_3)}{}}
+ {}
+$$
+$$
+\infer[\rn{early-return_1}]
+ {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
+ {gen\_id(ret) = x_{ret} \qquad x_{ret}'' \notin s_1 \qquad x_{ret}' \notin s_2}
+$$
+$$
+\infer[\rn{early-return_2}]
+ {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret} \cup (x_{ret} (e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
+ {\step{\Sigma}{s_1}{\Sigma_{ret}: (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \quad
+  \step{\Sigma}{s_2}{\Sigma_{ret}: (w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \quad gen\_id(ret) = x_{ret}}
+$$
+%$$
+%\infer[\rn{early-return_3}]
+% {\step{\Sigma_{ret}}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \vee true}{\ifr{e}{(s_1 ; \return{e_1})}{skip} ; x_{ret} := e_1}}
+% {gen\_id(\_) = x_{ret}}
+%$$
+}}
+\caption{Evaluation Rules for Ranger Transformations}
+\label{fig:semantics}
+\end{figure*}
+
 \subsection{Instantiation-time Transformations}
 \label{sec:instantiationTransformations}
+
+\textbf{Early Return Transformation}: In this transformation, Java Ranger collects that conditions for branches that have early return in them. In figure~\ref{fig:semantics} we show the rule of having an early return on the else side $\rn{early-return_1}$ where neither inner statements $s_1$ or $s_2$ are conditional with early return. In this case, the statement is transformed to appending an assignment statement to the early return result to a new early return var $x_{ret}$, also the condition under which the early return value occurs is added to the early return environment $\Sigma_{ret} \cup (x_{ret}, e_2)$ 
+
+Rule $\rn{early-return_2}$ describes the situation where both the statements $s1$ and $s2$ contains inner conditions with early return statements. In this case a new result variable is created $x_{ret}$ and assigned to the gamma expression $x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')$ describing conditions and values assigned under them. In addition the context of early return variables-conditions is updated. 
 
 \textbf{Renaming Transformation}: In Alpha renaming transformation, all Ranger IR variables are renamed to ensure their uniqueness before further processing takes place. 
 %
 This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure
 uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path,
-i.e., a region inside a loop will be instantiated multiple times.\\
+i.e., a region inside a loop will be instantiated multiple times.
+
+We do not define this transformation formally due to space, but it is basically straight forward by generating a unique prefix for each variable and updates the new name in the statement as well as all the contexts in which it appears.  \\
 %
 \textbf{Local Variable Substitution Transformation}: During this transformation we eagerly bring in all dynamically
 known constant values, symbolic values and references from stack slots into the region for further processing. \\
+More formally, rule $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.\\
 %
 \textbf{Higher-order Regions Transformation}: This transformation is initiated when a method invocation is encountered
 during local variable substitution.
@@ -338,13 +385,7 @@ parameters by repeatedly applying local variable substitution transformation ove
 (3) When no more higher-order regions can be inlined, the resulting substituted method region is inlined into
 the outer region.\\
 %
-If the method region has a single return value, then the original method invocation is replaced with an assignment to
-the returned expression.
-%
-%Otherwise, inlining of the method region takes place.
-%
-We dont currently support instantiation of method regions with multiple return statements, support for which requires
-another transformation that we talk about in Section~\ref{sec:future}.
+Formally, rule $\rn{high-order_1}$ describes the inlining process for methods that has no return values, and $\rn{high-order_2}$ describes inlining of methods that have a single return values. Methods of multiple returns, should have been normalized out with the early-return transformation discussed previously. For $\rn{high_order-1}$ initially 
 \\
 \textbf{Field References SSA form}: The field references transformation translates reads and writes of fields
 in Java bytecode into corresponding Ranger IR statements.
@@ -432,7 +473,7 @@ The intuition here is that, we want to maximize regions that Java Ranger can sum
 only partial.
 %
 We use this pass of transformation to identify such points, collect their path predicates and prune them away from the
-Ranger IR statement.
+Ranger IR statement. The formal rules of this transformation is defined in rule $\rn{single-path_1}$ and $\rn{single-path_2}$, where the former transforms statements that are considered exit points, then the later constructs the matching constraints to explore the single path of interest. 
 %
 The outcome of this process, is a more simplified and concise statement that represent the nominal behavior of the Ranger region.
 %
@@ -450,7 +491,7 @@ Once all GSA expressions have been computed, the Ranger IR need not have if-then
 The $\gamma$ functions introduced by GSA are a functional representation of branching, which lets us
 capture the semantics of everything happening on both sides of the branch.
 %
-Since the linearization transformation is done after every field and array entry has been unaliased and converted to
+Since the linearization transformation $\rn{linearlization}$ is done after every field and array entry has been unaliased and converted to
 GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
 semantics and converts it into a stream of GSA and SSA statements.\\
 \textbf{Translation to Green}:
@@ -461,7 +502,7 @@ This transformation starts off by translating Ranger variables to Green variable
 %
 Then Ranger statements are translated. More precisely, compositional statements are translated into conjunction, assignment statements are translated into Green equality expressions.
 %
-For assignment statements that have GSA expressions, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied. 
+For assignment statements that have GSA expressions $\rn{to-green}$, these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation were satisfied. 
 
 \subsection{Checking Correctness Of Region Summaries}
 The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
