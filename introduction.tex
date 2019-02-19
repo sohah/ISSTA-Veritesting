@@ -73,7 +73,7 @@ methods such as \texttt{get}.
 However, Java has an {\em open world} assumption, and most methods are {\em dynamically dispatched}, meaning that the code to be
 run is not certain until a method is resolved at runtime; if inlining is performed at all, it is by the JRE, so it is not reflected in bytecode.
 
-Not being able to summarize such dynamically dispatch methods can lead to poor performance for
+Not being able to summarize such dynamically dispatched methods can lead to poor performance for
 n\"aive implementations of bounded static regions.
 %
 Thus, to be successful, we must be able to inject the static regions associated with the calls into the dispatching
@@ -85,7 +85,7 @@ to be further interpreted.
 In our experiments, we demonstrate exponential speedups on benchmarks (in general, the more paths contained within a
 program, the larger the speedup) over the unmodified Java SPF tool using this approach.
 
-Another common feature of Java code that represents the boundary of path merging is \textit{exceptions}.
+Another common feature of Java code at the boundary of path merging is \textit{exceptions}.
 %
 If an exception can potentially be raised in a region, the symbolic executor needs to explore that exceptional behavior.
 %
@@ -99,9 +99,21 @@ behavior reduces the branching factor of the region.
 We propose a technique named \textit{Single-Path Cases} for splitting a region summary into its exceptional and
 unexceptional parts.
 
-While summarizing higher-order regions and finding single-path cases is useful to improve scalability,
-representing such summaries in an intermediate representation~(IR) that uses static single-assignment~(SSA) form
-provides a few key advantages.
+A third common feature of Java at the frontier of path merging is the \textit{return} instruction.
+%
+For a region summary, a return instruction represents an \textit{exit point} of the region.
+%
+An exit point is a program location in the region at which paths in the region have been merged into a single path.
+%
+If region has multiple exit points in the form of multiple return instructions, each predicated on a condition, the symbolic
+executor can construct a formula that represents all the possible return values predicated on their corresponding conditions.
+%
+Summarizing such multiple control-flow returning exit points of a region into a single returning exit point further
+reduces the branching factor of the region.
+
+While summarizing higher-order regions, finding single-path cases, and converting multiple returning exit points into a
+single returning exit point is useful to improve scalability, representing such summaries in an intermediate
+representation~(IR) that uses static single-assignment~(SSA) form provides a few key advantages.
 %
 (1) It allows region summaries to be constructed by using a sequence of transformations, with each transformation
 extending to add support for new features such as heap accesses, higher-order regions, and single-path cases.
@@ -120,23 +132,23 @@ Ranger IR has support for inlining method summaries and for constructing SSA for
 It also proposes Single-Path Cases as an alternative to multiple transition points as
 defined by Avgerinos et al.~\cite{veritesting}.
 
-This paper extends our initial investigations of Java veritesting
-reported in a paper at the 2017 JPF
-workshop~\cite{sharma-veritesting}.
-%
-Our workshop paper motivated some of the ways in which Java
-veritesting is different from veritesting for binary code and the
-value that veritesting could provide, but it did not describe an
-end-to-end automated implementation.
-%
-The present paper describes a number of conceptual improvements that
-are new since the workshop paper, including the Ranger IR, single-path
-cases, and the details of our higher-order region approach.
-%
-We have also made a number of architectural changes, such as switching
-from Soot to Wala for static analysis and using Green for formula
-representation, and we have integrated \tool\ as an extension to SPF
-and evaluated it in several case studies.
+%This paper extends our initial investigations of Java veritesting
+%reported in a paper at the 2017 JPF
+%workshop~\cite{sharma-veritesting}.
+%%
+%Our workshop paper motivated some of the ways in which Java
+%veritesting is different from veritesting for binary code and the
+%value that veritesting could provide, but it did not describe an
+%end-to-end automated implementation.
+%%
+%The present paper describes a number of conceptual improvements that
+%are new since the workshop paper, including the Ranger IR, single-path
+%cases, and the details of our higher-order region approach.
+%%
+%We have also made a number of architectural changes, such as switching
+%from Soot to Wala for static analysis and using Green for formula
+%representation, and we have integrated \tool\ as an extension to SPF
+%and evaluated it in several case studies.
 
 \subsection{Motivating Example}
 \begin{figure}
@@ -144,7 +156,7 @@ and evaluated it in several case studies.
     \caption{An example demonstrating the need for using a multi-path region summary}
     \label{fig:mot-example}
 \end{figure}
-Consider the example of Java code shown in Figure \ref{fig:mot-example}. The example is used to count number of words where characters are represented with 1 and 0 represents space. 
+Consider the example shown in Figure \ref{fig:mot-example}. The example is used to count number of words where characters are represented with 1 and 0 represents space.
 %
 The {\tt list} object refers to an {\tt ArrayList} of 200 {\tt Integer} objects which have an unconstrained symbolic
 integer as a field. Checking the first element to be a zero or one introduces a symbolic branch, that requires the symbolic execution to explore both paths. Therefore loop checking for each indexed entry in {\tt list} introduces a branch, which has both sides feasible and which requires the symbolic execution to explore both paths again. \\
