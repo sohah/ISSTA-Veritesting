@@ -23,7 +23,6 @@ Input: Region R\;
 	execute linearlization transformation(R)\;
 	execute to-green transformation(R)\;
 	\eIf{R successfully transformed}{populate output\;}{abort\;}
-	populate output\;
  \label{fig:algorithm}
   \caption{Ranger general pesudo-code}
 \end{algorithm}
@@ -40,12 +39,12 @@ After reaching a fixed point, single path cases are determined, then flattening 
 In the following sections, we describe each of the transformations performed by Java Ranger both formally by defining the semantics of each transformation and informally by showing how each transformation is realized on our example~\ref{fig:mot-example}
 
 
-
-\begin{figure*}[]
-    \caption{Overview of transformations on Ranger IR to create and instantiate regions up to a fix-point.}
-    \label{fig:overview}
-    \includegraphics[width=1.5\columnwidth]{figures/transformations.pdf}
-\end{figure*}
+%
+%\begin{figure*}[]
+%    \caption{Overview of transformations on Ranger IR to create and instantiate regions up to a fix-point.}
+%    \label{fig:overview}
+%    \includegraphics[width=1.5\columnwidth]{figures/transformations.pdf}
+%\end{figure*}
 %
 %
 %\subsection{WALA-based analysis for veritesting}
@@ -129,16 +128,14 @@ in Figure~\ref{fig:overview}.
 \begin{grammar}
 <stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
 \alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
-\alt invoke( <exp>, <exp>, <exp> )  | exit
+\alt invoke( $\tau$, <exp>, <exp> )  | exit
 
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
 <exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
 \alt get_field( <exp>, <exp> ) | put_field( <exp>, <exp> )
-\alt array_load( <exp>, <exp> )  
-\alt array_store( <exp>, <exp>, <exp> ) 
-\alt gamma( <exp>, <exp>, <exp> ) 
-\alt <exp>.<exp>
+\alt array_load( <exp>, <exp> ) | array_store( <exp>, <exp>, <exp> ) 
+\alt gamma( <exp>, <exp>, <exp> ) | <exp>.<exp>
 
 <$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
 
@@ -164,13 +161,13 @@ $$
 \\
 & \Gamma_s: ref \rightarrow & \tau&&
 \\
-\text{Tegion-map} & \Psi: \tau \rightarrow & x.s &&
+\text{Region-map} & \Psi: \tau \rightarrow & x.s &&
 \\
 & \Theta: var \rightarrow & loc &&
 \\
 \text{Single-path-constraints} & \Sigma: \{exp\} &  &  & 
 \\
-\text{Early-return-constraints} & \Sigma_{ret}: x_{ret} & \{exp\} &  & 
+\text{Early-return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
 \end{array}
 $$
 \caption{Environments used in Ranger.}
@@ -218,10 +215,28 @@ Starting from an initial SSA node, the algorithm first finds the immediate post-
 
 The algorithm systematically attempts to build regions for every branch instruction, even if the branch is already contained within another region.  The reason is that it may not be possible to instantiate the larger region depending on whether summaries can be found for {\em dynamically-dispatched} functions, and whether references are {\em uniquely determinable} for region outputs.
 
-The outcome of this step is a statement in Java Ranger grammar~\ref{fig:grammar}. Basically the grammar is composed of statements $stmt$ and expressions $exp$. Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\; \tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$ statement to bookmark exit point of a region/statement. 
+\begin{lstlisting}
+if ((== x58 0 )) {
+   x50 = invoke(ArrayList.get(I)Ljava.lang.Object,x9, x59)
+   x51 = checkcast (java.lang.Integer, x50)
+   x53 = invoke(Integer.intValue()I, x51)
+   if ((! (== x53 0 ) )) {
+      skip;
+   } else { skip; }
+} else {
+	.....
+}
+x54 := (Gamma x58==0 (Gamma !(x53==0) x57 x57) (Gamma !(x47!=0) x48 x57));
+x55 := (Gamma x58==0 (Gamma !(x53==0) 1 x58) (Gamma !(x47!=0) 0 x58));
+\end{lstlisting}
+The outcome of this step is a statement in Java Ranger. For example our example~\ref{fig:mot-example} is recovered from the Java Bytecode to obtain the Ranger statement in
+%\ref{lst:walk_static}.
+In the following sections we will discuss the various parts of this statement to show the effect of various transformations. 
+
+The grammar of Java Ranger is defined in~\ref{fig:grammar}. Basically the grammar is composed of statements $stmt$ and expressions $exp$. Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\; \tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$ statement to bookmark exit point of a region/statement. 
 
 Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and characters $\mathbb{C}$) , variables (these are subscripted with integers to facilitate having ssa form for vars D_$\mathbb{N}$), binary operations $op_b$, unary operations $op_u$,  $get-field(exp, exp)$ and $put-field(exp, exp, exp)$ for accessing and changing fields,  $array-load(exp, exp)$ and  $array-store(exp, exp, exp)$ for accessing and changing array elements, a special gamma expression, $gamma(exp, exp, exp)$, that operates like $?:$ in Java. Gamma expression are fundamentally important to Java Ranger because it is how Java Ranger determines the conditions of different paths as well as the evaluation of variables along these paths.  
-It worth pointing out that Java Ranger defines 3 types of variables, a field or array variable (created to maintain fields and arrays ssa), an early return variable (to carry early return values) and any other type of variables. We assume the existance of a special function $gen_var$ that would generate one variable in the right sequence for each of these types. 
+It worth pointing out that Java Ranger defines 3 types of variables, a field or array variable (created to maintain fields and arrays ssa), an early return variable (to carry early return values) and any other type of variables. We assume the existence of a special function $gen_var$ that would generate one variable in the right sequence for each of these types. 
 
 In the remaining sections we will use $x$ to range over any type of variable, $x_{ref}$ to variables constructed for fields and arrays and $x_{ret}$ for variables constructed for early return construction. Similarly we will use $s$ to range over statements, $e$ to range over expressions and $v$ to range over values.
 \iffalse
@@ -305,12 +320,12 @@ $$
 $$
 $$
 \infer[\rn{high-order_1}]
- {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
+ {\step{\Gamma_r, \Delta_r}{s_1; invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
  {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \quad \lookup{\Gamma_s}{v_1} = \tau , \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{high-order_2}]
- {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
+ {\step{\Gamma_r, \Delta_r}{e = invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
  {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \quad \lookup{\Gamma_s}{v} = \tau, \quad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}), \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
@@ -370,11 +385,18 @@ This is particularly important not only to ensure uniqueness of variables among 
 uniqueness of variable names of the \textit{same} region which might be instantiated multiple times on the same path,
 i.e., a region inside a loop will be instantiated multiple times.
 
-We do not define this transformation formally due to space, but it is basically straight forward by generating a unique prefix for each variable and updates the new name in the statement as well as all the contexts in which it appears.  \\
+We do not define this transformation formally due to space, but it is basically straight forward by generating a unique prefix for each variable and updates the new name in the statement as well as all the contexts in which it appears.  For example, in our example line 2, gets renamed to:
+\begin{lstlisting}
+   x50$1= invoke(ArrayList.get(I)Ljava.lang.Object,x9$1, x59$1);
+\end{lstlisting}
+
 %
 \textbf{Local Variable Substitution Transformation}: During this transformation we eagerly bring in all dynamically
 known constant values, symbolic values and references from stack slots into the region for further processing. \\
-More formally, rule $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.\\
+More formally, rule $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$. For example, the reference of the arraylist can be resolved (in this case it was resolved to object reference 375). It is then substituted by the substitution transformation, thus line 2 becomes:
+\begin{lstlisting}
+   x50$1= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$1);
+\end{lstlisting}
 %
 \textbf{Higher-order Regions Transformation}: This transformation is initiated when a method invocation is encountered
 during local variable substitution.
@@ -390,10 +412,34 @@ parameters by repeatedly applying local variable substitution transformation ove
 (3) When no more higher-order regions can be inlined, the resulting substituted method region is inlined into
 the outer region.\\
 %
-Formally, rule $\rn{high-order_1}$ describes the inlining process for methods that has no return values, and $\rn{high-order_2}$ describes inlining of methods that have a single return values. Methods of multiple returns, should have been normalized out with the early-return transformation discussed previously. Not the rules describes invoke virtual in Java, however Java Ranger supports as well invoke static and invoke interface. 
+Formally, rule $\rn{high-order_1}$ describes the inlining process for methods that has no return values for a concrete reference, and $\rn{high-order_2}$ describes inlining of methods that have a single return values also for concrete reference. For non-concerete reference, and after reaching a fixed point, the updated type table (using type propagation) is used to get the type of the variable and therefore the corresponding parametric region statement. It must be noted that methods with multiple returns, should have been normalized out with the early-return transformation discussed previously. Note the rules describes the support for the jvm invoke virtual instruction, however Java Ranger supports as well invoke static and invoke interface. 
 
 For $\rn{high_order-1}$ initially after evaluating the reference of the invoke by either finding it concerte value through substitution or obtaining it from the updated type table, the type is used to retrieve the parametric region for the method being invoked. Substitution of the parameters then follows and direct inlining occurs. In rule $\rn{high-order_2}$, inlining of the return value translates to an assignment statement.
-\\
+
+For example, regions that defines $ArrayList.get(I)java.lang.Object$ is discovered and inlined with the original region to become:
+\begin{lstlisting}
+[] = invoke < Primordial, Ljava/util/ArrayList, rangeCheck(I)V >[w1$3, w2$3]
+
+[w6$3] = invoke < Primordial, Ljava/util/ArrayList, elementData(I)Ljava/lang/Object; >[w1$3, w2$3]
+skip; 
+~earlyReturnResult$3 := w6$3; 
+\end{lslisting}
+
+\begin{lstlisting}
+w4 = get(w1.< Primordial, Ljava/util/ArrayList, size, <Primordial,I> >)
+if ((! (< w2 w4 ) )) {
+   new Instruction
+   
+[w7] = invoke < Primordial, Ljava/util/ArrayList, outOfBoundsMsg(I)Ljava/lang/String; >[w1, w2]
+   
+[] = invoke < Primordial, Ljava/lang/IndexOutOfBoundsException, <init>(Ljava/lang/String;)V >[w5, w7]
+   Throw Instruction
+} else {
+   skip; 
+}
+ return w-1
+ \end{lstlisting}
+ 
 \textbf{Field References SSA form}: The field references transformation translates reads and writes of fields
 in Java bytecode into corresponding Ranger IR statements.
 %
