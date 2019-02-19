@@ -1,55 +1,28 @@
 \section{Future Work}
 \label{sec:futureWork}
-While Java Ranger has the potential to scale to large real-world Java programs, there are a number of directions along
-which it can be further improved.
-\begin{itemize}
-
-\item Java Ranger attempts to perform path merging as aggresively as possible. This path merging strategy doesn't
-optimize towards making fewer solver calls. We plan to work towards implementing heuristics that
-can measure the effect of path merging on the rest of the program.
+While \tool\ was able to significantly outperform SPF in a majority of our benchmarks, there are a few directions
+along which it can further be extended.
+%
+Java Ranger attempts to perform path merging as aggresively as possible.
+%
+This path merging strategy doesn't optimize towards making fewer solver calls.
+%
+We plan to work towards implementing heuristics that can measure the effect of path merging on the rest of the program.
     
-%\item In some models, it is possible to reduce the number of paths to one.  The static region approach essentially
-%constructs a unrolled version of the program, similar to what tools like CBMC construct.   This can only happen on
-%relatively static models that do not have a lot of object construction leading to multiple dispatch paths.  HOSRs are
-%more flexible for these situations and allow specialization depending on dispatch type, which we believe will lead to
-%better performance for highly-dynamic models.
+While statically summarizing regions gives dynamic symbolic execution a performance boost to explore more paths
+efficiently, generating test cases that covers all summarized branches is one of the most useful applications of dynamic
+symbolic execution that is currently unsupported.
 %
-%\item In general, the solver time does not rise dramatically for disjunctive paths. Since (in the limit) we reduce the
-%number of paths exponentially by removing branches, we can perform relatively expensive analyses as preprocessing steps
-%and at instantiation if we are able to instantiate a static region, and still end up with much better performance.
+We intend to extend \tool\ towards test generation for merged paths in the future.
 
-\item Java Ranger is most useful when it can merge multiple execution paths into one summary. But such merging causes an
-increase in the size of the summary, and consequently, the path condition.
-%
-Once a summary has been communicated to the solver, it need not be sent again as long as it remains the same.
-%
-This requires us to use the solver in an incremental mode, where we use previously-constructed state in the solver for
-future solving.
-%
-Our current implementation of Java Ranger sends the entire path condition to the solver with every query, making every
-query even more expensive in the presence of large multi-path region summaries.
-%
-We plan to integrate incremental solving with Java Ranger in the future.
-%
-\item Multiple return instructions that appear on all execution paths inside a multi-path region can be simplified to a
-single return value of the region.
-%
-We implemented this transformation manually in TCAS but we plan to automate it in the future.
-%
-Such automation would allow us to summarize regions with return instructions.
-%
-\item While statically summarizing regions gives dynamic symbolic execution a
-performance boost to explore more paths efficiently, generating test cases that covers all summarized branches is one of
-the fundamental roles of dynamic symbolic execution that is currently unsupported.
-%
-This is an extension that we intend to investigate in our future work.
-%
-\item While path merging can potentially allow symbolic execution to explore interesting parts of a program sooner, the
+While path merging can potentially allow symbolic execution to explore interesting parts of a program sooner, the
 effect of path merging on search strategies, such as depth-first search and breadth-first search commonly used with
-symbolic execution, remains to be investigated. We plan to explore the integration of such guidance heuristics with path merging in the future.
+symbolic execution, remains to be investigated.
 %
-\item Java Ranger can summarize methods and regions in Java standard libraries. This creates potential for automatically
-constructing summaries of standard libraries so that Java symbolic execution engines can prevent path explosion
-originating from standard libraries.
+We plan to explore the integration of such guidance heuristics with path merging in the future.
 %
-\end{itemize}
+Java Ranger can summarize methods and regions in Java standard libraries.
+%
+This creates potential for automatically constructing summaries of standard libraries so that symbolic execution
+can prevent path explosion originating from standard libraries.
+%
