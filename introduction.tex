@@ -152,53 +152,53 @@ defined by Avgerinos et al.~\cite{veritesting}.
 
 \subsection{Motivating Example}
 \begin{figure}
-    \includegraphics[width=\columnwidth]{figures/wordCount-1.pdf}
+    \includegraphics[width=\columnwidth]{figures/wordCount.pdf}
     \caption{An example demonstrating the need for using a multi-path region summary}
     \label{fig:mot-example}
 \end{figure}
-Consider the example shown in Figure \ref{fig:mot-example}. The example is used to count number of words where characters are represented with 1 and 0 represents space.
+Consider the example shown in Figure \ref{fig:mot-example}.
+%
+The code counts the number of words where the concrete value {\tt 0} acts as a delimiter for words.
 %
 The {\tt list} object refers to an {\tt ArrayList} of 200 {\tt Integer} objects which have an unconstrained symbolic
-integer as a field. Checking the first element to be a zero or one introduces a symbolic branch, that requires the symbolic execution to explore both paths. Therefore loop checking for each indexed entry in {\tt list} introduces a branch, which has both sides feasible and which requires the symbolic execution to explore both paths again. \\
+integer as a field.
 %
-Performing this check over the entire {\tt list} makes symbolic execution need $2^{100}$ execution paths to terminate
-(assuming {\tt list} has 200 entries with every even-indexed entry pointing to a new unconstrained symbolic integer).
+Checking the number of words delimited by one or more {\tt 0}\rq s requires $2^{200}$ execution paths because vanilla
+symbolic execution needs to branch on comparing every entry in the list to {\tt 0}.
 %
-A simple way to avoid this path explosion is to merge the two paths arising out of the {\tt list.get(i) == 0} branch.
+However, we can avoid this path explosion by merge the two paths arising out of the {\tt list.get(i) == 0} branch.
 %
-Such path merging requires us to compute a summary of all behaviors arising on both sides of the branch of the if-statement inside the for loop.
+Such path merging requires us to compute a summary of all behaviors arising on both sides of the branch of the
+if-statement at line 16 in Figure~\ref{fig:mot-example}.
 %
 If we can construct such a summary beforehand, our symbolic executor can instantiate the summary by reading in inputs to
-the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.\\
+the summary from the stack and/or the heap, and writing outputs of the summary to the stack and/or the heap.
 %
-Unfortunately, constructing such a summary for this simple region is not straightforward due to the
-call to {\tt list.get(int)} which is actually a call to {\tt ArrayList<Integer>.get(int)} ({\tt java.util.List<E>.get(int)} is abstract and does not have an implementation).
+Unfortunately, constructing such a summary for this simple region is not straightforward.
 %
-{\tt ArrayList<Integer>.get(int)} internally does the following:
+The call to {\tt list.get(int)} which is actually a call to
+{\tt ArrayList<Integer>.get(int)} which internally does the following:
 %
 \begin{enumerate}
-\item It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling {\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
+\item It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling\\
+{\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
 %
-\item It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
+\item It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the
+entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
 %
-\item It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses the {\tt value} field of {\tt Integer} to return the integer value of this object.
+\item It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses
+the {\tt value} field of {\tt Integer} to return the integer value of this object.
 %
 \end{enumerate}
 
 The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
 also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
 %
-Our extension to path-merging includes using method summaries, either with a single return or no return, as part of region summaries that have method calls \footnote{We plan to support methods with multiple returns in the future.}.
-%
 The method whose summary is to be included depends on the dynamic type of the object reference on which the method is being invoked.
 %
-In our example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is declared statically as having the type {\tt List}.
+In this example, the dynamic type of {\tt list} is {\tt ArrayList}, whereas it is declared statically as having the type {\tt List}.
 %
-Therefore, the summary of {\tt list.get(i)} pulls in the method summaryof {\tt ArrayList<E>.get(i)}.\\
+Our contributions to path-merging uses the runtime type of {\tt list} to inline such method summaries to
+merge path all $2^{200}$ paths into a single execution path in this example.
 %
-Our \textit{Single-Path Cases} extension to path-merging also allows the possibility of exceptional behavior being
-included in the summary and explored separately from unexceptional behavior by performing exploration of exceptional
-behavior in the region on its own execution path.\\
-
-We will use this example throughout the reset of the paper to show how different transformations changes the region of interest until a summarization of the region is obtained. 
-%
+We  walk through the transformations that allow such path merging on this example in Section~\ref{sec:technique}.
