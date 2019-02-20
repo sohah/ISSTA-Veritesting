@@ -42,8 +42,7 @@ the multi-path region summary based on the instantiation-time type of the method
 \textbf{Mode 4}: In addition to using summaries instantiated in mode 3, \tool\ uses single-path cases to allow
 multi-path regions to have more than one exit point.
 %
-These exit points take the form of new object allocations, exceptional behavior present in the region, and method
-invocations for which no summaries are present.\vaibhav{Soha to double-check this statement}\\
+These exit points take the form of new object allocations and exceptional behavior present in the region.\\
 %
 \textbf{Mode 5}: In addition to using summaries instantiated in mode 4, \tool\ converts multiple exit points that return
 control flow into a single control flow-returning exit point along with using single-path
