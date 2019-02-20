@@ -1,6 +1,18 @@
 \section{Evaluation}
 \label{sec:results}
 \subsection{Experimental Setup}
+\begin{table}[]
+    \begin{tabular}{@{}ccccc@{}}
+        \toprule
+        WBS   & TCAS      & replace      & NanoXML   &            \\ \midrule
+        1234  & 4509      & 3980         & 871       &            \\ \midrule
+        Siena & Schedule2 & PrintTokens2 & ApacheCLI & MerArbiter \\ \midrule
+        1551  & 722       & 1180         & 910       & 20639      \\ \bottomrule
+    \end{tabular}
+    \caption{Static analysis time (msec) for all 9 benchmarks}
+    \label{table:static-analysis-time}
+\end{table}
+%
 We implemented the above mentioned transformations as a wrapper around the Symbolic PathFinder~\cite{spf} tool.
 %
 To make use of region summaries in Symbolic PathFinder, we use an existing feature of SPF named \textit{listener}.
@@ -19,7 +31,7 @@ bytecode offset of the end of the region.
 %
 Our implementation, named \tool, wraps around SPF and can be configured to run in the following five modes.\\
 %
-\textbf{Mode 1}: \tool\ runs vanilla SPF without any path merging enabled.\\
+\textbf{Mode 1}: \tool\ runs vanilla SPF without any path merging.\\
 %
 \textbf{Mode 2}: \tool\ summarizes multi-path regions with a single exit point and instantiates them if they are encountered.
 This includes multi-path regions that have local, stack, field, or array outputs.
@@ -40,7 +52,7 @@ Method summaries, that have a single exit point in the form of a control-flow re
 the multi-path region summary based on the instantiation-time type of the method.\\
 %
 \textbf{Mode 4}: In addition to using summaries instantiated in mode 3, \tool\ uses single-path cases to allow
-multi-path regions to have more than one exit point.
+regions to have more than one exit point.
 %
 These exit points take the form of new object allocations and exceptional behavior present in the region.\\
 %
@@ -65,17 +77,6 @@ Since path-merging can create large formulas in the path condition, the incremen
 reducing the number of times large formulas had to be passed to the solver.
 %
 \subsection{Evaluation}
-\begin{table}[]
-    \begin{tabular}{@{}ccccc@{}}
-        \toprule
-        WBS   & TCAS      & replace      & NanoXML   &            \\ \midrule
-        1234  & 4509      & 3980         & 871       &            \\ \midrule
-        Siena & Schedule2 & PrintTokens2 & ApacheCLI & MerArbiter \\ \midrule
-        1551  & 722       & 1180         & 910       & 20639      \\ \bottomrule
-    \end{tabular}
-    \caption{Static analysis time (msec) for all 9 benchmarks}
-    \label{table:static-analysis-time}
-\end{table}
 %
 In order to evaluate the performance of \tool, we used the following nine benchmarking programs commonly used to
 evaluate symbolic execution performance.
@@ -105,8 +106,11 @@ distributed event-based applications~\cite{siena} which consists of 94 procedure
 (8) ApacheCLI~\cite{apachecli} provides an API for parsing command lines options passed to programs.
 It consists of 183 procedures and 3612 lines of code.
 %
-(9) MerArbiter models a flight software component of NASA JPL\rq s Mars Exploration Rovers. It was originally modeled in
-Simulink/Stateflow and automatically translated into Java using the Polyglot framework. We used the version made
+(9) MerArbiter models a flight software component of NASA JPL\rq s Mars Exploration Rovers.
+%
+%It was originally modeled in Simulink/Stateflow and automatically translated into Java using the Polyglot framework.
+%
+We used the version made
 available by Yang et al.~\cite{memoise}. This benchmark consists of 268 classes, 553 methods, 4697 lines of code
 including the Polyglot framework.
 
@@ -196,9 +200,8 @@ paths, we found that the cost of static analysis gets amortized as the number of
 %    in mode 2.]{
     {\includegraphics[width=\columnwidth]{figures/merarbiter-results.pdf} }
     \label{fig:merarbiter-results}%
-    \caption{With 6 steps (24 symbolic inputs) of MerArbiter, \tool\ reduces execution path count by 94\% and running time by 68\%. While
-    vanilla SPF (mode 1 in \tool) times out in 12 hours with 7 steps (28 symbolic inputs), \tool finishes in 3.4\% hours
-    in mode 2.}
+    \caption{With 6 steps (24 symbolic inputs) of MerArbiter, \tool\ reduces execution path count by 94\% and running time by 68\%.
+    SPF times out in 12 hours with 7 steps (28 inputs), \tool\ finishes in 3.4 hours in mode 2.}
 \end{figure}
 
 Figures~\ref{fig:results1},~\ref{fig:results2} show that \tool\ achieves a significant speed-up over SPF with
@@ -231,7 +234,7 @@ instructions that required \tool\ to lookup a region summary for it and (2) 8,95
 %
 In case of WBS, \tool\ summarizes a multi-path region that consists of 9 branches.
 %
-In case of TCAS, \tool\ uses 28 method summaries in each step of TCAS, many of which summarize multiple feasible return values of a method
+In case of TCAS, \tool\ uses 28 method summaries in each step of TCAS, many of which summarize multiple return values
 into a single formula that represents all the feasible return values of the method.
 %
 While SPF does not finish more than 5 steps of WBS and 2 steps of TCAS within 12 hours, \tool\ finishes 10 steps of both

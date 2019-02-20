@@ -179,17 +179,15 @@ Unfortunately, constructing such a summary for this simple region is not straigh
 The call to {\tt list.get(int)} which is actually a call to
 {\tt ArrayList<Integer>.get(int)} which internally does the following:
 %
-\begin{enumerate}
-\item It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling\\
+(1) It checks if the index argument accesses a value within bounds of the {\tt ArrayList} by calling\\
 {\tt ArrayList<E>.rangeCheck(int)}. If this access is not within bounds, it throws an exception.
 %
-\item It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the
+(2) It calls {\tt ArrayList<E>.elementData(int)} to access an internal array named {\tt elementData} and get the
 entry at position {\tt i}. This call results in an object of class {\tt Integer} being returned.
 %
-\item It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses
+(3) It calls {\tt Integer.intValue()} on the object returned by the previous step. This call internally accesses
 the {\tt value} field of {\tt Integer} to return the integer value of this object.
 %
-\end{enumerate}
 
 The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
 also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.

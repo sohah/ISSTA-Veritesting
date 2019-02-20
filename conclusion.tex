@@ -1,23 +1,29 @@
 \section{Conclusion}
 \label{sec:future}
 
-We presented Java Ranger as a path merging tool for Java.
+We presented an extension to veritesting implemented in a tool named \tool.
 %
-It works by systematically applying a series of transformations over a statement recovered from the CFG. This
-representation provides the benefit of modularity and makes path-merging for Java symbolic execution more accessible to
-end users.
+It works by systematically applying a series of transformations over a statement recovered from the CFG.
 %
-Java Ranger has its own IR statement and it supports the construction of SSA for fields and arrays.
+%This representation provides the benefit of modularity and makes path-merging for Java symbolic execution more accessible to
+%end users.
 %
-Java Ranger provides evidence that inlining summaries of higher-order regions can lead to a further reduction in the
-number of execution paths that need to be explored with path merging.
+%Java Ranger has its own IR statement and it supports the construction of SSA for fields and arrays.
 %
-It supports the exploration of exceptional behavior in multi-path regions via Single Path Cases.
+\tool\rq s use of fixed-point computation over multiple transformations demonstrates a
+significant improvement over SPF.
 %
-It provides an alternative method using which a symbolic executor can summarize unexceptional behavior of a multi-path
-region while simultaneously capturing exceptional behavior in the region.
+\tool\ provides evidence that inlining summaries of higher-order regions can lead to a further reduction in the
+number of execution paths that need to be explored with path merging as shown by the TCAS benchmark.
 %
-Java Ranger reinterprets path merging for symbolic execution of Java bytecode and has the potential to allow symbolic
-execution to scale up to exploration of real-world Java programs.
+\tool\rq s use of return value summaries also demonstrates a significant benefit over SPF with the NanoXML benchmark.
+%
+%It supports the exploration of exceptional behavior in multi-path regions via Single Path Cases.
+%
+%It provides an alternative method using which a symbolic executor can summarize unexceptional behavior of a multi-path
+%region while simultaneously capturing exceptional behavior in the region.
+%
+\tool\ reinterprets path merging for symbolic execution of Java bytecode and allows symbolic
+execution to scale to exploration of real-world Java programs.
 
 
