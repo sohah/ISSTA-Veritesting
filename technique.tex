@@ -112,8 +112,8 @@ This step which goes from $C$ to $C'$ discovers all the classes at a class depth
 %
 We continue this method discovery process up to a class depth of 3.
 %
-While we can increase the call depth in our method discovery process, we found that summarizing
-arbitrary code regions with more than 3 steps deep, did not lead to practically useful region summaries.
+We found that summarizing
+arbitrary code regions with more than 3 steps deep did not lead to practically useful region summaries.
 %
 After obtaining a list of methods, we computed static summaries of multi-path regions in these methods and method summaries.
 %
@@ -225,7 +225,9 @@ for {\em dynamically-dispatched} functions, and whether references are {\em uniq
 %
 The outcome of this step is a statement in Java Ranger.
 %
-For the motivating example in Figure~\ref{fig:mot-example}, the recovered statement is as follows:
+For region 2 shown in the motivating example in Figure~\ref{fig:mot-example}, the recovered statement is as follows where
+$x58$ corresponds to input from $inWord$, and $x54$, $x55$ correspond to outputs to $wordCount$,
+$inWord$ respectively.
 %
 \begin{lstlisting}
 if ((! (== x58 0 ) )) {
@@ -465,7 +467,6 @@ The $\rn{early-return_1}$ and $\rn{early-return_2}$ describe the semantics of th
 unique to each instantiation of the region.
 %
 This transformation helps distinguish variables across multiple instantiations of the same region.
-uniqueness before further processing takes place.
 %
 % This is particularly important not only to ensure uniqueness of variables among different regions, but also to ensure
 %uniqueness of variable names of the \textit{same} region whichmight be instantiated multiple times on the same path,
@@ -473,7 +474,7 @@ uniqueness before further processing takes place.
 %
 %We do not define this transformation formally due to space, but it is basically straight forward by generating a unique
 %prefix for each variable and updates the new name in the statement as well as all the contexts in which it appears.
-To give an example of this transformation from our motivating example, line 2 gets changed to:
+To give an example of this transformation, line 2 in the recovered Ranger IR statement gets changed to:
 \begin{lstlisting}
 x44$2 = invoke < Application, Ljava/util/List, get(I)Ljava/lang/Object; >[x9$2, x59$2]
 \end{lstlisting}
@@ -486,7 +487,7 @@ The $\rn{substitution}$ rule in Figure~\ref{fig:semantics} describes the semanti
 %The $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its
 %dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.
 Running this transformation on the previous Ranger IR statement causes $x9\$2$ to be
-resolved to a concrete integer value 375 to change the statement to {\tt x44\$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59\$2);}\\
+resolved to a concrete integer value 375 to change the statement to $x44\$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59\$2);$\\
 %transformation, thus line 2 becomes:
 %\begin{lstlisting}
 %x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
@@ -497,7 +498,7 @@ during local variable substitution.
 %
 At this point, we perform three steps.
 %
-(1) The called method\rq s summary is retrieved and alpha renaming of Ranger IR variables is applied on it.
+(1) The called method\rq s summary is retrieved and variables in it are alpha-renamed.
 %
 (2) Ranger IR expressions that correspond to the method\rq s parameters are evaluated and used to substitute the formal
 parameters by repeatedly applying local variable substitution transformation over the method region.
@@ -523,7 +524,7 @@ To continue the effect of this transformation on the motivating example, regions
 $ArrayList.get(I)java.lang.Object$ are inlined in the original region to get the following Ranger IR statement.
 %
 Please note that $x58$ from the originally recovered static summary has been substituted by $x40\$1$ because it was
-read as a local variable input that had the symbolic value $x40\$1$ (a consequence of summarizing in lines 8--10 in
+read as a local variable input~($inWord$)~that had the symbolic value $x40\$1$ (a consequence of summarizing region 1 in
 Figure~\ref{fig:mot-example}).
 %
 \begin{lstlisting}
@@ -614,9 +615,8 @@ All array copies are merged at the merge point of multi-path regions.
 %
 The merged array copy represents array outputs of the region.
 %
-The effect of this transformation on the last shown Ranger IR statement produces the following statement.
-%
-For this region instantiation, the value present at index 0 in array reference 397 was 380.
+The effect of this transformation on the last shown Ranger IR statement produces the following statement where the
+value at index 0 in array reference 397 was 380.
 \begin{lstlisting}
 if ((!= x40$1 0 )) {
   if ((&& (< 0 200 ) (>= 0 0 ) )) {
@@ -645,10 +645,10 @@ x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 %statements, binary operations, and variables at leaf nodes of $\gamma$ functions.\\
 %
 \textbf{Simplification of Ranger IR}: This transformation uses constant propagation, copy propagation, and constant
-folding~\cite{dragon-book} to avoid unnecessary formulas in the region by representing constant assignments and copies
+folding~\cite{dragon-book} to shorten the summary by representing constant assignments and copies
 in the region\rq s instantiation environment.
 %
-This transformation also simplifies away if-then-else expressions and if-then-else statements where both choices are
+This transformation also simplifies if-then-else expressions and if-then-else statements where the choices are
 syntactically equal.
 %
 Running simplification on the previous Ranger IR statement yields the following statement.
@@ -671,7 +671,7 @@ x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 %x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 %\end{lstlisting}
 \textbf{Single Path Cases}: This transformation collects path predicates inside a region that lead to
-\textit{non-nominal} exit point as an alternative to transition points as presented by Avgerinos et al~\cite{veritesting}.
+\textit{non-nominal} exit point as an alternative to transition points~\cite{veritesting}.
 %
 We define non-nominal exit points to be program locations inside the region that either cause
 exceptional behavior or use behavior that we cannot summarize, i.e, object creation.
@@ -702,10 +702,12 @@ capture the semantics of behavior happening on both sides of the branch.
 %GSA, dropping if-then-else statements from the Ranger IR representation of the region summary reduces redundancy in its
 %semantics and converts it into a stream of GSA and SSA statements.\\
 Running this transformation on the last shown Ranger IR statement (after another simplification and inlining of the
-summary of {\tt Integer.intValue()}) produces the following statement.
+summary of $Integer.intValue()$) produces the following statement.
 %
-Please note that the {\tt value} field accessed by {\tt Integer.intValue()} in the object referenced by the value
-380 was set to the symbolic integer {\tt x1}.
+Please note that the $value$ field accessed by $Integer.intValue()$ in the object referenced by the value
+380 was set to the symbolic integer $x1$.
+%
+The variables $x54\$2$ and $x55\$2$ correspond to outputs to $wordCount$, $inWord$ in Figure~\ref{fig:mot-example} respectively.
 \begin{lstlisting}
 x54$2 := (Gamma x40$1!=0 (Gamma x1==0 1 0) 0);
 x55$2 := (Gamma x40$1!=0 (Gamma x1==0 0 x40$1) (Gamma x1!=0 1 x40$1));

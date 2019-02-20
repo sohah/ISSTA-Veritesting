@@ -126,6 +126,9 @@ the same 12 hour time budget.
 %
 We report results from both of these evaluations for each benchmark in Figures~\ref{fig:results1},~\ref{fig:results2}.
 %
+Detailed experimental results are reported in Tables~\ref{table:results1},~\ref{table:results2} in a file named
+``results-tables.pdf'' in the supplementary material included in our submission.
+%
 Since Java Ranger relies on a prior static analysis to construct region summaries, we report the time taken to statically
 analyze all the code in each of the benchmarks in Table~\ref{table:static-analysis-time}.
 %
@@ -226,8 +229,8 @@ count with the PrintTokens2 benchmark.
 We restrict our results with Siena to 6 symbolic inputs because 6 is the most number of symbolic inputs for which
 SPF finishes complete path exploration within a 12 hour time budget.
 %
-On running Siena with 6 symbolic inputs, the overhead of \tool\ results from it running into (1) 3,800,343 symbolic branch
-instructions that required \tool\ to lookup a region summary for it and (2) 8,959,692 concrete branch instructions that
+On running Siena, the overhead of \tool\ results from running into (1) 3,800,343 symbolic branch
+instructions that a region summary lookup and (2) 8,959,692 concrete branch instructions that
 \tool\ could have summarized, had these branches been symbolic.
 
 \tool\ is able to summarize the entire step function of WBS and TCAS into a single execution path.
@@ -254,8 +257,8 @@ On the ApacheCLI benchmark, the most significant benefit is introduced in mode 2
 Modes 4, 5 cause an increase in execution path count and running time but still give a significant reduction over
 mode 1.
 %
-The increase in running time in modes 4 and 5 results from \tool\ use of the solver to check if the single-path cases
-that may be present in the multi-path region in modes 4 and 5 are feasible.
+The increase in running time in modes 4 and 5 results from \tool\rq s use of the solver to check if the single-path cases
+in modes 4 and 5 are feasible.
 %
 In the future, we plan to use a counter-example cache to reduce the use of a solver to check the feasibility of these
 single-path cases.

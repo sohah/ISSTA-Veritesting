@@ -77,7 +77,7 @@ Not being able to summarize such dynamically dispatched methods can lead to poor
 n\"aive implementations of bounded static regions.
 %
 Thus, to be successful, we must be able to inject the static regions associated with the calls into the dispatching
-region.
+region~\cite{sharma-veritesting}.
 %
 We call such regions {\em higher order} as they require a region as an argument and can return a region that may need
 to be further interpreted.
@@ -153,7 +153,7 @@ defined by Avgerinos et al.~\cite{veritesting}.
 \subsection{Motivating Example}
 \begin{figure}
     \includegraphics[width=\columnwidth]{figures/wordCount.pdf}
-    \caption{An example demonstrating the need for using a multi-path region summary}
+    \caption{An example demonstrating the need for using a multi-path region summary for two regions}
     \label{fig:mot-example}
 \end{figure}
 Consider the example shown in Figure \ref{fig:mot-example}.
