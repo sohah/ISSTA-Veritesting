@@ -133,8 +133,8 @@ in Figure~\ref{fig:overview}.
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
 <exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
-\alt get_field( <exp>, <exp> ) | put_field( <exp>, <exp> )
-\alt array_load( <exp>, <exp> ) | array_store( <exp>, <exp>, <exp> ) 
+\alt get_field( <exp> ) | put_field( <exp>, <exp> )
+\alt array_load( <exp> ) | array_store( <exp>, <exp>, <exp> ) 
 \alt gamma( <exp>, <exp>, <exp> ) | <exp>.<exp>
 
 <$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
@@ -162,6 +162,8 @@ $$
 & \Gamma_s: ref \rightarrow & \tau&&
 \\
 \text{Region-map} & \Psi: \tau \rightarrow & x.s &&
+\\
+\text{path-subscript-map} & psm: v \rightarrow & x &&
 \\
 & \Theta: var \rightarrow & loc &&
 \\
@@ -235,7 +237,7 @@ In the following sections we will discuss the various parts of this statement to
 
 The grammar of Java Ranger is defined in~\ref{fig:grammar}. Basically the grammar is composed of statements $stmt$ and expressions $exp$. Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\; \tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$ statement to bookmark exit point of a region/statement. 
 
-Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and characters $\mathbb{C}$) , variables (these are subscripted with integers to facilitate having ssa form for vars D_$\mathbb{N}$), binary operations $op_b$, unary operations $op_u$,  $get-field(exp, exp)$ and $put-field(exp, exp, exp)$ for accessing and changing fields,  $array-load(exp, exp)$ and  $array-store(exp, exp, exp)$ for accessing and changing array elements, a special gamma expression, $gamma(exp, exp, exp)$, that operates like $?:$ in Java. Gamma expression are fundamentally important to Java Ranger because it is how Java Ranger determines the conditions of different paths as well as the evaluation of variables along these paths.  
+Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and characters $\mathbb{C}$) , variables (these are subscripted with integers to facilitate having ssa form for vars D_$\mathbb{N}$), binary operations $op_b$, unary operations $op_u$,  $get-field(exp)$ and $put-field(exp, exp, exp)$ for accessing and changing fields,  $array-load(exp)$ and  $array-store(exp, exp, exp)$ for accessing and changing array elements, a special gamma expression, $gamma(exp, exp, exp)$, that operates like $?:$ in Java. Gamma expression are fundamentally important to Java Ranger because it is how Java Ranger determines the conditions of different paths as well as the evaluation of variables along these paths.  
 It worth pointing out that Java Ranger defines 3 types of variables, a field or array variable (created to maintain fields and arrays ssa), an early return variable (to carry early return values) and any other type of variables. We assume the existence of a special function $gen_var$ that would generate one variable in the right sequence for each of these types. 
 
 In the remaining sections we will use $x$ to range over any type of variable, $x_{ref}$ to variables constructed for fields and arrays and $x_{ret}$ for variables constructed for early return construction. Similarly we will use $s$ to range over statements, $e$ to range over expressions and $v$ to range over values.
@@ -312,21 +314,21 @@ Formally we define the following structures: \\
 $$
 \infer[\rn{substitution}]
  {\step{\Theta, \Delta_s}{x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}{sub}}
- {\lookup{\Theta}{x} = l , \quad \lookup{\Delta_s}{l}=(v,e)}
+ {\lookup{\Theta}{x} = l , \qquad \lookup{\Delta_s}{l}=(v,e)}
 \qquad
  \infer[\rn{single-path_1}]
- {\step{}{throw e}{}{exit}{single}}
+ {\sstep{throw \:e}{single}{exit}}
  {}
 $$
 $$
 \infer[\rn{high-order_1}]
  {\step{\Gamma_r, \Delta_r}{s_1; invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \quad \lookup{\Gamma_s}{v_1} = \tau , \quad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{high-order_2}]
  {\step{\Gamma_r, \Delta_r}{e = invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \quad \lookup{\Gamma_s}{v} = \tau, \quad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}), \quad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}), \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{single-path_2}]
@@ -354,18 +356,44 @@ $$
 $$
 \infer[\rn{early-return_1}]
  {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
- {gen\_id(ret) = x_{ret} \qquad x_{ret}'' \notin s_1 \qquad x_{ret}' \notin s_2}
+ {gen\_id() = x_{ret} \qquad x_{ret}'' \notin s_1 \qquad x_{ret}' \notin s_2}
 $$
 $$
-\infer[\rn{early-return_2}]
+\infer[\rn{get-return_2}]
  {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret} \cup (x_{ret} (e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
- {\step{\Sigma}{s_1}{\Sigma_{ret}: (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \quad
-  \step{\Sigma}{s_2}{\Sigma_{ret}: (w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \quad gen\_id(ret) = x_{ret}}
+ {\step{\Sigma}{s_1}{\Sigma_{ret}: (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
+  \step{\Sigma}{s_2}{\Sigma_{ret}: (w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
+$$
+$$
+\infer[\rn{get-field_1}]
+ {\step{\Gamma}{x := get\text{-}field(e)}{\Gamma'}{ x := (v,e')}{field}}
+ {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
+$$
+$$
+\infer[\rn{get-field_2}]
+ {\step{\Gamma}{x := get\text{-}field(e)}{\Gamma'}{ x := (v,e')}{field}}
+ {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad psm(v) = x_r}
+$$
+$$
+\infer[\rn{put-field_1}]
+ {\step{\Gamma, psm}{x := put\text{-}field(e1, e2)}{\Gamma', psm\cup(v, x_0)}{ x := x_0; x_0 := e2}{field}}
+ {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad \Theta(v) = l \qquad psm(v) = \phi }
+$$
+$$
+\infer[\rn{put-field_2}]
+ {\step{\Gamma, psm}{x := put\text{-}field(e1, e2)}{\Gamma', psm\cup(v, x_{ref})}{ x := x_r; x_{ref} := e2}{field}}
+ {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad \Theta(v) = l \qquad psm(v) \neq \phi \quad gen\_id() = x_{ref}}
+$$
+$$
+\infer[\rn{gamma-generation_1}]
+ {\step{\Gamma, psm}{\ifr{e}{s_1}{s_2}}{\Gamma'', psm''}{\ifr{e}{s_1'}{s_2'} ; x_ref = create\text{-}gamma(s_1', s_2', psm)}{field}}
+ {\step{\Gamma, psm}{s_1}{\Gamma', psm'}{s_1'}{field} \qquad 
+ \step{\Gamma', psm'}{s_2}{\Gamma'', psm''}{s_2'}{field}  \qquad gen\_id() = x_{ref}}
 $$
 %$$
 %\infer[\rn{early-return_3}]
 % {\step{\Sigma_{ret}}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \vee true}{\ifr{e}{(s_1 ; \return{e_1})}{skip} ; x_{ret} := e_1}}
-% {gen\_id(\_) = x_{ret}}
+% {gen\_id() = x_{ret}}
 %$$
 }}
 \caption{Evaluation Rules for Ranger Transformations}

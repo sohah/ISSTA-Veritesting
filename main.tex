@@ -61,8 +61,9 @@
 \newcommand{\return}[1]{return\: #1}
 \newcommand{\throw}[1]{throw\: #1}
 \newcommand{\ifr}[3]{if \; #1 \; then \; #2 \; else \: #3}
-\newcommand{\rstate}[2]{#1 \:,\: #2}
+\newcommand{\rstate}[2]{#1 \:;\: #2}
 \newcommand{\step}[5]{\rstate{#1}{#2}\ \mapsto_{#5}\ \rstate{#3}{#4}}
+\newcommand{\sstep}[3]{#1\: \mapsto_{#2}\: #3}
 \newcommand{\lookup}[2]{#1(#2)}
 \newcommand{\sub}[3]{[#1/#2]#3}
 
