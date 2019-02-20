@@ -57,8 +57,7 @@ regions to have more than one exit point.
 These exit points take the form of new object allocations and exceptional behavior present in the region.\\
 %
 \textbf{Mode 5}: In addition to using summaries instantiated in mode 4, \tool\ converts multiple exit points that return
-control flow into a single control flow-returning exit point along with using single-path
-cases to allow multi-path regions to have more than one non-returning exit point.
+control flow into a single control flow-returning exit point to allow multi-path regions to have more than one non-returning exit point.
 
 We used the control-flow graph recovered by Wala~\cite{Wala} to bootstrap our static statement recovery process.
 %
@@ -114,8 +113,8 @@ We used the version made
 available by Yang et al.~\cite{memoise}. This benchmark consists of 268 classes, 553 methods, 4697 lines of code
 including the Polyglot framework.
 
-We first ran each of these benchmarks using SPF with increasing number of symbolic inputs and obtained the most number
-of symbolic inputs with which SPF finished complete exploration of each benchmark within a 12 hour time budget.
+We first ran each of these benchmarks using SPF with increasing number of symbolic inputs and obtained the most number of inputs
+with which SPF finished complete exploration of each benchmark within a 12 hour time budget.
 %
 We then ran each benchmark with this number of symbolic inputs with \tool.
 %
@@ -129,13 +128,15 @@ We report results from both of these evaluations for each benchmark in Figures~\
 Detailed experimental results are reported in Tables~\ref{table:results1},~\ref{table:results2} in a file named
 ``results-tables.pdf'' in the supplementary material included in our submission.
 %
+A even more detailed set of results can be found in a file named ``results-all.csv''.
+%
 Since Java Ranger relies on a prior static analysis to construct region summaries, we report the time taken to statically
 analyze all the code in each of the benchmarks in Table~\ref{table:static-analysis-time}.
 %
 We found that the total time required for static analyis is roughly proportional to the size of the benchmark.
 %
 While such static analysis performance can cause \tool\ to be slower on benchmarks with a small number of execution
-paths, we found that the cost of static analysis gets amortized as the number of execution paths increased in each benchmark.
+paths, we found that the cost of static analysis gets amortized as the number of execution paths increased.
 %
 \begin{figure*}%
     \centering

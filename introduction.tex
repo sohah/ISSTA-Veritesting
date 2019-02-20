@@ -106,9 +106,9 @@ For a region summary, a return instruction represents an \textit{exit point} of 
 An exit point is a program location in the region at which paths in the region have been merged into a single path.
 %
 If region has multiple exit points in the form of multiple return instructions, each predicated on a condition, the symbolic
-executor can construct a formula that represents all the possible return values predicated on their corresponding conditions.
+executor can construct a formula that represents all return values predicated on their corresponding conditions.
 %
-Summarizing such multiple control-flow returning exit points of a region into a single returning exit point further
+Summarizing such multiple control-flow returning exit points of a region into a single exit point further
 reduces the branching factor of the region.
 
 While summarizing higher-order regions, finding single-path cases, and converting multiple returning exit points into a
