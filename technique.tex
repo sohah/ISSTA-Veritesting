@@ -227,7 +227,7 @@ The outcome of this step is a statement in Java Ranger.
 %
 For region 2 shown in the motivating example in Figure~\ref{fig:mot-example}, the recovered statement is as follows where
 $x58$ corresponds to input from $inWord$, and $x54$, $x55$ correspond to outputs to $wordCount$,
-$inWord$ respectively.
+$inWord$ respectively.\\
 %
 \begin{lstlisting}
 if ((! (== x58 0 ) )) {
@@ -591,8 +591,8 @@ simplification) within the same fixed point iteration, this Ranger IR statement 
 Please note that the simplification transformation sets variables assigned to a constant value in a constant values
 map maintained in the region\rq s instantiation environment.
 %
-This causes the assignment to $x48\$2$ to be removed from the below Ranger IR statement and uses of $x48\$2$ to be
-substituted by the constant 1.
+%This causes the assignment to $x48\$2$ to be removed from the below Ranger IR statement and
+This causes uses of $x48\$2$ to be substituted by the constant 1.
 %
 \begin{lstlisting}
 if ((!= x40$1 0 )) {
@@ -603,7 +603,7 @@ if ((!= x40$1 0 )) {
 x54$2 := (Gamma x40$1!=0 (Gamma x47$2==0 1 0) 0);
 x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 \end{lstlisting}
-\textbf{Array References SSA Transformation}: The array references transformation translates reads and writes of arrays in
+\textbf{Array References SSA Transformation}: This transformation translates reads and writes of arrays in
 Java bytecode into corresponding Ranger IR statements.
 %
 In order to translate all array accesses to SSA form, this transformation creates an execution path-specific copy of
@@ -616,7 +616,7 @@ All array copies are merged at the merge point of multi-path regions.
 The merged array copy represents array outputs of the region.
 %
 The effect of this transformation on the last shown Ranger IR statement produces the following statement where the
-value at index 0 in array reference 397 was 380.
+value at index 0 in array reference 397 was 380 and the length of array at reference 397 was 200.
 \begin{lstlisting}
 if ((!= x40$1 0 )) {
   if ((&& (< 0 200 ) (>= 0 0 ) )) {
