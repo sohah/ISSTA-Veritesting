@@ -55,7 +55,7 @@
 
 %\acmPrice{15.00}
 
-\newcommand{\unit}{ ( ) }
+\newcommand{\unit}{ (\;) }
 \newcommand{\rn}[1]{\scriptscriptstyle\mathtt{#1}}
 \newcommand{\compose}[2]{#1 \; ; \; #2}
 \newcommand{\return}[1]{return\: #1}
@@ -80,6 +80,9 @@
 \newcommand{\toolfull}{Java Ranger}
 
 \title{\tool: Static Regions for Efficient Symbolic Execution of Java}
+% Note: the \title is repeated twice more below around the call to
+% \maketitle so that we can use a version with a nicer-looking choice
+% of a line break location on the first page of the paper.
 
 \author{Vaibhav Sharma}
 \authornote{Both authors contributed equally to this research.}
@@ -176,14 +179,16 @@ into a single such exit point.
 We have implemented our algorithms in \tool, an extension to the
 widely used Symbolic Pathfinder tool for Java bytecode.
 %
-Our empirical evaluation shows that veritesting greatly reduces the
-search space of Java symbolic execution benchmarks, while our expanded
-capabilities provided a significant further improvement.
+Our empirical evaluation shows that \tool\ greatly reduces the
+search space of Java symbolic execution benchmarks with its expanded
+path-merging capabilities providing a significant improvement.
 
 
 
 \end{abstract}
+\title{\tool: Static Regions for\\Efficient Symbolic Execution of Java}
 \maketitle
+\title{\tool: Static Regions for Efficient Symbolic Execution of Java}
 
 %\keywords{multi-path symbolic execution; veritesting; Symbolic
 %PathFinder; static analysis}
