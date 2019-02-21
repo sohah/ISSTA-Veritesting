@@ -713,14 +713,18 @@ x55$2 := (Gamma x40$1!=0 (Gamma x1==0 0 x40$1) (Gamma x1!=0 1 x40$1));
 \end{lstlisting}
 \textbf{Translation to Green}:
 %
-At this point Ranger region contains only compositional statements as well as assignment statements that might contain
-GSA expressions in them.
+At this point, the region summary contains only compositional statements with assignment statements that contain
+GSA expressions.
 %
-Compositional statements are translated into conjunction, assignment statements are translated into Green equality expressions.
+Compositional statements are translated into conjunction, assignment statements are translated into Green~\cite{green}
+equality expressions.
 %
 For assignment statements that have GSA expressions~(shown in the $\rn{to-green}$ rule in Figure~\ref{fig:semantics}),
 these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation
 were satisfied.
+%
+We translate region summaries from Ranger IR to Green because we found Green constraints to be a more pliable interface
+for translation from Ranger IR to the solver than SPF\rq s existing constraints.
 
 %\subsection{Checking Correctness Of Region Summaries}
 %The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should
