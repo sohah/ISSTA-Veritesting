@@ -4,20 +4,21 @@
 \begin{algorithm}[]
 \SetAlgoLined
 Input: Region R\;
- somethingChanged = true\;
  execute early-return transformation(R)\;
- execute alpha-renaming transformation(R)\;
- \Repeat{!(somethingChanged)}
+execute alpha-renaming transformation(R)\;
+somethingChanged = true\;
+\Repeat{!(somethingChanged)}
  {
 	\While{(somethingChanged)}{
+        somethingChanged = false\;
 		execute substitution transformation(R)\;
-		execute higher-order method inlining transformation(R)\;
+		execute higher-order transformation(R)\;
 		execute field references SSA transformation(R)\;
 		execute array references SSA transformation(R)\;
 		execute simplification transformation(R)\;}
 	execute higher-order transformation(R)\;}
 execute single-path cases transformation(R)\;
-execute linearlization transformation(R)\;
+execute linearization transformation(R)\;
 execute to-green transformation(R)\;
 \If{R successfully transformed}{populate outputs\;}
 \caption{Ranger general pseudocode}
@@ -323,14 +324,17 @@ used in that $\phi$-expression must belong to the same stack slot.
 We use this assumption to propagate stack slots across all $\phi$-expressions.
 %
 %
-Formally we define the following structures: \\
+Formally we define the following structures.
+%
+Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where
+each step on some statement s, w.r.t. the maps below yields a new statement $s'$ and possibly new maps in some
+transformation $T$.\\
 \textbf{value-map}: $\Delta_r$ and $\Delta_s$ maps stack slots, to concrete values $val$ or symbolic values $exp$ for Java Ranger and SPF respectively.\\
 \textbf{type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and SPF respectively.\\
 \textbf{region-map}: Java Ranger defines a map $\Psi$ from type $\tau$  to a parametric statement $x.s$ that defines the region\rq s summary.\\
 \textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints\\
 \textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints.
-
-Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where each step on some statement s, with respect to the maps above yields a new statement $s'$ and possibly new maps in some transformation $T$.
+%
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
 %variables.
@@ -344,8 +348,7 @@ Figure~\ref{fig:semantics} shows the semantics of different transformations, wit
 %%
 %This requires visiting all variables and phi statements of the IR to maximize the inference of the stack slot, this is
 %repeatedly done until a fix point is reached.
-
-
+%
 \begin{figure*}[t]
     \footnotesize
 \fbox{%
@@ -437,7 +440,7 @@ $$
 \caption{Evaluation Rules for Ranger Transformations}
 \label{fig:semantics}
 \end{figure*}
-
+%
 \subsection{Instantiation-time Transformations}
 \label{sec:instantiationTransformations}
 
@@ -483,11 +486,11 @@ The $\rn{substitution}$ rule in Figure~\ref{fig:semantics} describes the semanti
 %The $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its
 %dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.
 Running this transformation on the previous Ranger IR statement causes $x9\$2$ to be
-resolved to a concrete integer value 375 to change the statement to $x44\$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59\$2);$\\
+resolved to a concrete integer value 375 to change the statement to %$x44\$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59\$2);$\\
 %transformation, thus line 2 becomes:
-%\begin{lstlisting}
-%x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
-%\end{lstlisting}
+\begin{lstlisting}
+x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
+\end{lstlisting}
 %
 \textbf{Higher-order Regions Transformation}: This transformation is initiated when a method invocation is encountered
 during local variable substitution.

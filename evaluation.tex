@@ -1,17 +1,6 @@
 \section{Evaluation}
 \label{sec:results}
 \subsection{Experimental Setup}
-\begin{table}[]
-    \begin{tabular}{@{}ccccc@{}}
-        \toprule
-        WBS   & TCAS      & replace      & NanoXML   &            \\ \midrule
-        1234  & 4509      & 3980         & 871       &            \\ \midrule
-        Siena & Schedule2 & PrintTokens2 & ApacheCLI & MerArbiter \\ \midrule
-        1551  & 722       & 1180         & 910       & 20639      \\ \bottomrule
-    \end{tabular}
-    \caption{Static analysis time (msec) for all 9 benchmarks}
-    \label{table:static-analysis-time}
-\end{table}
 %
 We implemented the above mentioned transformations as a wrapper around the Symbolic PathFinder~\cite{spf} tool.
 %
@@ -76,6 +65,17 @@ Since path-merging can create large formulas in the path condition, the incremen
 reducing the number of times large formulas had to be passed to the solver.
 %
 \subsection{Evaluation}
+\begin{table}[h]
+    \begin{tabular}{@{}ccccc@{}}
+        \toprule
+        WBS   & TCAS      & replace      & NanoXML   &            \\ \midrule
+        1234  & 4509      & 3980         & 871       &            \\ \midrule
+        Siena & Schedule2 & PrintTokens2 & ApacheCLI & MerArbiter \\ \midrule
+        1551  & 722       & 1180         & 910       & 20639      \\ \bottomrule
+    \end{tabular}
+    \caption{Static analysis time (msec) for all 9 benchmarks}
+    \label{table:static-analysis-time}
+\end{table}
 %
 In order to evaluate the performance of \tool, we used the following nine benchmarking programs commonly used to
 evaluate symbolic execution performance.
@@ -182,7 +182,7 @@ paths, we found that the cost of static analysis gets amortized as the number of
 \begin{figure}[]%
     \centering
     \subfloat[In mode 2 in ApacheCLI with 6 symbolic inputs, \tool\ reduces execution path count by 96\% while reducing
-    running time by 86\%. While vanilla SPF (mode 1 in \tool) times out in 12 hours with 7 symbolic inputs, \tool\
+    running time by 86\%. While vanilla SPF (which is mode 1 in \tool) times out in 12 hours with 7 symbolic inputs, \tool\
     manages to finish in 3.6 hours in mode 2.]{
     {\includegraphics[width=\columnwidth]{figures/apachecli-results.pdf}
     \label{fig:apachecli-results}}}%
@@ -190,7 +190,7 @@ paths, we found that the cost of static analysis gets amortized as the number of
     \subfloat[The last input to ApacheCLI is different from all the other inputs because it controls whether ApacheCLI
     should stop on encountering a non-option input. The benefits of using \tool\ with ApacheCLI are still evident
     if this input is made symbolic. In mode 2, \tool\ reduces execution path count by 96\% and running time by 88\%.
-    Vanilla SPF (mode 1 in \tool) still times out in 12 hours with 8 symbolic inputs (including the {\tt stopOnNonOption}
+    Vanilla SPF (which is mode 1 in \tool) still times out in 12 hours with 8 symbolic inputs (including the {\tt stopOnNonOption}
     input while \tool\ manages to finish in 7.2 hours in mode 2.)]{
     {\includegraphics[width=\columnwidth]{figures/apachecli-1-results.pdf} }
     \label{fig:apachecli-1-results}}%
@@ -267,7 +267,7 @@ single-path cases.
 In the MerArbiter benchmark, while the most significant benefit is introduced in mode 2 of \tool, the benefit in terms of
 both execution path count and running time remains the same in modes 3, 4, and 5.
 %
-All the multi-path regions that SPF~(or mode 1 in \tool) needs to branch on but are summarized by \tool\ are small
+All the multi-path regions that SPF~(which is mode 1 in \tool) needs to branch on but are summarized by \tool\ are small
 regions that compute a boolean value based on a symbolic branch and write it to the stack as an operand to be used
 by the following return instruction.
 %
