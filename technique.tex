@@ -121,7 +121,7 @@ Next, we attempt to summarize these methods and regions in them.
 \begin{grammar}
 <stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
 \alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
-\alt invoke( $\tau$, <exp>, <exp> )  | exit
+\alt invoke( <exp>, <exp> )  | exit
 
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
@@ -220,7 +220,7 @@ If for any graph, the post-dominator is also a predecessor of the node, we consi
 The algorithm systematically attempts to build regions for every branch instruction, even if the branch is already
 contained within another region.
 %
-The reason is that it may not be possible to instantiate the larger region depending on whether summaries can be found
+The reason for this is that, it may not be possible to instantiate the larger region depending on whether summaries can be found
 for {\em dynamically-dispatched} functions, and whether references are {\em uniquely determinable} for region outputs.
 %
 The outcome of this step is a statement in Java Ranger.
@@ -334,6 +334,11 @@ Formally we define the following structures: \\
 \textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints\\
 \textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints
 
+Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where each step on some statement s, with respect to the maps $\Delta_r, \Delta_s, \Gamma_r, \Gamma_s, \Psi, \Sigma, \Sigma_{ret}$, yields a new statement $s'$ and possibly new maps $\Delta_r', \Delta_s', \Gamma_r', \Gamma_s', \Psi', \Sigma', \Sigma_{ret}'$ in some transformation $T$.
+
+$\step{\Delta_r, \Delta_s, \Gamma_r, \Gamma_s, \Psi, \Sigma, \Sigma_{ret}}{s}{\Delta_r', \Delta_s', \Gamma_r', \Gamma_s', \Psi', \Sigma', \Sigma_{ret}'}{s'}{T}$
+
+ To avoid unnecessarily complicated rules and to promote clarity, we take the freedom of writing only maps relevant to a given rule.
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
 %variables.
@@ -364,13 +369,13 @@ $$
 $$
 $$
 \infer[\rn{high-order_1}]
- {\step{\Gamma_r, \Delta_r}{s_1; invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
+ {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
  {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{high-order_2}]
- {\step{\Gamma_r, \Delta_r}{e = invoke(\tau, e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}), \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+ {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}) \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{single-path_2}]
@@ -387,7 +392,7 @@ $$
  {}
  \qquad
 \infer[\rn{linearlization}]
- {\step{\Sigma}{\ifr{e}{s_1}{s_2}}{\Sigma}{\compose{s_1}{s_2}}{}}
+ {\sstep{\ifr{e}{s_1}{s_2}}{\compose{s_1}{s_2}}{}}
  {}
 $$
 $$
@@ -396,41 +401,41 @@ $$
  {}
 $$
 $$
-\infer[\rn{early-return_1}]
- {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
- {gen\_id() = x_{ret} \qquad x_{ret}'' \notin s_1 \qquad x_{ret}' \notin s_2}
-$$
-$$
-\infer[\rn{get-return_2}]
- {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret} \cup (x_{ret} (e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
- {\step{\Sigma}{s_1}{\Sigma_{ret}: (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
-  \step{\Sigma}{s_2}{\Sigma_{ret}: (w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
-$$
-$$
 \infer[\rn{get-field_1}]
- {\step{\Gamma}{x := get\text{-}field(e)}{\Gamma'}{ x := (v,e')}{field}}
- {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
+ {\step{psm}{x := get\text{-}field(e)}{psm}{ x := (v,e')}{field}}
+ {\step{psm}{e}{psm}{v}{any} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
 $$
 $$
 \infer[\rn{get-field_2}]
- {\step{\Gamma}{x := get\text{-}field(e)}{\Gamma'}{ x := (v,e')}{field}}
- {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad psm(v) = x_r}
+ {\step{psm}{x := get\text{-}field(e)}{psm}{ x := x_r}{field}}
+ {\step{psm}{e}{psm}{v}{any} \qquad psm(v) = x_r}
 $$
 $$
 \infer[\rn{put-field_1}]
- {\step{\Gamma, psm}{x := put\text{-}field(e1, e2)}{\Gamma', psm\cup(v, x_0)}{ x := x_0; x_0 := e2}{field}}
- {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad \Theta(v) = l \qquad psm(v) = \phi }
+ {\step{\Gamma_r, psm}{x := put\text{-}field(e1, e2)}{(\Gamma_r \cup (x_0, \Gamma_s{v})), (psm\cup(v, x_0))}{ (x := x_0); (x_0 := e2)}{field}}
+ {\step{\Gamma_r, psm}{e}{\Gamma_r, psm}{v}{any} \qquad \Theta(v) = l \qquad psm(v) = \phi }
 $$
 $$
 \infer[\rn{put-field_2}]
- {\step{\Gamma, psm}{x := put\text{-}field(e1, e2)}{\Gamma', psm\cup(v, x_{ref})}{ x := x_r; x_{ref} := e2}{field}}
- {\step{\Gamma, psm}{e}{\Gamma'}{v}{field} \qquad \Theta(v) = l \qquad psm(v) \neq \phi \quad gen\_id() = x_{ref}}
+ {\step{\Gamma_r, psm}{x := put\text{-}field(e1, e2)}{(\Gamma_r \cup (x_{ref}', \Gamma_r(x_{ref}))), (psm\cup(v, x_{ref}'))}{ (x := x_r) ; (x_{ref}' := e2)}{field}}
+ {\step{psm}{e}{psm}{v}{any} \qquad \Theta(v) = l \qquad psm(v) = x_{ref} \quad gen\_id() = x_{ref}'}
 $$
 $$
 \infer[\rn{gamma-generation_1}]
- {\step{\Gamma, psm}{\ifr{e}{s_1}{s_2}}{\Gamma'', psm''}{\ifr{e}{s_1'}{s_2'} ; x_ref = create\text{-}gamma(s_1', s_2', psm)}{field}}
+ {\step{\Gamma, psm}{\ifr{e}{s_1}{s_2}}{\Gamma''), psm''}{\ifr{e}{s_1'}{s_2'} ; x_{ref} = create\text{-}gamma(s_1', s_2', psm)}{field}}
  {\step{\Gamma, psm}{s_1}{\Gamma', psm'}{s_1'}{field} \qquad 
  \step{\Gamma', psm'}{s_2}{\Gamma'', psm''}{s_2'}{field}  \qquad gen\_id() = x_{ref}}
+$$
+$$
+\infer[\rn{early-return_1}]
+ {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
+ {gen\_id() = x_{ret} \qquad \text{no_return}(s_1) \qquad \text{no_return}(s_2)}
+$$
+$$
+\infer[\rn{get-return_2}]
+ {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret}\cup (x_{ret},(e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{s_1}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
+ {\step{\Sigma_{ret}}{s_1}{\Sigma_{ret}\cup (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
+  \step{\Sigma_{ret}}{s_2}{\Sigma_{ret}'\cup(w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
 $$
 %$$
 %\infer[\rn{early-return_3}]
@@ -520,7 +525,7 @@ Rules $\rn{high-order_1}$ and $\rn{high-order_2}$ describe the semantics of this
 %the method being invoked. Substitution of the parameters then follows and direct inlining occurs. In rule
 %$\rn{high-order_2}$, inlining of the return value translates to an assignment statement.
 %
-To continue the effect of this transformation on the motivating example, regions that defines
+To show the effect of this transformation on the motivating example, regions that defines
 $ArrayList.get(I)java.lang.Object$ are inlined in the original region to get the following Ranger IR statement.
 %
 Please note that $x58$ from the originally recovered static summary has been substituted by $x40\$1$ because it was
