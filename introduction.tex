@@ -31,9 +31,9 @@ FuzzBALL~\cite{BabicMMS2011}, and {\tt angr}~\cite{angr} for binary code.
 
 Although symbolic analysis is a popular technique, scalability is a substantial challenge for many applications.
 %
-In particular, it can suffer from a {\em path explosion}: complex
-software has exponentially many execution paths, and baseline symbolic
-execution techniques that explore one path at a time are unable to
+In particular, symbolic execution can suffer from a {\em path explosion}: complex
+software has exponentially many execution paths, and baseline 
+techniques that explore one path at a time are unable to
 cover all paths.
 %
 Dynamic state merging~\cite{HansenSS2009,kuznetsov} provides one way to
@@ -57,7 +57,7 @@ node and path coverage, when implemented at the X86 binary level for compiled C 
 %
 This motivates us to investigate using static regions for symbolic execution of Java software (at the Java bytecode level).
 
-Java programmers who follow best software engineering practices attempt to write code in an object-oriented
+Java programmers who follow best software engineering practices will write code in an object-oriented
 form with common functionality implemented as a Java class and multiple not-too-large methods used to implement small
 sub-units of functionality.
 %
@@ -129,7 +129,7 @@ Ranger IR.
 %
 Ranger IR has support for inlining method summaries and for constructing SSA form for heap accesses.
 %
-It also proposes Single-Path Cases as an alternative to multiple transition points as
+The paper also proposes Single-Path Cases as an alternative to multiple transition points as
 defined by Avgerinos et al.~\cite{veritesting}.
 
 %This paper extends our initial investigations of Java veritesting
@@ -189,8 +189,8 @@ entry at position {\tt i}. This call results in an object of class {\tt Integer}
 the {\tt value} field of {\tt Integer} to return the integer value of this object.
 %
 
-The static summary of {\tt ArrayList<Integer>.get(int)} needs to not only include summaries of all these three methods but
-also include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
+The static summary of {\tt ArrayList<Integer>.get(int)} needs not only to include summaries of all these three methods but
+also to include the possibility of an exception being raised by the included summary of {\tt ArrayList<E>.rangeCheck(i)}.
 %
 The method whose summary is to be included depends on the dynamic type of the object reference on which the method is being invoked.
 %
