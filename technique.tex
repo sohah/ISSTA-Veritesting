@@ -132,11 +132,7 @@ Next, we attempt to summarize these methods and regions in them.
 
 <$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
 
-<$op_u$> ::= $-$ | \textasciitilde
-
-<val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$
-
-<var> ::= ID_$\mathbb{N}$
+<$op_u$> ::= $-$ | \textasciitilde  \quad <val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$ \quad <var> ::= ID_$\mathbb{N}$
 \end{grammar}
 \caption{Context Free Grammar for Java Ranger IR}
 \label{fig:grammar}
@@ -223,7 +219,7 @@ contained within another region.
 The reason for this is that, it may not be possible to instantiate the larger region depending on whether summaries can be found
 for {\em dynamically-dispatched} functions, and whether references are {\em uniquely determinable} for region outputs.
 %
-The outcome of this step is a statement in Java Ranger IR.
+The outcome of this step is a statement in Java Ranger.
 %
 For region 2 shown in the motivating example in Figure~\ref{fig:mot-example}, the recovered statement is as follows where
 $x58$ corresponds to input from $inWord$, and $x54$, $x55$ correspond to outputs to $wordCount$,
@@ -328,17 +324,13 @@ We use this assumption to propagate stack slots across all $\phi$-expressions.
 %
 %
 Formally we define the following structures: \\
-\textbf{value-map}: Java Ranger and SPF value map $\Delta_r$ and $\Delta_s$  that maps stack slots, to concrete values $val$ or symbolic values $exp$ \\
-\textbf{type-map}: Java Ranger and SPF value map $\Gamma_r$ and $\Gamma_s$  that maps vars or references, to types $\tau$\\
-\textbf{region-map}: Java Ranger defines a map $\Psi$ from type $\tau$  to a parametric statement $x.s$ that defines the region\rq s summary\\
+\textbf{value-map}: $\Delta_r$ and $\Delta_s$ maps stack slots, to concrete values $val$ or symbolic values $exp$ for Java Ranger and SPF respectively.\\
+\textbf{type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and SPF respectively.\\
+\textbf{region-map}: Java Ranger defines a map $\Psi$ from type $\tau$  to a parametric statement $x.s$ that defines the region\rq s summary.\\
 \textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints\\
-\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints
+\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints.
 
-Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where each step on some statement s, with respect to the maps $\Delta_r, \Delta_s, \Gamma_r, \Gamma_s, \Psi, \Sigma, \Sigma_{ret}$, yields a new statement $s'$ and possibly new maps $\Delta_r', \Delta_s', \Gamma_r', \Gamma_s', \Psi', \Sigma', \Sigma_{ret}'$ in some transformation $T$.
-
-$\step{\Delta_r, \Delta_s, \Gamma_r, \Gamma_s, \Psi, \Sigma, \Sigma_{ret}}{s}{\Delta_r', \Delta_s', \Gamma_r', \Gamma_s', \Psi', \Sigma', \Sigma_{ret}'}{s'}{T}$
-
- To avoid unnecessarily complicated rules and to promote clarity, we take the freedom of writing only maps relevant to a given rule.
+Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where each step on some statement s, with respect to the maps above yields a new statement $s'$ and possibly new maps in some transformation $T$.
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
 %variables.
@@ -404,8 +396,7 @@ $$
 \infer[\rn{get-field_1}]
  {\step{psm}{x := get\text{-}field(e)}{psm}{ x := (v,e')}{field}}
  {\step{psm}{e}{psm}{v}{any} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
-$$
-$$
+\qquad
 \infer[\rn{get-field_2}]
  {\step{psm}{x := get\text{-}field(e)}{psm}{ x := x_r}{field}}
  {\step{psm}{e}{psm}{v}{any} \qquad psm(v) = x_r}
@@ -621,7 +612,7 @@ All array copies are merged at the merge point of multi-path regions.
 The merged array copy represents array outputs of the region.
 %
 The effect of this transformation on the last shown Ranger IR statement produces the following statement where the
-value at index 0 in array reference 397 was 380 and the length of array at reference 397 was 200.
+value at index 0 in array reference 397 was 380 and the length of array at reference 397 was 200.\\
 \begin{lstlisting}
 if ((!= x40$1 0 )) {
   if ((&& (< 0 200 ) (>= 0 0 ) )) {
