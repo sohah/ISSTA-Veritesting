@@ -3,41 +3,64 @@
 %
 \begin{algorithm}[]
 \SetAlgoLined
-Input: Region R\;
- execute early-return transformation(R)\;
-execute alpha-renaming transformation(R)\;
-somethingChanged = true\;
-\Repeat{!(somethingChanged)}
- {
-	\While{(somethingChanged)}{
-        somethingChanged = false\;
-		execute substitution transformation(R)\;
-		execute higher-order transformation(R)\;
-		execute field references SSA transformation(R)\;
-		execute array references SSA transformation(R)\;
-		execute simplification transformation(R)\;}
-	execute higher-order transformation(R)\;}
-execute single-path cases transformation(R)\;
-execute linearization transformation(R)\;
-execute to-green transformation(R)\;
-\If{R successfully transformed}{populate outputs\;}
+Input: (symbolic if-instruction inst)\;
+$\region_{initial}$ = jit-region-construction(inst)\;
+$\region_{no\_return}$ =  early-return transformation($\region_{initial}$)\;
+$\region_{alpha}$ =  alpha-renaming transformation($\region_{no\_return}$)\;
+$\region_{before}$ = $\region_{alpha}$\;
+$\region_{after}$ = null\;
+\Repeat{($\region_{before} = \region_{after}$)}
+{
+	\Repeat{($\region_{before} = \region_{after}$)}{
+		\uIf{($\region_{after} \neq $ null)}
+			{$\region_{before}  = \region_{after}$}
+		$\region_{sub}$ =  substitution transformation($\region_{before}$)\;
+		$\region_{ord}$ =  higher-order transformation($\region_{sub}$)\;
+		$\region_{field}$ =  field references transformation($\region_{ord}$)\;
+		$\region_{array}$ =  array references transformation($\region_{field}$)\;
+		$\region_{simple}$ =  simplification transformation($\region_{array}$)\;
+		$\region_{after}$ = $\region_{simple}$\;
+		
+		}
+		$\region_{after}$ =  higher order transformation($\region_{after}$)\;
+	}
+$\region_{single\_path}$ = single-path cases transformation(R)\;
+$\region_{linear}$ = linearization transformation(R)\;
+$\region_{green}$ = to-green transformation(R)\;
+
+\eIf{is-canonical($\region_{green}$)}
+	{populate outputs \tcp{successful transformation} 
+	skip region execution\;}
+   {abort \tcp*{resume DSE of if-instruction}}  
+   
 \caption{Ranger general pseudocode}
 \label{fig:algorithm}
 \end{algorithm}
+
+\newtext{Algorithm~\ref{fig:algorithm} describes how \tool\ works. The main idea is that \toolshort\  intercepts symbolic if-instructions and tries to capture the 
+summary of instructions that lie along its internal control flows and up until the phi instruction. We call this summarization a {\bf Region} or just \region. Now it is important to note that, \region\ does not only contain the summarization in form of some \toolshort\ IR statement, it also contains other environment-related information, such as types, input and outputs in the region, explained later in this section.}
+
+\newtext{To do that, \tool\ uses just-in-time analysis and with the help of Wala as a static analysis tool, \toolshort\ constructs the cfg of the method embedding the intercepted symbolic if instruction. Then \toolshort\ translates the part of the cfg corresponding to the if-branches until the immediate common successor, into \tool\  IR statement and some region related environment information (line 2). We call this step \bf{jit-region construction}.}
+
+\newtext{\tool\ then runs different transformations on \region\ (lines 2-22) with the goal of reducing the region IR statement into some canonical form that can be easily translated to the solver. }
+\newtext{Because the dependency of running some transformations, can be bidirectional. For example, inlining methods could result in some field statements that requires the field-references-transformation to run on, but likewise, field-transformation could result in propagating information about a method that should be inlined through the high-order-transformation. Using the two fixed points loop, \toolshort\ ensures that such dependencies are taken into consideration.}
+
+\newtext{If the transformations successfully produces a canonical form of the region, then \tool\ adds the summarization to the path condition, populate other symbolic objects and sets the execution point of DSE to start on the instruction following the summarized if-instruction. Otherwise, \toolshort\ aborts and allows DSE to resume execution (lines 23-28).}
 %
-To add path merging to SPF, we pre-compute static summaries of multi-path code regions and use them to also pre-compute
-summaries of methods.
+%%
+%To add path merging to SPF, we pre-compute static summaries of multi-path code regions and use them to also precompute summaries of methods.
+%%
+%Algorithm~\ref{fig:algorithm} describes the core algorithm of \tool\ for using such pre-computed summaries.
+%%
+%Given a multi-path region summary in Ranger IR~(described in Figure~\ref{fig:grammar}), \tool\
+%runs two loops, one nested within the other, up to a fixed point in order to ensure that the type
+%used for inlining higher-order method summaries is precise.
+%%
+%\tool\ ensures such precision of the higher-order region\rq s type because it only inlines methods called using a concrete object
+%reference for which type information can be recovered from the region\rq s instantiation environment.
 %
-Algorithm~\ref{fig:algorithm} describes the core algorithm of \tool\ for using such pre-computed summaries.
-%
-Given a multi-path region summary in Ranger IR~(described in Figure~\ref{fig:grammar}), \tool\
-runs two loops, one nested within the other, up to a fixed point in order to ensure that the type
-used for inlining higher-order method summaries is precise.
-%
-\tool\ ensures such precision of the higher-order region\rq s type because it only inlines methods called using a concrete object
-reference for which type information can be recovered from the region\rq s instantiation environment.
-%
-In the following sections, we describe the semantics of Java Ranger\rq s instantiation-time transformations
+
+In the following sections, we describe the semantics of Java Ranger\rq s transformations
 and explain how each transformation is realized on the motivating example presented in Figure~\ref{fig:mot-example}
 %
 %\begin{figure*}[]
