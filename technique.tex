@@ -40,7 +40,7 @@ $\region_{green}$ = to-green transformation(R)\;
 \newtext{Algorithm~\ref{fig:algorithm} describes how \tool\ works. The main idea is that \toolshort\  intercepts symbolic if-instructions and tries to capture the 
 summary of instructions that lie along its internal control flows and up until the phi instruction. We call this summarization a {\bf Region} or just \region. Now it is important to note that, \region\ does not only contain the summarization in form of some \toolshort\ IR statement, it also contains other environment-related information, such as types, input and outputs in the region, explained later in this section.}
 
-\newtext{To do that, \tool\ uses just-in-time analysis and with the help of Wala as a static analysis tool, \toolshort\ constructs the cfg of the method embedding the intercepted symbolic if instruction. Then \toolshort\ translates the part of the cfg corresponding to the if-branches until the immediate common successor, into \tool\  IR statement and some region related environment information (line 2). We call this step \bf{jit-region construction}.}
+\newtext{To do that, \tool\ uses just-in-time analysis and with the help of Wala~\cite{Wala} as a static analysis tool, \toolshort\ constructs the cfg of the method embedding the intercepted symbolic if instruction. Then \toolshort\ translates the part of the cfg corresponding to the if-branches until the immediate common successor, into \tool\  IR statement and some region related environment information (line 2). We call this step \bf{jit-region construction}.}
 
 \newtext{\tool\ then runs different transformations on \region\ (lines 2-22) with the goal of reducing the region IR statement into some canonical form that can be easily translated to the solver. }
 \newtext{Because the dependency of running some transformations, can be bidirectional. For example, inlining methods could result in some field statements that requires the field-references-transformation to run on, but likewise, field-transformation could result in propagating information about a method that should be inlined through the high-order-transformation. Using the two fixed points loop, \toolshort\ ensures that such dependencies are taken into consideration.}
@@ -120,39 +120,43 @@ and explain how each transformation is realized on the motivating example presen
 %%
 %
 
-\subsection{Statement Recovery}
-\label{sec:static-analysis}
-
-\subsubsection{Statement Recovery Setup}
-%
-To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
-%
-Next, we construct a set containing only the class $C$ that contains $M$.
-%
-We then get another set of classes, $C'$,
-such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
-%
-This step which goes from $C$ to $C'$ discovers all the classes at a class depth of 1 from $C$.
-%
-We continue this method discovery process up to a class depth of 3.
-%
-We found that summarizing
-arbitrary code regions with more than 3 steps deep did not lead to practically useful region summaries.
-%
-Next, we attempt to summarize these methods and regions in them.
+%\subsubsection{Statement Recovery Setup}
+%%
+%To bound the set of code regions we analyze, we start by specifying a method $M$ in a configuration file.
+%%
+%Next, we construct a set containing only the class $C$ that contains $M$.
+%%
+%We then get another set of classes, $C'$,
+%such that every class in $C'$ has at least one method that was called by a method in a class in $C$.
+%%
+%This step which goes from $C$ to $C'$ discovers all the classes at a class depth of 1 from $C$.
+%%
+%We continue this method discovery process up to a class depth of 3.
+%%
+%We found that summarizing
+%arbitrary code regions with more than 3 steps deep did not lead to practically useful region summaries.
+%%
+%Next, we attempt to summarize these methods and regions in them.
 %
 \begin{figure}
 \begin{grammar}
-<stmt> ::= <stmt> ; <stmt> | <exp> := <exp> | skip | x.<stmt> 
+<stmt> ::= <canonical-stmt> | x.<stmt> 
+\alt <stmt> ; <stmt> | <exp> := <exp>
 \alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
 \alt invoke( <exp>, <exp> )  | exit
 
+<canonical-stmt> ::= <canonical-stmt> ; <canonical-stmt> 
+\alt <canonial-exp> := <canonical-exp> | skip
+
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
-<exp>  ::= <val> | <var> | <exp> $op_b$ <exp> | $op_u$ <exp>
-\alt get_field( <exp> ) | put_field( <exp>, <exp> )
-\alt array_load( <exp> ) | array_store( <exp>, <exp>, <exp> ) 
-\alt gamma( <exp>, <exp>, <exp> ) | <exp>.<exp>
+<exp>  ::=  <canonical-exp> | get_field( <exp> ) 
+\alt put_field( <exp>, <exp> ) | array_load( <exp> ) 
+\alt array_store( <exp>, <exp>, <exp> ) | <exp>.<exp>
+
+<canonical-exp> ::= <val> | <var> 
+\alt <canonical-exp> $op_b$ <canonical-exp> | $op_u$ <canonical-exp>
+\alt gamma( <canonical-exp>, <canonical-exp>, <canonical-exp> )
 
 <$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
 
@@ -215,7 +219,10 @@ $$
 %So the type of this map (the blockConditionMap) is: {\tt(ISSABasicBlock x ISSABasicBlock) --> List of (Expression x enum \{Then, Else\})}.
 %%
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
-\subsubsection{IR-Statement Recovery}
+\subsection{JIT Region Construction}
+\label{sec:jit}
+
+\subsubsection{IR Statement Recovery}
 %In this step, a Java Ranger is created from the corresponding CFG. Since regions of interest for our technique are
 %bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of
 %loops is driven by conditional logic within the loop, rather than the loop itself. %Starting from an SSA form, the first
@@ -308,7 +315,7 @@ to represent intermediate computation.
 %
 %Similarly we will use $s$ to refer to statements, $e$ to refer to expressions and $v$ to refer to values.
 
-\subsection{Region Definition}
+\subsubsection{Environment Creation}
 
 Once the statement of a multi-path region has been recovered, its corresponding environment is populated.
 %
@@ -464,8 +471,8 @@ $$
 \label{fig:semantics}
 \end{figure*}
 %
-\subsection{Instantiation-time Transformations}
-\label{sec:instantiationTransformations}
+\subsection{Transformations}
+\label{sec:Transformations}
 
 \textbf{Early Return Transformation}: In this transformation, Java Ranger converts region summaries with return
 statements into region summaries that assign a $x_{ret}$ variable a $gamma$ expression that evaluates to different
