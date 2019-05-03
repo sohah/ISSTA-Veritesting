@@ -15,38 +15,38 @@ On finding such a symbolic branch condition, \tool\ attempts to compute a static
 regions in the method which contains the current program location.
 %
 After this Just-In-Time static analysis, if \tool\ summarized the multi-path region that begins at the current program
-location, \tool\ instantiates the region summary corresponding to the current program location by reading inputs from
+location, \tool\ computes the canonical region corresponding to the current program location by reading inputs from
 and writing outputs to the stack and the heap.
 %
-Finally, it conjuncts the instantiated region summary with the path condition and resumes symbolic execution at the
+Finally, it conjuncts the canonical region summary with the path condition and resumes symbolic execution at the
 bytecode offset of the end of the region.
 %
 \tool\ wraps around SPF and can be configured to either run SPF without any path merging or run SPF with the
-following path-merging features enabled.
+following four path-merging features enabled.
 
-\tool\ summarizes multi-path regions with a single exit point and instantiates them if they are encountered.
+(1) \tool\ only transforms multi-path regions with a single exit point to their canonical form.
 This includes multi-path regions that have local, stack, field, or array outputs.
 %
 \tool\ substitutes local inputs into the Ranger IR representation of the multi-path region, and constructs SSA form
-Ranger IR for all field and array accesses in the region using its instantiation-time context.
+Ranger IR for all field and array accesses in the region using its runtime context.
 %
 The SSA form representation of all field and array accesses allows the Ranger IR to be simplified uniformly across all
 variable types which reduces the size of the region summary and improves performance.
 %
-While our current implementation of \tool\ cannot instantiate summaries with symbolic object and array
+While our current implementation of \tool\ cannot transform summaries with symbolic object and array
 references, it is capable of summarizing reads and writes to arrays with symbolic indices.
 %
-\tool\ instantiates all multi-path region
+(2) \tool\ uses multi-path region
 summaries that make method calls which have also been statically summarized.
 %
 Method summaries are inlined into
-the multi-path region summary based on the instantiation-time type of the method.
+the multi-path region summary based on the dynamic type of the method.
 %
-\tool\ uses single-path cases to allow regions to have more than one exit point.
+(3) \tool\ uses single-path cases to allow regions to have more than one exit point.
 %
 These exit points take the form of new object allocations and exceptional behavior present in the region.
 %
-\tool\ converts multiple exit points that return
+(4) \tool\ converts multiple exit points that return
 control flow from the region to its caller into a single control flow-returning exit point.
 %
 This feature allows summarization of multiple {\tt return} instructions in a region into a single control-flow
@@ -109,92 +109,174 @@ We used the version made
 available by Yang et al.~\cite{memoise}. This benchmark consists of 268 classes, 553 methods, 4697 lines of code
 including the Polyglot framework.
 
-We first ran each of these benchmarks using SPF with increasing number of symbolic inputs and obtained the most number of inputs
-with which SPF finished complete exploration of each benchmark within a 24 hour time budget.
+We first ran each of these benchmarks using SPF with increasing number of symbolic inputs and obtained the most number
+of symbolic inputs with which SPF finished complete exploration of each benchmark within a 24 hour time budget.
 %
 We then ran each benchmark with this number of symbolic inputs with \tool.
 %
 This evaluation allowed us to check if \tool\ is faster than SPF at achieving complete path exploration of each benchmark.
 %
-Next, we used the fastest mode of \tool\ to check if it could explore the benchmark with even more symbolic inputs within
-the same 12 hour time budget.\vaibhav{Figure out if these results need to be reported}
+%Next, we used the fastest mode of \tool\ to check if it could explore the benchmark with even more symbolic inputs within
+%the same 12 hour time budget.\vaibhav{Figure out if these results need to be reported}
 %
-We report results from this evaluations for each benchmark in Table~\ref{table:results-all-mode5}
+We report results from this evaluation for each benchmark in Table~\ref{table:results-all-mode5}.
 %
-Since Java Ranger relies on a prior static analysis to construct region summaries, we report the time taken to statically
-analyze all the code in each of the benchmarks in column ``static analysis time (sec)'' in
-Table~\ref{table:results-all-mode5}.
-%
-We found that the total time required for static analyis is roughly proportional to the size of the benchmark.
-%
-While static analysis performance can cause \tool\ to be slower on benchmarks with a small number of execution
-paths, we observed that the cost of static analysis gets amortized as the number of execution paths increases.
+%While static analysis performance can cause \tool\ to be slower on benchmarks with a small number of execution
+%paths, we observed that the cost of static analysis gets amortized as the number of execution paths increases.
 %
 \input{tables/results-all-mode5}
 %
-Table~\ref{table:results-all-modes5} shows that \tool\ achieves a significant speed-up over SPF with
+\input{tables/comparison-tables}
+%
+Table~\ref{table:results-all-mode5} shows that \tool\ achieves a significant speed-up over SPF with
 5~(WBS, TCAS, NanoXML, ApacheCLI, MerArbiter) of the 9 benchmarks in terms of both running time and number of
 execution paths.
 %
-Of the remaining four benchmarks, \tool\ also achieves a modest 22\% reduction in running time and 34\% reduction
+\tool\ also achieves a modest 22\% reduction in running time and 34\% reduction
 in the number of execution paths with the PrintTokens2 benchmark.
-%
-\tool\ has the same performance as SPF on Siena and Schedule2 with a minor overhead in running time that comes from
-\tool\rq s lookup of a region summary for every executed branch instruction and recording of instantiation-time metrics.
-%
-We restrict our results with Siena to 7 symbolic inputs because 6 is the most number of symbolic inputs for which
-SPF finishes complete path exploration within a 24 hour time budget.
-%
-On running Siena, the overhead of \tool\ results from running into concrete branch instructions that
-\tool\ could have summarized, had these branches been symbolic.
-%
-In the replace benchmark, while \tool\ reduces the number of execution paths by about 89\%, it incurs an increase in
-execution time due to most region instantiations not being beneficial.
-%
-On manually investigating the set of instantiated regions in replace, we found that the outputs of most regions were
-being branched on later in the code causing the benefit from more instantiations to be lost.
-%
-\vaibhav{Running an automated analysis to check if there is a subset of regions that is most beneficial}
 
 \tool\ is able to summarize the entire step function of WBS and TCAS into a single execution path.
 %
-In case of WBS, \tool\ summarizes a multi-path region that consists of 9 branches.
+This step functions of WBS and TCAS take 3 and 12 symbolic inputs respectively.
 %
-In case of TCAS, \tool\ uses 28 method summaries in each step of TCAS, many of which summarize multiple return values
-into a single formula that represents all the feasible return values of the method.
+In WBS, \tool\ summarizes multi-path regions with deeply nested {\tt if} bytecode instructions, in one case
+summarizing a region that consisted of 9 branches nested within one another.
 %
-While SPF does not finish more than 5 steps of WBS and 2 steps of TCAS within 12 hours, \tool\ finishes 10 steps of both
-benchmarks within 59 seconds and 5.6 seconds respectively.
+In TCAS, \tool\ inlines 28 method summaries in each step of TCAS, many of which summarize multiple return values
+into a single formula that represents all the return values of the method.
+%
+While SPF does not finish more than 5 steps of WBS and 2 steps of TCAS within 24 hours, \tool\ finishes 10 steps of both
+benchmarks within 2.81 seconds and 1.41 seconds respectively.
+
+In the replace benchmark, while \tool\ reduces the number of execution paths by about 88\%, it incurs an increase in
+execution time.
+%
+This increase occurs even when \tool\ transforms 20 distinct regions into 7334 canonical region summaries.
+%
+On manually investigating the set of instantiated regions in replace, we found that the outputs of most of these
+regions were being branched on later in the code causing the benefit from path-merging to be lost.
+%
+In order to test this hypothesis, we ran an automated evaluation where we restricted \tool\ to only a subset of
+regions.
+%
+First, we determined the most number of symbolic inputs with which \tool\ could explore all paths in replace in less
+than a minute.
+%
+We found this number to be 6 symbolic inputs which took \tool\ about 37 seconds while using 14 regions.
+%
+Next, we constructed a list of region subsets sorted in increasing order of the subset size.
+%
+This list began with 14 region subsets, each containing one region, and ended with a single set containing all 14 regions.
+%
+The total number of region subsets present in this list was $2^{14}-1$.
+%
+Finally, we ran \tool\ with every region subset in this list, where \tool\ was allowed to only canonicalize regions
+within a given subset.
+%
+After running this evaluation for 96 hours, we found that all possible region subsets containing up to 4 regions had
+been tested.
+%
+But, no region subset up to 4 regions in size resulted with a reduction in the running time and number of execution
+paths.
+%
+While it is possible that there is a larger set of regions in the replace benchmark that provides the most benefit
+from path-merging, our automated evaluation and a manual investigation did not reveal what such a set of regions might be.
+%
+In the future, we plan to integrate a query count estimated heuristic of the kind proposed by
+Kuznetsov et al.~\cite{kuznetsov} to canonicalize only a beneficial set of regions in the replace benchmark.
 
 On the NanoXML benchmark, \tool\ finds several opportunities for execution path count reduction on account of the
 NanoXML benchmark having several methods with multi-path regions that have a control-flow returning instruction on every
 branch side.
 %
-With mode 5 of \tool\ converting such multiple control-flow returning exit points regions into a single control-flow
-returning exit point, \tool\ is able to use more than 27,000 method summaries when running NanoXML with 8 symbolic
-inputs and finish in 7.3 hours while vanilla SPF~(which is the same as mode 1 of \tool)
-times out in 12 hours.
+Since \tool\ can convert such multiple control-flow returning exit points regions into a single control-flow
+returning exit point, \tool\ is able to inline more than 8,000 method summaries when running NanoXML with 8 symbolic
+inputs and finish in about 8 hours while vanilla SPF needs about 18 hours to complete the same exploration.
 
-On the ApacheCLI benchmark, the most significant benefit is introduced in mode 2 of \tool.
+\tool\ has the same performance as SPF on Siena and Schedule2 with a minor overhead in running time that comes from
+\tool\rq s lookup of a region summary for every executed branch instruction and recording of metrics.
 %
-Modes 4, 5 cause an increase in execution path count and running time but still give a significant reduction over
-mode 1.
+We restrict our results with Siena to 7 symbolic inputs because 7 is the most number of symbolic inputs for which
+SPF finishes complete path exploration within a 24 hour time budget.
 %
-The increase in running time in modes 4 and 5 results from \tool\rq s use of the solver to check if the single-path cases
-in modes 4 and 5 are feasible.
-%
-In the future, we plan to use a counter-example cache to reduce the use of a solver to check the feasibility of these
-single-path cases.
+On running Siena, the overhead of \tool\~(about 5\% in running time)results from running into concrete branch
+instructions that \tool\ could have summarized, had these branches been symbolic.
 
-In the MerArbiter benchmark, while the most significant benefit is introduced in mode 2 of \tool, the benefit in terms of
-both execution path count and running time remains the same in modes 3, 4, and 5.
+In the PrintTokens2 benchmark, \tool\ uses 4 distinct regions, 2 of which involve summarizing multi-path regions which
+have a {\tt return} instruction at the end of every path in the region.
 %
-All the multi-path regions that SPF~(which is mode 1 in \tool) needs to branch on but are summarized by \tool\ are small
+Being able to summarize multiple control-flow returning exit points into a single such exit point proves to be a crucial
+feature in \tool\ for this benchmark.
+
+The ApacheCLI benchmark takes 9 inputs, the first 8 are 1-byte inputs used to construct command-line options and
+the last input controls whether ApacheCLI should stop on encountering an invalid option input.
+%
+Since the 9th input is different from the first 8, we ran ApacheCLI with the first 6 inputs and the 9th input
+made symbolic.
+%
+\tool\ finishes exploration with this setup of ApacheCLI in about 1.5 hours whereas SPF finishes exploration in about 9
+hours as shown in Table~\ref{table:results-all-mode5}
+%
+When we ran SPF on ApacheCLI with the first 7 inputs and the 9th input made symbolic, it was unable to complete
+exploration within 24 hours.
+%
+But, \tool\ can complete this exploration in about 15 hours.
+
+In the MerArbiter benchmark, the most significant benefit from \tool\ comes from its ability to summarize multi-path
+regions that put their output on the stack directly.
+%
+Such regions are common in Java bytecode since the JVM is both a stack machine and a register machine.
+%
+All the multi-path regions that SPF~(which is mode 1 in \tool) needs to branch on but are summarized by \tool\ are
 regions that compute a boolean value based on a symbolic branch and write it to the stack as an operand to be used
 by the following return instruction.
 %
-Most of these multi-path regions lie inside several levels of nested classes and field references that necessitate
-a fixed-point computation over the field substitution and constant propagation transformations.
+Most of these multi-path regions lie inside several levels of nested classes and dynamically bound field references
+that necessitate a fixed-point computation over the field substitution and constant propagation transformations.
 %
-\tool\ summarizes such multi-path regions and does 464,000 instantiations with 7 steps of MerArbiter, with more than
-319,000 instantiations needing more than 8 iterations of the fixed-point computation.
+\tool\ summarizes such multi-path regions and does 411,000 instantiations with 7 steps of MerArbiter (each step takes 4
+symbolic inputs), with more than 282,000 instantiations needing more than 8 iterations of the fixed-point computation.
+
+\tool\ has different path-merging features such as summarizing multi-path regions with a single non-returning exit
+point, inlining method summaries, exploring unsummarized behavior using single-path cases, and summarizing multiple
+control flow-returning exit points into a single such exit point.
+%
+We wanted to evaluate the effect each feature has when it is added to a previous set of features.
+%
+We set up an experiment where beginning with no path-merging (aka baseline SPF), we added path-merging features in the
+aforementioned order.
+%
+For every benchmark where any path-merging was performed, we computed the ratio of three metrics with a set of
+path-merging features enabled to the same metrics without path-merging (aka when only baseline SPF was used).
+%
+These three metrics were: the running time, the number of execution paths explored, and the number of solver calls made.
+%
+We present the results of this comparison in Table~\ref{table:comparison-table}.
+%
+Table~\ref{table:comparison-table} shows that merging of paths for regions that have a single non-returning exit point
+is most often useful.
+%
+This observation matches our intuition that regions are most commonly present in Java.
+%
+The addition of method summary inlining provides a major reduction in all three metrics in TCAS.
+%
+This observation matches a observation made manually from TCAS' source code that multi-path regions in it often invoke
+methods that can be summarized by \tool\.
+%
+The addition of single-path cases provides a major reduction in the number of solver queries in the replace and
+NanoXML benchmarks.
+%
+But, it also causes a minor increase in the running time of both of these benchmarks.
+%
+We attribute this increase to the fact that the reduction in the number of solver queries is not enough to compensate
+for the increase in complexity of the solver queries introduced with single-path cases.
+%
+In the future, we plan to address this issue by transforming region summaries with more sophisticated term rewriting
+and context-specific simplification of canonical regions to reduce the complexity of solver queries.
+%
+The addition of summarizing multiple control flow-returning exit points into a single such exit point provides a
+significant reduction in the number of execution paths and number of solver queries in the NanoXML, PrintTokens2
+benchmarks.
+%
+The benefit from this feature matches our observation that both of these benchmarks contain frequently-executed
+regions that contain multiple control-flow returning exit points.

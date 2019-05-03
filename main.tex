@@ -8,11 +8,11 @@
 \usepackage{color}
 \usepackage{graphicx}
 %\usepackage{subcaption}
-\usepackage{subfig}
-\captionsetup{compatibility=false}
+%\usepackage{subfig}
+%\captionsetup{compatibility=false}
 \usepackage{amssymb,proof}
 \usepackage[ruled,linesnumbered]{algorithm2e}
-\usepackage{booktabs}
+\usepackage{booktabs,subcaption,amsfonts,dcolumn}
 
 
 \usepackage{cite}
@@ -21,6 +21,8 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\newcolumntype{d}[1]{D..{#1}}
+\newcommand\mc[1]{\multicolumn{1}{c}{#1}} % handy shortcut macro
 
 
 \lstset{frame=tb,
