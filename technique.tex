@@ -854,7 +854,22 @@ these are translated into two disjunctive formulas that describes the assignment
 were satisfied.
 %
 We translate region summaries from Ranger IR to Green because we found Green constraints to be a more pliable interface
-for translation from Ranger IR to the solver than SPF\rq s existing constraints.
+for translation from Ranger IR to the solver than SPF\rq s existing constraints.\\
+\textbf{Maintaining soundness}: All the Ranger IR transformations described above are semantics-preserving
+transformations and therefore do not adversely affect the soundness of the baseline symbolic executor.
+%
+One transformation in which this may not be obvious is the array references transformation.
+%
+On encountering an array access with a symbolic index, a baseline symbolic executor can choose to explore behavior caused
+due to the index being less than 0, equal to and greater than the size of the array, and being within bounds of
+the array length.
+%
+The array references transformation preserves these semantics of out-of-bounds exploration of array accesses by adding
+{\tt throw} Ranger IR statements into the region summary that are predicated on a disjunction of these same conditions
+that check the symbolic index.
+%
+{\tt throw} Ranger IR statements are explored as single-path cases causing the baseline symbolic executor to
+explore the same out-of-bounds array accesses as it would have without any path-merging.
 
 %\subsection{Checking Correctness Of Region Summaries}
 %The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should

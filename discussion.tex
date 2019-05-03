@@ -15,10 +15,14 @@ Supporting these would require integrating our implementation with
 SPF\rq s lazy initialization~\cite{spf} to allow symbolic object references to be part of a region.
 
 While path-merging gives dynamic symbolic execution a performance boost to explore more paths
-efficiently, generating test cases that covers all merged branches is one of the most useful applications of dynamic
-symbolic execution that is currently unsupported.
+efficiently, generating test cases that cover all branches is one of the most useful applications of dynamic
+symbolic execution.
 %
-We intend to extend \tool\ towards test generation for merged paths in the future.
+This is an example of an application of symbolic execution that, if applied as-is, would have to undo the benefits of
+path-merging.
+%
+We intend to extend \tool\ towards test generation for merged paths in the future by targeting test generation
+towards a coverage criterion such as Modified Condition/Decision Coverage.
 
 While path merging can potentially allow symbolic execution to explore interesting parts of a program sooner, the
 effect of path merging on search strategies, such as depth-first search and breadth-first search commonly used with
