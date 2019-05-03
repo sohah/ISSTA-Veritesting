@@ -176,7 +176,7 @@ $$
 \\
 & \Gamma_s: ref \rightarrow & \tau&&
 \\
-\text{Region-map} & \Psi: \tau \rightarrow & x.s &&
+\text{Region-map} & \Psi: \tau \rightarrow & \lambda x.s &&
 \\
 \text{path-subscript-map} & psm: v \rightarrow & x &&
 \\
@@ -185,6 +185,10 @@ $$
 \text{Single-path-constraints} & \Sigma: \{exp\} &  &  & 
 \\
 \text{Early-return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
+\\
+\text{Nominal-next-instruction} & Next: & \mathbb{Z} &  & 
+\\
+\text{Early-return-next-instruction} & Next_{ret}: & \mathbb{Z} &  & 
 \end{array}
 $$
 \caption{Environments used in Ranger.}
@@ -246,8 +250,6 @@ to represent intermediate computation. This distinction is abstracted away from 
 }
 
 \newtext{Other forms of expressions include non-canonical expressions, this includes read and writes to fields and arrays. }
-
-\newtext{Please note that}
 %
 %
 %Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and
@@ -312,7 +314,7 @@ For region 2 shown in the motivating example in Figure~\ref{fig:mot-example}, th
 $x58$ corresponds to input from $inWord$, and $x54$, $x55$ correspond to outputs to $wordCount$,
 $inWord$ respectively.\\
 %
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 if ((! (== x58 0 ) )) {
   x44 = invokeinterface < Application, Ljava/util/List, get(I)Ljava/lang/Object; >[x9,x59]
   x47 = invokevirtual < Application, Ljava/lang/Integer, intValue()I > x44
@@ -374,11 +376,14 @@ used in that $\phi$-expression must belong to the same stack slot.
 
 Formally we define the following structures:\\
 %
-\textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps stack slots, to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
+\textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps a location (i.e, stack slots, heap entry), to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
 \textbf{Type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and DSE respectively.\\
 \textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. \newtext{This is used to bind the region type to its statement. The actually form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.}\\
 \textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints. \newtext{This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.}\\
 \textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints. \newtext{This is used to set up the path condition for early return case, more information is in next section.}
+\newtext{\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.}
+\newtext{\textbf{Early-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for early return case.}
+
 
 Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a transformation step on some statement s, w.r.t. the maps, which usually yield a new statement $s'$ and possibly some changes in the map.\\
 %
@@ -400,9 +405,32 @@ Figure~\ref{fig:semantics} shows the semantics of different transformations, whe
     \footnotesize
 \fbox{%
 \parbox{0.98\textwidth}{%
+%$$
+%\infer[\rn{early-return_1}]
+% {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
+% {gen\_id() = x_{ret} \qquad \text{no_return}(s_1) \qquad \text{no_return}(s_2)}
+%$$
+%$$
+%\infer[\rn{get-return_2}]
+%{\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret}\cup (x_{ret},(e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{s_1}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
+%{\step{\Sigma_{ret}}{s_1}{\Sigma_{ret}\cup (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
+%\step{\Sigma_{ret}}{s_2}{\Sigma_{ret}'\cup(w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
+%$$
+
+$$
+\infer[\rn{get-return}]
+ {\step{\Sigma}{\ifr{e}{(s_1; \return{v_1})}{s_2}}{\Sigma}{(\ifr{e}{s_1; \return{v_1}}{s_2}) ; x_{ret} = v_1}{}}
+{
+Next = position(if_{inst}.next())
+\qquad
+Next_{ret} = position(return_{inst})
+\qquad
+gen\_id() = x_{ret}}
+$$
+
 $$
 \infer[\rn{substitution}]
- {\step{\Theta, \Delta_s}{x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}{sub}}
+ {\step{\Theta, \Delta_s}{\lambda x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}{sub}}
  {\lookup{\Theta}{x} = l , \qquad \lookup{\Delta_s}{l}=(v,e)}
 \qquad
  \infer[\rn{single-path_1}]
@@ -412,12 +440,12 @@ $$
 $$
 \infer[\rn{high-order_1}]
  {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=x.s_2, \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=\lambda x.s_2, \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{high-order_2}]
  {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= x.(s; \return{e'}) \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= \lambda x.(s; \return{e'}) \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
 $$
 $$
 \infer[\rn{single-path_2}]
@@ -467,17 +495,6 @@ $$
  {\step{\Gamma, psm}{s_1}{\Gamma', psm'}{s_1'}{field} \qquad 
  \step{\Gamma', psm'}{s_2}{\Gamma'', psm''}{s_2'}{field}  \qquad gen\_id() = x_{ref}}
 $$
-$$
-\infer[\rn{early-return_1}]
- {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
- {gen\_id() = x_{ret} \qquad \text{no_return}(s_1) \qquad \text{no_return}(s_2)}
-$$
-$$
-\infer[\rn{get-return_2}]
- {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret}\cup (x_{ret},(e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{s_1}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
- {\step{\Sigma_{ret}}{s_1}{\Sigma_{ret}\cup (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
-  \step{\Sigma_{ret}}{s_2}{\Sigma_{ret}'\cup(w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
-$$
 %$$
 %\infer[\rn{early-return_3}]
 % {\step{\Sigma_{ret}}{\ifr{e}{(s_1 ; \return{e_1})}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \vee true}{\ifr{e}{(s_1 ; \return{e_1})}{skip} ; x_{ret} := e_1}}
@@ -491,11 +508,9 @@ $$
 \subsection{Transformations}
 \label{sec:Transformations}
 
-\textbf{Early Return Transformation}: In this transformation, Java Ranger converts region summaries with return
-statements into region summaries that assign a $x_{ret}$ variable a $gamma$ expression that evaluates to different
-return values, each return value predicated on the condition that would cause that value to be returned.
+\newtext{\textbf{Early Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.}
 %
-The $\rn{early-return_1}$ and $\rn{early-return_2}$ describe the semantics of this transformation.
+\newtext{The $\rn{early-return}$ describe the semantics of this transformation when the return statement is on one side of a multi-path region. In this case \toolshort\ generates a new return variable $x_{ret}$ and assign it to the return variable. Eventually if the path-merging of this region was successful \toolshort\ will in this case generate two paths one to explore the early return choice and another to explore the nominal choice. Accordingly, the position where DSE needs to resume from needs to be changed depending on which choice is being executed.}
 %
 %In this transformation, Java Ranger collects that conditions for branches that
 %have early return in them. In figure~\ref{fig:semantics} we show the rule of having an early return on the else side
@@ -521,33 +536,30 @@ This transformation helps distinguish variables across multiple instantiations o
 %We do not define this transformation formally due to space, but it is basically straight forward by generating a unique
 %prefix for each variable and updates the new name in the statement as well as all the contexts in which it appears.
 To give an example of this transformation, line 2 in the recovered Ranger IR statement gets changed to:
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 x44$2 = invoke < Application, Ljava/util/List, get(I)Ljava/lang/Object; >[x9$2, x59$2]
 \end{lstlisting}
 
-\textbf{Local Variable Substitution Transformation}: During this transformation, we substitute Ranger IR variables that
-are local variable inputs with their constant or symbolic values read for each local variable\rq s stack slot.
+\textbf{Local Variable Substitution Transformation}: During this transformation, local variable inputs in \toolshort\ are substituted with their concrete or symbolic values obtained from the environment of DSE.
 %
-The $\rn{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation.
+\newtext{The $\rn{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation where the location of an input variable $l$ is used to lookup its value in the DSE environment $\Delta_s$ and is substituted in the region statement.}
 %
 %The $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its
 %dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.
 Running this transformation on the previous Ranger IR statement causes $x9\$2$ to be
 resolved to a concrete integer value 375 to change the statement to %$x44\$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59\$2);$\\
 %transformation, thus line 2 becomes:
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
 \end{lstlisting}
 %
-\textbf{Higher-order Regions Transformation}: This transformation is initiated when a method invocation is encountered
-during local variable substitution.
+\textbf{Higher-order Regions Transformation}: This transformation is initiated when a method invocation after local variable substitution.
 %
 At this point, we perform three steps.
 %
-(1) The called method\rq s summary is retrieved and variables in it are alpha-renamed.
+\newtext{(1) The called method\rq s region is retrieved, depending on the dynamic type obtained from DSE, if the region is not found then JIT-region construction is called for it. If a method region was finally constructed/retrieved then its variables are alpha-renamed.}
 %
-(2) Ranger IR expressions that correspond to the method\rq s parameters are evaluated and used to substitute the formal
-parameters by repeatedly applying local variable substitution transformation over the method region.
+\newtext{(2) For concrete object references that \toolshort\ was able to substitute for callee objects (if it is non-static invocation, otherwise no object reference is need), \toolshort\ uses expressions of IR parameters to substitute the formal parameters by repeatedly applying local variable substitution transformation over the method region.}
 %
 (3) When no more higher-order method summaries can be inlined, the resulting substituted method region is inlined into
 the outer region.
@@ -573,7 +585,7 @@ Please note that $x58$ from the originally recovered static summary has been sub
 read as a local variable input~($inWord$)~that had the symbolic value $x40\$1$ (a consequence of summarizing region 1 in
 Figure~\ref{fig:mot-example}).
 %
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 if ((! (== x40$1 0 ) )) {
   x4$4 = get(375.< Primordial, Ljava/util/ArrayList, size, <Primordial,I> >)
   if ((! (< 0 x4$4 ) )) {
@@ -611,7 +623,7 @@ Gated Single Assignment (GSA)~\cite{Ottenstein1990}.
 %
 To continue expanding the motivating example, the field references transformation on the above Ranger IR statement
 changes the assignments to $x4\$4$ and $x4\$5$ to assign them the concrete values 200 and 397 respectively.
-%\begin{lstlisting}
+%\begin{lstlisting}[numbers=none]
 %if ((! (== x40$1 0 ) )) {
 %  x4$4 := 200;
 %  if ((! (< 0 x4$4 ) )) {
@@ -640,7 +652,7 @@ map maintained in the region\rq s instantiation environment.
 %This causes the assignment to $x48\$2$ to be removed from the below Ranger IR statement and
 This causes uses of $x48\$2$ to be substituted by the constant 1.
 %
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 if ((!= x40$1 0 )) {
   x5$5 = 397[0:<Primordial,Ljava/lang/Object>]
   x45$2 := x5$5;
@@ -663,7 +675,7 @@ The merged array copy represents array outputs of the region.
 %
 The effect of this transformation on the last shown Ranger IR statement produces the following statement where the
 value at index 0 in array reference 397 was 380 and the length of array at reference 397 was 200.\\
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 if ((!= x40$1 0 )) {
   if ((&& (< 0 200 ) (>= 0 0 ) )) {
     x5$5 := 380;
@@ -698,7 +710,7 @@ This transformation also simplifies if-then-else expressions and if-then-else st
 syntactically equal.
 %
 Running simplification on the previous Ranger IR statement yields the following statement.
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 if ((!= x40$1 0 )) {
   [x47$2] = invoke < Application, Ljava/lang/Integer, intValue()I >[380]
 } else { ... }
@@ -708,7 +720,7 @@ x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 %
 %Another iteration of the fixed-point loop causes the summary for {\tt Integer.intValue()} to be inlined to produce the
 %following Ranger IR statement.
-%\begin{lstlisting}
+%\begin{lstlisting}[numbers=none]
 %if ((!= x40$1 0 )) {
 %  x3$9 = get(380.< Primordial, Ljava/lang/Integer, value, <Primordial,I> >)
 %  x47$2 := x3$9;
@@ -754,7 +766,7 @@ Please note that the $value$ field accessed by $Integer.intValue()$ in the objec
 380 was set to the symbolic integer $x1$.
 %
 The variables $x54\$2$ and $x55\$2$ correspond to outputs to $wordCount$, $inWord$ in Figure~\ref{fig:mot-example} respectively.
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 x54$2 := (Gamma x40$1!=0 (Gamma x1==0 1 0) 0);
 x55$2 := (Gamma x40$1!=0 (Gamma x1==0 0 x40$1) (Gamma x1!=0 1 x40$1));
 \end{lstlisting}
