@@ -3,7 +3,7 @@
 While \tool\ was able to significantly outperform SPF in a majority of our benchmarks, there are a few directions
 along which it can further be extended.
 %
-Java Ranger attempts to perform path merging as aggresively as possible.
+Java Ranger attempts to perform path merging as aggressively as possible.
 %
 This path merging strategy doesn't optimize towards making fewer solver calls.
 %
@@ -14,8 +14,8 @@ We plan to work towards implementing heuristics that can measure the effect of p
 Supporting these would require integrating our implementation with
 SPF\rq s lazy initialization~\cite{spf} to allow symbolic object references to be part of a region.
 
-While statically summarizing regions gives dynamic symbolic execution a performance boost to explore more paths
-efficiently, generating test cases that covers all summarized branches is one of the most useful applications of dynamic
+While path-merging gives dynamic symbolic execution a performance boost to explore more paths
+efficiently, generating test cases that covers all merged branches is one of the most useful applications of dynamic
 symbolic execution that is currently unsupported.
 %
 We intend to extend \tool\ towards test generation for merged paths in the future.

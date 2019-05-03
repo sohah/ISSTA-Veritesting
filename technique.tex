@@ -5,7 +5,7 @@
 \SetAlgoLined
 Input: (symbolic conditional branch instruction inst)\;
 $\region_{initial}$ = jit-region-construction(inst)\;
-$\region_{no\_return}$ =  early-return transformation($\region_{initial}$)\;
+$\region_{no\_return}$ =  return transformation($\region_{initial}$)\;
 $\region_{alpha}$ =  alpha-renaming transformation($\region_{no\_return}$)\;
 $\region_{before}$ = $\region_{alpha}$\;
 $\region_{after}$ = null\;
@@ -216,13 +216,13 @@ $$
 \\
 & \Theta: var \rightarrow & loc &&
 \\
-\text{Single-path-constraints} & \Sigma: \{exp\} &  &  & 
-\\
-\text{Early-return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
+\text{path-constraints} & \Sigma: \{exp\} &  &  & 
+%\\
+%\text{Return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
 \\
 \text{Nominal-next-instruction} & Next: & \mathbb{Z} &  & 
 \\
-\text{Early-return-next-instruction} & Next_{ret}: & \mathbb{Z} &  & 
+\text{Return-next-instruction} & Next_{ret}: & \mathbb{Z} &  & 
 \end{array}
 $$
 \caption{Environments used in Ranger.}
@@ -278,8 +278,7 @@ skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes 
 \newtext{\toolshort\ expressions consist of $\langle canonical\text{-}exp\rangle$, which is analogous to canonical statements, which describes the simplest form of expressions that \toolshort\ tries to reduce to.  $\langle canonical\text{-}exp\rangle$ includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them
 ID_$\mathbb{N}$), binary and unary operations over canonical expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expression that allow Ranger IR to construct Gated Single Assignment~(GSA)\cite{} form for variables which intuitively describes conditional assignment of variables.}
 
-\newtext{Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), an
-early return variable (to carry early return values), variables that correspond to local variables, and variables used
+\newtext{Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), a return variable (to carry the return values), variables that correspond to local variables, and variables used
 to represent intermediate computation. This distinction is abstracted away from the grammar but is referred to whenever necessary in the text.
 }
 
@@ -431,10 +430,10 @@ Formally we define the following structures:\\
 \textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps a location (i.e, stack slots, heap entry), to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
 \textbf{Type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and DSE respectively.\\
 \textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. \newtext{This is used to bind the region type to its statement. The actually form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.}\\
-\textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints. \newtext{This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.}\\
-\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints. \newtext{This is used to set up the path condition for early return case, more information is in next section.}
+\textbf{Path-Constraint-List}: A list $\Sigma$ of path constraints. \newtext{This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.}\\
+%\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. \newtext{This is used to set up the path condition for return case, more information is in next section.}
 \newtext{\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.}
-\newtext{\textbf{Early-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for early return case.}
+\newtext{\textbf{Return-Next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for return case.}
 
 
 Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a transformation step on some statement s, w.r.t. the maps, which usually yield a new statement $s'$ and possibly some changes in the map.\\
@@ -485,52 +484,51 @@ $$
  {\step{\Theta, \Delta_s}{\lambda x.s}{\Theta, \Delta_s}{\sub{(v,e)}{x}{s}}{sub}}
  {\lookup{\Theta}{x} = l , \qquad \lookup{\Delta_s}{l}=(v,e)}
 \qquad
- \infer[\rn{single-path_1}]
- {\sstep{throw \:e}{single}{exit}}
- {}
-$$
-$$
-\infer[\rn{high-order_1}]
- {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_1}}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=\lambda x.s_2, \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
-$$
-$$
-\infer[\rn{high-order_2}]
- {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
- {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= \lambda x.(s; \return{e'}) \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
-$$
-$$
-\infer[\rn{single-path_2}]
- {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2}}{(\Sigma \vee e)}{s_2}{}}
- {}
-\qquad
-\infer[\rn{single-path_3}]
- {\step{\Sigma}{\ifr{e}{s_1}{(s_2 ; exit ; s_2')}}{(\Sigma \vee !e)}{s_1}{}}
- {}
-$$
-$$
-\infer[\rn{single-path_4}]
- {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2 ; exit ; s_2'}}{(\Sigma \vee true)}{skip}{}}
- {}
- \qquad
-\infer[\rn{linearlization}]
- {\sstep{\ifr{e}{s_1}{s_2}}{\compose{s_1}{s_2}}{}}
- {}
-$$
-$$
 \infer[\rn{to-green}]
  {\step{\Sigma}{x := gamma(e_1, e_2, e_3)}{\Sigma}{( e_1 \wedge x = e_2) \vee ( !e_1 \wedge x = e_3)}{}}
  {}
 $$
 $$
-\infer[\rn{get-field_1}]
- {\step{psm}{x := get\text{-}field(e)}{psm}{ x := (v,e')}{field}}
- {\step{psm}{e}{psm}{v}{any} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
-\qquad
-\infer[\rn{get-field_2}]
- {\step{psm}{x := get\text{-}field(e)}{psm}{ x := x_r}{field}}
- {\step{psm}{e}{psm}{v}{any} \qquad psm(v) = x_r}
+\infer[\rn{high-order}]
+ {\step{\Gamma_r, \Delta_r}{s_1; invoke(e_1, e_2, e_3)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{s_1; \sub{v_2}{x}{s_2}}{high}}
+ {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r, \Delta_r'}{v_1}{sub} \qquad \lookup{\Gamma_s}{v_1.e_2} = \tau , \qquad \Gamma_r', \lookup{\Psi}{\tau}=\lambda x.s_2, \qquad \step{\Delta_r'}{e_3}{\Delta_r''}{v_3}{sub}}
 $$
+%$$
+%\infer[\rn{high-order_2}]
+% {\step{\Gamma_r, \Delta_r}{e = invoke(e_1, e_2)}{(\Gamma_r \cup \Gamma_r'), \Delta_r''}{\sub{v_2}{x}{s} ; e = e'}{high}}
+% {\step{\Gamma_r, \Delta_r}{e_1}{\Gamma_r', \Delta_r'}{v}{sub}, \qquad \lookup{\Gamma_s}{v} = \tau, \qquad \Gamma_r', \lookup{\Psi}{\tau}= \lambda x.(s; \return{e'}) \qquad \step{\Delta_r'}{e_2}{\Delta_r''}{v_2}{sub}}
+%$$
+$$
+ \infer[\rn{single-path_1}]
+ {\sstep{throw \:e}{single}{exit}}
+ {}
+\qquad
+\infer[\rn{single-path_2}]
+ {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2}}{(\Sigma \vee e)}{s_2}{}}
+ {}
+%\qquad
+%\infer[\rn{single-path_3}]
+% {\step{\Sigma}{\ifr{e}{s_1}{(s_2 ; exit ; s_2')}}{(\Sigma \vee !e)}{s_1}{}}
+% {}
+%$$
+%$$
+%\infer[\rn{single-path_4}]
+% {\step{\Sigma}{\ifr{e}{(s_1 ; exit ; s_1' )}{s_2 ; exit ; s_2'}}{(\Sigma \vee true)}{skip}{}}
+% {}
+% \qquad
+%\infer[\rn{linearlization}]
+% {\sstep{\ifr{e}{s_1}{s_2}}{\compose{s_1}{s_2}}{}}
+% {}
+$$
+%$$
+%\infer[\rn{get-field_1}]
+% {\step{psm}{x := get\text{-}field(e)}{psm}{ x := (v,e')}{field}}
+% {\step{psm}{e}{psm}{v}{any} \quad \Theta(v) = l \qquad \Delta_s (v )=(v,e') \qquad psm(v) = \phi}
+%\qquad
+%\infer[\rn{get-field_2}]
+% {\step{psm}{x := get\text{-}field(e)}{psm}{ x := x_r}{field}}
+% {\step{psm}{e}{psm}{v}{any} \qquad psm(v) = x_r}
+%$$
 $$
 \infer[\rn{put-field_1}]
  {\step{\Gamma_r, psm}{x := put\text{-}field(e1, e2)}{(\Gamma_r \cup (x_0, \Gamma_s{v})), (psm\cup(v, x_0))}{ (x := x_0); (x_0 := e2)}{field}}
@@ -553,16 +551,16 @@ $$
 % {gen\_id() = x_{ret}}
 %$$
 }}
-\caption{Evaluation Rules for Ranger Transformations}
+\caption{Subset of the Evaluation Rules for Ranger Transformations}
 \label{fig:semantics}
 \end{figure*}
 %
 \subsection{Transformations}
 \label{sec:Transformations}
 
-\newtext{\textbf{Early Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.}
+\newtext{\textbf{Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.}
 %
-\newtext{The $\rn{early-return}$ describe the semantics of this transformation when the return statement is on one side of a multi-path region. In this case \toolshort\ generates a new return variable $x_{ret}$ and assign it to the return variable. Eventually if the path-merging of this region was successful \toolshort\ will in this case generate two paths one to explore the early return choice and another to explore the nominal choice. Accordingly, the position where DSE needs to resume from needs to be changed depending on which choice is being executed.}
+\newtext{The $\rntext{return}$ describe the semantics of this transformation when the return statement is on one side of a multi-path region. In this case \toolshort\ generates a new return variable $x_{ret}$ and assign it to the return variable. Eventually if the path-merging of this region was successful \toolshort\ will in this case generate two paths one to explore the return choice and another to explore the nominal choice. Accordingly, the position where DSE needs to resume from needs to be changed depending on which choice is being executed.}
 %
 %In this transformation, Java Ranger collects that conditions for branches that
 %have early return in them. In figure~\ref{fig:semantics} we show the rule of having an early return on the else side
@@ -594,7 +592,7 @@ x44$2 = invoke < Application, Ljava/util/List, get(I)Ljava/lang/Object; >[x9$2, 
 
 \textbf{Local Variable Substitution Transformation}: During this transformation, local variable inputs in \toolshort\ are substituted with their concrete or symbolic values obtained from the environment of DSE.
 %
-\newtext{The $\rn{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation where the location of an input variable $l$ is used to lookup its value in the DSE environment $\Delta_s$ and is substituted in the region statement.}
+\newtext{The $\rntext{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation where the location of an input variable $l$ is used to lookup its value in the DSE environment $\Delta_s$ and is substituted in the region statement.}
 %
 %The $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its
 %dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.
@@ -616,10 +614,13 @@ At this point, we perform three steps.
 (3) When no more higher-order method summaries can be inlined, the resulting substituted method region is inlined into
 the outer region.
 %
-Rules $\rn{high-order_1}$ and $\rn{high-order_2}$ describe the semantics of this transformation.
+%Rules $\rn{high-order}$ and $\rn{high-order_2}$ describe the semantics of this transformation.
 %Formally, rules $\rn{high-order_1}$ describes the inlining process for methods that has no return values for a concrete
-%reference, and $\rn{high-order_2}$ describes inlining of methods that have a single return values also for concrete
-%reference. For non-concerete reference, and after reaching a fixed point, the updated type table (using type
+%reference, 
+
+\newtext{Rule $\rntext{high-order}$ describes inlining of methods that have a single return values for concrete
+object reference. In this rule, $e_1$ reduces using substitution to a concrete reference $v_1$ type, then using the DSE environment method-region $\lambda x.s_2$ is pulled out from region map $\Psi$. Finally inlining of the method-region is down where values $v_3$ substitute formal parameters.}
+%For non-concerete reference, and after reaching a fixed point, the updated type table (using type
 %propagation) is used to get the type of the variable and therefore the corresponding parametric region statement. It
 %must be noted that methods with multiple returns, should have been normalized out with the early-return transformation
 %discussed previously. Note the rules describes the support for the jvm invoke virtual instruction, however Java Ranger
@@ -672,6 +673,10 @@ It uses a global subscript to distinguish between assignments to the same field 
 %
 At the merge point of the region, field assignments done on the same field are merged using
 Gated Single Assignment (GSA)~\cite{Ottenstein1990}.
+%
+
+\newtext{Rule $\rntext{put-field_1}$ and $\rntext{put-field_2}$ describes the operation of the field transformation over a put-field instruction and rule $\rntext{gamma-generation_1}$ describes the generation of a gamma expression for field SSA vars. The first rule describes a put-field for a concrete reference $v$ that has not been mapped to SSA variable. In this case, \toolshort\ gives a new var with initial subscript $x_0$ and adds that to the $psm$ map.  The second rule describes a situation where the reference has an occurance in $psm$ map, and therefore a new subscript variable is being created $x'_{ref}$ that would be assigned the put field value. Finally the $\rntext{gamma-generation}$ rule, describes the situation where on different sides of an if instruction $psm$ had different subscripted variables appear for the same referenced variable, in this case \toolshort\ creates a gamma statement. }
+
 %
 To continue expanding the motivating example, the field references transformation on the above Ranger IR statement
 changes the assignments to $x4\$4$ and $x4\$5$ to assign them the concrete values 200 and 397 respectively.
@@ -805,10 +810,11 @@ exceptional behavior and potentially reduces the branching factor in the multi-p
 %The intuition here is that, we want to maximize regions that Java Ranger can summarize, even if the summarization is
 %only partial.
 %
-In this transformation, \tool\ identifies non-nominal exit points, collects their path predicates and prunes them away from the
-Ranger IR statement. The formal rules of this transformation is defined in rule $\rn{single-path_1}$ and
-$\rn{single-path_2}$, where the former transforms statements that are considered exit points, then the later constructs
-the matching constraints to explore the single path of interest.
+
+In this transformation, \tool\ identifies non-nominal exit points, collects their path predicates and prunes them away
+from the Ranger IR statement. The formal rules of this transformation is defined in rule $\rntext{single-path_1}$ and
+$\rntext{single-path_2}$, where the former transforms statements that are considered exit points, then the later
+constructs the matching constraints to explore the single path of interest.
 %
 The outcome of this process, is a more simplified and concise statement that represent the nominal behavior of the Ranger region.
 %
@@ -843,7 +849,7 @@ GSA expressions.
 Compositional statements are translated into conjunction, assignment statements are translated into Green~\cite{green}
 equality expressions.
 %
-For assignment statements that have GSA expressions~(shown in the $\rn{to-green}$ rule in Figure~\ref{fig:semantics}),
+For assignment statements that have GSA expressions~(shown in the $\rntext{to-green}$ rule in Figure~\ref{fig:semantics}),
 these are translated into two disjunctive formulas that describes the assignment if the GSA condition or its negation
 were satisfied.
 %
