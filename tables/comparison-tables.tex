@@ -1,0 +1,57 @@
+\begin{table}
+    \begin{subtable}[t]{0.5\textwidth}
+        \centering
+            \begin{tabular}{ccccc}
+                \hline
+                \begin{tabular}[c]{@{}c@{}}Benchmark\\ name\end{tabular} & \begin{tabular}[c]{@{}c@{}}multi-path\\ region\\ summ.\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ higher-\\ order\\ regions\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ single-\\ path\\ cases\end{tabular} & \begin{tabular}[c]{@{}c@{}}+returns\\ summ.\end{tabular} \\ \hline
+                WBS                                                      & 0.0002                                                              & 0.0002                                                              & 0.0002                                                           & 0.0002                                                   \\ \hline
+                TCAS                                                     & 0.347                                                               & 0.002                                                               & 0.002                                                            & 0.002                                                    \\ \hline
+                replace                                                  & 1.36                                                                & 3.23                                                                & 3.93                                                             & 3.89                                                     \\ \hline
+                NanoXML                                                  & 0.84                                                                & 0.74                                                                & 2.25                                                             & 0.44                                                     \\ \hline
+                PrintTokens2                                             & 0.67                                                                & 0.66                                                                & 0.7                                                              & 0.78                                                     \\ \hline
+                ApacheCLI                                                & 0.16                                                                & 0.13                                                                & 0.18                                                             & 0.19                                                     \\ \hline
+                MerArbiter                                               & 0.15                                                                & 0.16                                                                & 0.17                                                             & 0.16                                                     \\ \hline
+            \end{tabular}
+        \caption{Comparing running time}
+        \label{table:runtime-comparison}
+    \end{subtable}
+    \hspace{\fill}
+    \begin{subtable}[t]{0.50\textwidth}
+        \centering
+            \begin{tabular}{ccccc}
+                \hline
+                \begin{tabular}[c]{@{}c@{}}Benchmark\\ name\end{tabular} & \begin{tabular}[c]{@{}c@{}}multi-path\\ region\\ summ.\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ higher-\\ order\\ regions\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ single-\\ path\\ cases\end{tabular} & \begin{tabular}[c]{@{}c@{}}+returns\\ summ.\end{tabular} \\ \hline
+                WBS                                                      & 1.30E-07                                                            & 1.30E-07                                                            & 1.30E-07                                                         & 1.30E-07                                                 \\ \hline
+                TCAS                                                     & 0.245                                                               & 2.60E-05                                                            & 2.60E-05                                                         & 2.60E-05                                                 \\ \hline
+                replace                                                  & 0.63                                                                & 0.9                                                                 & 0.12                                                             & 0.12                                                     \\ \hline
+                NanoXML                                                  & 0.9999                                                              & 0.9996                                                              & 0.9981                                                           & 0.1535                                                   \\ \hline
+                PrintTokens2                                             & 0.87                                                                & 0.87                                                                & 0.87                                                             & 0.66                                                     \\ \hline
+                ApacheCLI                                                & 0.0035                                                              & 0.0035                                                              & 0.0035                                                           & 0.0035                                                   \\ \hline
+                MerArbiter                                               & 0.11                                                                & 0.11                                                                & 0.11                                                             & 0.11                                                     \\ \hline
+            \end{tabular}
+        \caption{Comparing number of execution paths}
+        \label{table:numpaths-comparison}
+    \end{subtable}
+    \begin{subtable}[t]{0.50\textwidth}
+        \centering
+            \begin{tabular}{ccccc}
+                \hline
+                \begin{tabular}[c]{@{}c@{}}Benchmark\\ name\end{tabular} & \begin{tabular}[c]{@{}c@{}}multi-path\\ region\\ summ.\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ higher-\\ order\\ regions\end{tabular} & \begin{tabular}[c]{@{}c@{}}+ single-\\ path\\ cases\end{tabular} & \begin{tabular}[c]{@{}c@{}}+returns\\ summ.\end{tabular} \\ \hline
+                WBS                                                      & 0                                                                   & 0                                                                   & 0                                                                & 0                                                        \\ \hline
+                TCAS                                                     & 0.234                                                               & 0                                                                   & 0                                                                & 0                                                        \\ \hline
+                replace                                                  & 0.74                                                                & 1.13                                                                & 0.33                                                             & 0.33                                                     \\ \hline
+                NanoXML                                                  & 1.0001                                                              & 0.9997                                                              & 1.0475                                                           & 0.1903                                                   \\ \hline
+                PrintTokens2                                             & 0.92                                                                & 0.92                                                                & 0.92                                                             & 0.69                                                     \\ \hline
+                ApacheCLI                                                & 0.05                                                                & 0.05                                                                & 0.05                                                             & 0.05                                                     \\ \hline
+                MerArbiter                                               & 0.13                                                                & 0.13                                                                & 0.13                                                             & 0.13                                                     \\ \hline
+            \end{tabular}
+        \caption{Comparing number of solver queries}
+        \label{table:numqueries-comparison}
+    \end{subtable}
+%    \hspace{\fill}
+
+    \caption{Presenting the ratio of the running time, number of execution paths, and number of solver queries without
+    path-merging to the running time, number of execution paths, and number of solver queries with path-merging
+    for the 7 benchmarks where any path-merging was done. A ratio less than 1 indicates path-merging was useful (smaller is better).}
+    \label{tab:table1}
+\end{table}

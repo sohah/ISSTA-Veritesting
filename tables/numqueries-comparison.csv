@@ -1,0 +1,17 @@
+"Benchmark
+name","multi-
+path
+region
+summ.","+ higher-
+order
+regions","+ single-
+path
+cases","+returns
+summ."
+WBS,0,0,0,0
+TCAS,0.234,0,0,0
+replace,0.74,1.13,0.33,0.33
+NanoXML,1.0001,0.9997,1.0475,0.1903
+PrintTokens2,0.92,0.92,0.92,0.69
+ApacheCLI,0.05,0.05,0.05,0.05
+MerArbiter,0.13,0.13,0.13,0.13
