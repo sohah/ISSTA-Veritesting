@@ -71,6 +71,12 @@ path condition every time a query is to be solved.
 Since path-merging can create large formulas in the path condition, the incremental solving mode provided a crucial
 benefit in reducing the number of times large formulas had to be passed to the solver.
 %
+Finally, we also built in a heuristic that estimates the number of paths through a canonical region summary and compares
+it to the number of exit points present in the region.
+%
+The canonical region summary is used only if the estimated number of paths is greater than the number of exit points in
+the region.
+%
 \subsection{Evaluation}
 %
 In order to evaluate the performance of \tool, we used the following nine benchmarking programs commonly used to
@@ -108,13 +114,18 @@ It consists of 183 procedures and 3612 lines of code.
 We used the version made
 available by Yang et al.~\cite{memoise}. This benchmark consists of 268 classes, 553 methods, 4697 lines of code
 including the Polyglot framework.
+%
+While none of our existing benchmarks performed multi-threaded execution, path-merging can interfere with symbolic
+execution of multi-threaded programs.
+%
+We plan to explore this extension of path-merging for symbolic execution of multi-threaded programs in the future.
 
 We first ran each of these benchmarks using SPF with increasing number of symbolic inputs and obtained the most number
-of symbolic inputs with which SPF finished complete exploration of each benchmark within a 24 hour time budget.
+of symbolic inputs with which SPF explored all execution paths in each benchmark within a 24 hour time budget.
 %
 We then ran each benchmark with this number of symbolic inputs with \tool.
 %
-This evaluation allowed us to check if \tool\ is faster than SPF at achieving complete path exploration of each benchmark.
+This evaluation allowed us to check if \tool\ is faster than SPF at exploring all feasible paths through each benchmark.
 %
 %Next, we used the fastest mode of \tool\ to check if it could explore the benchmark with even more symbolic inputs within
 %the same 12 hour time budget.\vaibhav{Figure out if these results need to be reported}
@@ -191,16 +202,17 @@ branch side.
 %
 Since \tool\ can convert such multiple control-flow returning exit points regions into a single control-flow
 returning exit point, \tool\ is able to inline more than 8,000 method summaries when running NanoXML with 8 symbolic
-inputs and finish in about 8 hours while vanilla SPF needs about 18 hours to complete the same exploration.
+inputs and finish in about 8 hours while vanilla SPF needs about 18 hours to explore all feasible paths.
 
-\tool\ has the same performance as SPF on Siena and Schedule2 with a minor overhead in running time that comes from
-\tool\rq s lookup of a region summary for every executed branch instruction and recording of metrics.
+\tool\ has the same performance as SPF on Siena and Schedule2 with a minor overhead~(about 5\% in running time) in
+running time that comes from \tool\rq s lookup of a region summary for every executed branch instruction, recording of
+metrics, and from doing JIT static analysis to recover region statements.
 %
 We restrict our results with Siena to 7 symbolic inputs because 7 is the most number of symbolic inputs for which
-SPF finishes complete path exploration within a 24 hour time budget.
+SPF finishes exploring all feasible paths within a 24 hour time budget.
 %
-On running Siena, the overhead of \tool\~(about 5\% in running time)results from running into concrete branch
-instructions that \tool\ could have summarized, had these branches been symbolic.
+We do not attempt to construct a fully linearized form of a region summary if it does not begin on a symbolic conditional
+branch.
 
 In the PrintTokens2 benchmark, \tool\ uses 4 distinct regions, 2 of which involve summarizing multi-path regions which
 have a {\tt return} instruction at the end of every path in the region.
@@ -217,8 +229,8 @@ made symbolic.
 \tool\ finishes exploration with this setup of ApacheCLI in about 1.5 hours whereas SPF finishes exploration in about 9
 hours as shown in Table~\ref{table:results-all-mode5}
 %
-When we ran SPF on ApacheCLI with the first 7 inputs and the 9th input made symbolic, it was unable to complete
-exploration within 24 hours.
+When we ran SPF on ApacheCLI with the first 7 inputs and the 9th input made symbolic, it was unable to explore all
+feasible paths in ApacheCLI within 24 hours.
 %
 But, \tool\ can complete this exploration in about 15 hours.
 
@@ -280,3 +292,9 @@ benchmarks.
 %
 The benefit from this feature matches our observation that both of these benchmarks contain frequently-executed
 regions that contain multiple control-flow returning exit points.
+%
+In conclusion, Table~\ref{table:comparison-table} shows that every path-merging feature present in \tool\ has a
+beneficial impact on atleast one benchmark in our set.
+%
+It demonstrates the benefits from our re-interpretation and extension of the original veritesting approach~\cite{veritesting}
+for symbolic execution of Java bytecode.

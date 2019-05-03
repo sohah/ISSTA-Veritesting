@@ -8,6 +8,11 @@ Java Ranger attempts to perform path merging as aggresively as possible.
 This path merging strategy doesn't optimize towards making fewer solver calls.
 %
 We plan to work towards implementing heuristics that can measure the effect of path merging on the rest of the program.
+%
+\tool\ currently lacks support for symbolic object and array references.
+%
+Supporting these would require integrating our implementation with
+SPF\rq s lazy initialization~\cite{spf} to allow symbolic object references to be part of a region.
 
 While statically summarizing regions gives dynamic symbolic execution a performance boost to explore more paths
 efficiently, generating test cases that covers all summarized branches is one of the most useful applications of dynamic
@@ -25,4 +30,3 @@ Java Ranger can summarize methods and regions in Java standard libraries.
 %
 This creates potential for automatically constructing summaries of standard libraries so that symbolic execution
 can prevent path explosion originating from standard libraries.
-%
