@@ -139,10 +139,11 @@ In the following sections, we first describe \tool\ grammar then we discuss just
 %
 \begin{figure}
 \begin{grammar}
-<stmt> ::= <canonical-stmt> | x.<stmt> 
+<stmt> ::= <canonical-stmt> | $\lambda$ x.<stmt> 
 \alt <stmt> ; <stmt> | <exp> := <exp>
 \alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
 \alt invoke( <exp>, <exp> )  | exit
+
 <canonical-stmt> ::= <canonical-stmt> ; <canonical-stmt> 
 \alt <canonial-exp> := <canonical-exp> | skip
 
@@ -218,34 +219,37 @@ $$
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
 
 \subsection{\tool\ Grammar}
-%In the following sections we will discuss the various parts of this statement to show the effect of various transformations.
-%The grammar of Java Ranger is defined in~\ref{fig:grammar}. Basically the grammar is composed of statements $stmt$ and
-%expressions $exp$. Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a
-%skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\;
-%\tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$
-%statement to bookmark exit point of a region/statement.
+\newtext{Figure~\ref{fig:grammar} shows \tool\ grammar, which can be thought of as a superset of Wala IR which is in turn a superset of Java bytecode instructions. }
+
+\newtext{\toolshort's grammar is composed of statements $stmt$ and
+expressions $exp$. Statements include $\langle canonical\text{-}stmt\rangle$ used to describe the simplest form of statements in which different transformations of \toolshort\ tries to reduces to. A region statement $\lambda x.\langle stmt \rangle$, which defines the binding of the input parameter in the region statement. Other statements in \toolshort\ IR also include: sequential composition ($stmt ; stmt$), assignment ($exp := exp$),
+skip, exit ($exit\text{-}stmt$) (which determine single path cases, it includes $new\; \tau$, $throw\; exp$ and $return\; exp$ statements), if-then-else and finally $invoke$ statement to indicate call of a method.}
+
 %In the following sections we will discuss the various parts of this statement to show the effect of various transformations.
 %
-We present the grammar that describes Ranger IR in Figure~\ref{fig:grammar}.
-%
-It consists of different kinds of statements of which
-$exit$ statements define single-path cases present in the region and $skip$ statements allow simplifications to
-reduce the size of the region summary.
+%It consists of different kinds of statements of which
+%$exit$ statements define single-path cases present in the region and $skip$ statements allow simplifications to
+%reduce the size of the region summary.
 %Statements in Java Ranger contains: sequential composition ($stmt;stmt$), assignment ($exp = exp$), a
 %skip, parametric statements $x.stmt$, exit-statements $exit$, which determine single path regions and they are $new\;
 %\tau$, $throw\; exp$ and $return\; exp$, if-then-else, method invocation $invoke(exp, exp, exp)$ and especial $exit$
 %statement to bookmark exit point of a region/statement.
 %
-Java Ranger expressions consist of constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$ and
-characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for vars
-D_$\mathbb{N}$), binary and unary operators over expressions, reads and writes from fields and arrays, and
-a special gamma expression, $gamma(exp, exp, exp)$, that is the ternary operator in Java.
-%
-Gamma expressions allow Ranger IR to construct Gated Single Assignment~(GSA) form for variables.
-%
-Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), an
+
+
+\newtext{\toolshort\ expressions consist of $\langle canonical\text{-}exp\rangle$, which is analogous to canonical statements, which describes the simplest form of expressions that \toolshort\ tries to reduce to.  $\langle canonical\text{-}exp\rangle$ includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them
+ID_$\mathbb{N}$), binary and unary operations over canonical expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expression that allow Ranger IR to construct Gated Single Assignment~(GSA)\cite{} form for variables which intuitively describes conditional assignment of variables.}
+
+\newtext{Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), an
 early return variable (to carry early return values), variables that correspond to local variables, and variables used
-to represent intermediate computation.
+to represent intermediate computation. This distinction is abstracted away from the grammar but is referred to whenever necessary in the text.
+}
+
+\newtext{Other forms of expressions include non-canonical expressions, this includes read and writes to fields and arrays. }
+
+\newtext{Please note that}
+%
+%
 %Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and
 %characters $\mathbb{C}$) , variables (these are subscripted with integers to facilitate having ssa form for vars
 %D_$\mathbb{N}$), binary operations $op_b$, unary operations $op_u$,  $get-field(exp)$ and $put-field(exp, exp, exp)$ for
@@ -269,9 +273,9 @@ to represent intermediate computation.
 \label{sec:jit}
 \newtext{As mentioned before the construction of the region happens when \tool\ detects a symbolic if-instruction during DSE, and thus an opportunity for path-merging. Using the recovered cfg of the method where the intercepted if-instruction resides, \toolshort\ constructs two types of regions: \textit{conditional-region} and \textit{method-region}.} 
 
-\newtext{A \textit{conditional-region}: which contains a statement in \toolshort\ IR and a coressponding environment. The IR statement represents the summarization of the instructions from the conditional instruction basic block, i.e, if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains information about variables in the region, such as types of variables, variables stack slot information, inputs of the region and output of the region.}
+\newtext{A \textit{conditional-region}: contains a statement in \toolshort\ IR and a coressponding environment. The IR statement represents the summarization of the instructions from the conditional instruction basic block, i.e, if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains information about variables in the region, such as types of variables, variables stack slot information, inputs of the region and output of the region.}
 
-\newtext{A \textit{method-region}: which also contains a statement in \toolshort\ IR and an environment. This time however the IR statement represents the summarization of the whole method. The environment for a method-region is almost similar to the conditional-region, except that the input and the stack slot of variables are defined in terms of the parameters to the method.}  
+\newtext{A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the IR statement represents the summarization of the whole method. The environment for a method-region is almost similar to the conditional-region, except that the input and the stack slot of variables are defined in terms of the parameters to the method.}  
 
 \newtext{In the next subsections we describe the two main steps in constructing a region, the IR statement creation, which we call \textit{IR statement recovery} and the environment creation for regions.}
 \subsubsection{IR Statement Recovery}
