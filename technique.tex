@@ -149,9 +149,9 @@ In the following sections, we first describe \tool\ grammar then we discuss just
 
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
-<exp>  ::=  <canonical-exp> | get_field( <exp> ) 
-\alt put_field( <exp>, <exp> ) | array_load( <exp> ) 
-\alt array_store( <exp>, <exp>, <exp> ) | <exp>.<exp>
+<exp>  ::=  <canonical-exp> | get_field( <exp>.<exp> ) 
+\alt put_field( <exp>.<exp>, <exp> ) | array_load( <exp>, <exp>) 
+\alt array_store( <exp>, <exp>, <exp> ) 
 
 <canonical-exp> ::= <val> | <var> | <canonical-exp> $op_b$ <canonical-exp> 
 \alt $op_u$ <canonical-exp> | gamma(<canonical-exp>, <canonical-exp>, <canonical-exp>)
@@ -271,11 +271,11 @@ to represent intermediate computation. This distinction is abstracted away from 
 
 \subsection{JIT Region Construction}
 \label{sec:jit}
-\newtext{As mentioned before the construction of the region happens when \tool\ detects a symbolic if-instruction during DSE, and thus an opportunity for path-merging. Using the recovered cfg of the method where the intercepted if-instruction resides, \toolshort\ constructs two types of regions: \textit{conditional-region} and \textit{method-region}.} 
+\newtext{As mentioned before the construction of the region happens when \tool\ detects a symbolic if-instruction during DSE, and thus an opportunity for path-merging. Using the recovered cfg of the method where the intercepted if-instruction resides, \toolshort\ constructs two types of regions: \textit{multi-path region} and \textit{method-region}.} 
 
-\newtext{A \textit{conditional-region}: contains a statement in \toolshort\ IR and a coressponding environment. The IR statement represents the summarization of the instructions from the conditional instruction basic block, i.e, if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains information about variables in the region, such as types of variables, variables stack slot information, inputs of the region and output of the region.}
+\newtext{A \textit{multi-path region}: contains a statement in \toolshort\ IR and a coressponding environment. The IR statement represents the summarization of the instructions from the conditional instruction basic block, i.e, if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains information about variables in the region, such as types of variables, variables stack slot information, inputs of the region and output of the region.}
 
-\newtext{A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the IR statement represents the summarization of the whole method. The environment for a method-region is almost similar to the conditional-region, except that the input and the stack slot of variables are defined in terms of the parameters to the method.}  
+\newtext{A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the IR statement represents the summarization of the whole method. The environment for a method-region is almost similar to the multi-path region, except that the input and the stack slot of variables are defined in terms of the parameters to the method.}  
 
 \newtext{In the next subsections we describe the two main steps in constructing a region, the IR statement creation, which we call \textit{IR statement recovery} and the environment creation for regions.}
 \subsubsection{IR Statement Recovery}
@@ -327,7 +327,7 @@ x55 := (Gamma !(x58==0) (Gamma !(x47!=0) 0 x58) (Gamma !(x53==0) 1 x58));
 %\ref{lst:walk_static}.
 \subsubsection{Environment Creation}
 
-Once the statement of a multi-path region has been recovered, its corresponding environment is populated.
+\newtext{Once the statement of a region has been recovered, i.e., a corresponding \toolshort\ IR statement has been created, \toolshort\ then tries to populate its corresponding environment.}
 %
 This includes identifying the region boundary, in terms of the region\rq s local variable inputs and outputs, types, and stack
 slots of variables used in the region summary.
@@ -336,11 +336,13 @@ slots of variables used in the region summary.
 %
 %This is used later to constrain the computation and population of Ranger IR environment tables.
 %
-The local variable inputs are Ranger IR variables in the region summary that make the first \textit{use} of a
-stack slot.
+
+\newtext{\toolshort\ defines local variable inputs as variables in the region summary that make the first \textit{use} of a
+given stack slot. This is called an input variable(s) to the region because, when the DSE hits a symbolic region where there is a opportunity of path-merging, \toolshort\ collects information (concrete/symbolic values) from the dynamic environment of DSE, and substitute them in the region's statements, i.e, substituting the first binding of variables to a stack slot with its actual concrete or symbolic value. Using these environment-related information \toolshort\ continue trying to either dereference objects used in the IR statement or express them in a canonical form. }
 %
-Similarly, local variable outputs are the last \textit{def} of a Ranger IR variable in a region summary that maps to a
-stack slot.
+
+\newtext{Similarly, local variable outputs are the last \textit{def} of a \toolshort\ IR variable in a region summary that maps to a given
+stack slot. \toolshort\ uses this information to populate symbolic expression or concrete values that summaries the execution of the region.}
 %The output table is populated with the last \textit{def} of a local variable at merge point of the region.
 %
 %We also use local variable type information for all variables that lie within the boundary of the region.
@@ -350,30 +352,35 @@ stack slot.
 %We infer type information using the instantiation environment of a region for local variables, field references, and
 %array references.
 %
-We use the instantiation environment to map Ranger IR variables to their corresponding stack slots, starting with
-the stack slot information given by Wala.
+\newtext{To do this, \toolshort\ relies on Wala to provide stack slot information for intermediate variables. This is however not always available and therefore \toolshort\ needs to try to infer the mapping of intermediates to stack slots. This is done using the observation that, if at one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
+used in that $\phi$-expression must belong to the same stack slot.
+%
+\toolshort\ use this observation to propagate stack slots across all $\phi$-expressions. 
+}
+%Again, we use the dynamic environment to map \toolshort\ IR variables to their corresponding stack slots, starting with
+%the stack slot information provided by Wala. However, 
 %We also construct a stack slot table as part of a region\rq s Ranger IR summary.
 %
 %The stack slot table maps Ranger IR variables to a stack slot, if they correspond to a local variable in the source code.
 %
 %We populate the stack slot table by obtaining a variable to stack slot mapping from WALA.
 %
-We also assume that, if at least one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
-used in that $\phi$-expression must belong to the same stack slot.
+%We also assume that, if at least one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
+%used in that $\phi$-expression must belong to the same stack slot.
+%%
+%We use this assumption to propagate stack slots across all $\phi$-expressions.
 %
-We use this assumption to propagate stack slots across all $\phi$-expressions.
 %
+
+Formally we define the following structures:\\
 %
-Formally we define the following structures.
-%
-Figure~\ref{fig:semantics} shows the semantics of different transformations, with evaluation following judgment where
-each step on some statement s, w.r.t. the maps below yields a new statement $s'$ and possibly new maps in some
-transformation $T$.\\
-\textbf{value-map}: $\Delta_r$ and $\Delta_s$ maps stack slots, to concrete values $val$ or symbolic values $exp$ for Java Ranger and SPF respectively.\\
-\textbf{type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and SPF respectively.\\
-\textbf{region-map}: Java Ranger defines a map $\Psi$ from type $\tau$  to a parametric statement $x.s$ that defines the region\rq s summary.\\
-\textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints\\
-\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints.
+\textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps stack slots, to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
+\textbf{Type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and DSE respectively.\\
+\textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. \newtext{This is used to bind the region type to its statement. The actually form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.}\\
+\textbf{Single-Path-Constraint-List}: A list $\Sigma$ of single-path constraints. \newtext{This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.}\\
+\textbf{Early-Return-Constraint-map}: A map $\Sigma_{ret}$ from early-return vars $x_{ret}$ to early-return constraints. \newtext{This is used to set up the path condition for early return case, more information is in next section.}
+
+Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a transformation step on some statement s, w.r.t. the maps, which usually yield a new statement $s'$ and possibly some changes in the map.\\
 %
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
