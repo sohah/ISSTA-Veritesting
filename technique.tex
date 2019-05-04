@@ -474,10 +474,10 @@ is every hit again, i.e., executed again, then instead of re-running the jit-reg
 the region from the map.\\
 \textbf{Path-subscript-map}: This is used to associate with every reference, the last subscripted variable.\\
 \textbf{Location-map}: a map $\Theta$ that defines a location mapping for each variable in the \tool\ IR statement, i.e, which stack-slot or part of the heap does it refer to.\\
-\textbf{Path-Constraint-List}: A list $\Sigma$ of path constraints. This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.\\
-\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. This is used to set up the path condition for return case, more information is in next section.\\
-\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.\\
-\textbf{Return-Next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for return case.
+\textbf{Path-Constraint-List} and \textbf{Return-Constraint-map}: These are constraints $\Sigma$ and $\Sigma_{ret}$ to be added on the path condition for for both the nominal case and the return case respectively, with the purpose of guiding the DSE.\\
+%They are used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.\\
+%\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. This is used to set up the path condition for return case, more information is in next section.\\
+\textbf{Nominal-next-instruction} and \textbf{Return-Next-instruction}: specifies the instruction position from which DSE should resume from, if path-merging was successful, in the nominal case and return case respectively.\\
 
 
 Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a
