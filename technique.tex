@@ -30,7 +30,7 @@ $\region_{linear}$ = linearization transformation($\region_{single}$)\;
 	{$\region_{green}$ = to-green transformation($\region_{linear}$)\;   
 	populate outputs \tcp{successful transformation} 
 	skip region execution\;}
-   {abort \tcp*{resume DSE of conditional branch instruction}}  
+   {abort \tcp{resume DSE from cond. branch}}
 \caption{Ranger general pseudocode}
 \label{fig:algorithm}
 \end{algorithm}
@@ -255,10 +255,10 @@ $$
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
 
 \subsection{\tool\ Grammar}
-Figure~\ref{fig:grammar} shows \tool\ grammar, which can be thought of as a superset of Wala IR which is in turn a superset of Java bytecode instructions. 
+Figure~\ref{fig:grammar} shows grammar used for constructing Ranger IR, which is a superset of Wala IR.
 
-\toolshort's grammar is composed of statements $stmt$ and
-expressions $exp$. Statements include, a region statement $\lambda x.\langle stmt \rangle$, which defines the binding of the input parameter in the region statement. Other statements in \toolshort\ IR also include: sequential composition ($stmt ; stmt$), assignment ($exp := exp$),
+Ranger IR's grammar is composed of statements $stmt$ and
+expressions $exp$. Statements include, a region statement $\lambda x.\langle stmt \rangle$, which defines the binding of the input parameter in the region statement. Other statements in Ranger IR also include: sequential composition ($stmt ; stmt$), assignment ($exp := exp$),
 skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes $new\; \tau$, $throw\; exp$ and $return\; exp$ statements), if-then-else and finally $invoke$ statement to indicate call of a method.
 
 %In the following sections we will discuss the various parts of this statement to show the effect of various transformations.
@@ -273,14 +273,22 @@ skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes 
 %
 
 
-\toolshort\ expressions includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them
-ID_$\mathbb{N}$), binary and unary expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expression that allow Ranger IR to construct Gated Single Assignment~(GSA)\cite{} form for variables which intuitively describes conditional assignment of variables. Also \toolshort\ expressions includes read and writes to fields and arrays.
-
-A fully-linearized statements in \toolshort only includes composition and assignment over fully-linearized expressions.
-A fully linearized expressions in turn consists of binary, unary and gamma expressions.
-
-Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), a return variable (to carry the return values), variables that correspond to local variables, and variables used
-to represent intermediate computation. This distinction is abstracted away from the grammar but is referred to whenever necessary in the text.
+Ranger IR expressions includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters
+$\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them ID_$\mathbb{N}$),
+binary and unary expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expressions allow
+Ranger IR to construct Gated Single Assignment~(GSA)\cite{Ottenstein1990} form for variables which intuitively describes conditional
+assignment of variables. Ranger IR expressions also include reads and writes to fields and arrays.
+%
+A fully-linearized statement in Ranger IR only includes composition and assignment over fully-linearized expressions.
+%
+A fully linearized expression consists of unary, binary, and ternary operators (aka gamma expressions) over Ranger IR
+variables.
+%
+Java Ranger defines 5 types of variables, variables used to construct SSA form for field and array accesses, a return
+variable used to capture return values in a region), variables that correspond to local variables, and variables used to
+represent intermediate computation.
+%
+This distinction is used where necessary in the rest of this work.
 %
 %
 %Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and
@@ -305,21 +313,31 @@ to represent intermediate computation. This distinction is abstracted away from 
 \subsection{JIT Region Construction}
 \label{sec:jit}
 The construction of a region happens when \tool\ detects a symbolic conditional branch
-during DSE, and thus an opportunity for path-merging. Using the recovered cfg of the method where the intercepted
-conditional branch instruction resides, \toolshort\ constructs two types of regions: \textit{multi-path region} and \textit{method-region}.
+during dynamic symbolic execution~(DSE), and thus an opportunity for path-merging.
+%
+Using the recovered CFG of the method where the intercepted
+conditional branch instruction resides, \toolshort\ constructs two types of regions: \textit{multi-path region} and
+\textit{method-region}.
 
-A \textit{multi-path region} contains a statement in \toolshort\ IR and a corresponding environment. The IR
-statement represents the summarization of the instructions from the conditional instruction basic block, i.e,
-if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains
-information about variables in the region, such as types of variables, variables stack slot information, inputs of the
-region and output of the region.
+A \textit{multi-path region} contains a statement in Ranger IR and a corresponding environment and it always begins on
+a conditional branch instruction.
+%
+A Ranger IR statement represents the summarization of the instructions lying in the part of the CFG, that begins from
+the basic block containing the conditional branch and ends at this basic block\rq s immediate post-dominator.
+%
+The region environment that contains information about variables in the region, such as types of variables, variables
+stack slot information, inputs of the region and output of the region.
 
-A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the
-IR statement represents the summarization of the whole method. The environment for a method-region is similar to
-the multi-path region, except that the input and the stack slot of variables are defined in terms of the parameters to
-the method.
-
-In the next subsections we describe the two main steps in constructing a region, the IR statement creation,
+A \textit{method-region} also contains a statement in Ranger IR and an environment.
+%
+But, the IR statement represents the summarization of the whole method.
+%
+The environment for a method-region is similar to the multi-path region, except that the input and the stack slot of
+variables are defined in terms of the parameters to the method.
+%
+A method region begins at the beginning of the method that it is summarizing and ends on a {\tt return} instruction.
+%
+In the next subsections, we describe the two main steps in constructing a region, the IR statement creation,
 which we call \textit{IR statement recovery} and the environment creation for regions.
 \subsubsection{IR Statement Recovery}
 %In this step, a Java Ranger is created from the corresponding CFG. Since regions of interest for our technique are
@@ -328,10 +346,10 @@ which we call \textit{IR statement recovery} and the environment creation for re
 %transformation recovers a tree-shaped AST for the subgraphs of interest.  While this step is not strictly necessary, it
 %substantially simplifies subsequent transformations.
 %
-In this step, we recover the Ranger IR of a region from its Java bytecode representation.
+%In this step, we recover the Ranger IR of a region from its Java bytecode representation.
 %
-While the Java bytecode operaters as a register~(used for local variables) and stack~(used for instruction operands)
-machine, the Ranger IR captures the region in Static Single Assignment~(SSA) form with inputs corresponding to
+While Java bytecode operates as a register~(used for local variables) and stack~(used for instruction operands)
+machine, the recovered Ranger IR captures the region in Static Single Assignment~(SSA) form with inputs corresponding to
 local variables and outputs corresponding to local variables or the stack.
 %
 The algorithms used in this step are similar to those used for decompilation~\cite{Yakdan15@decompilation}. % but with slightly different goals:
@@ -378,7 +396,7 @@ x55 := (Gamma !(x58==0) (Gamma !(x47!=0) 0 x58) (Gamma !(x53==0) 1 x58));
 %\ref{lst:walk_static}.
 \subsubsection{Environment Creation}
 
-Once the statement of a region has been recovered, i.e., a corresponding \toolshort\ IR statement has been created, \toolshort\ then tries to populate its corresponding environment.
+Once the statement of a region has been recovered, i.e., a corresponding Ranger IR statement has been created, \toolshort\ then tries to populate its corresponding environment.
 %
 This includes identifying the region boundary, in terms of the region\rq s local variable inputs and outputs, types, and stack
 slots of variables used in the region summary.
@@ -389,11 +407,23 @@ slots of variables used in the region summary.
 %
 
 \toolshort\ defines local variable inputs as variables in the region summary that make the first \textit{use} of a
-given stack slot. This is called an input variable(s) to the region because, when the DSE hits a symbolic region where there is a opportunity of path-merging, \toolshort\ collects information (concrete/symbolic values) from the dynamic environment of DSE, and substitute them in the region's statements, i.e, substituting the first binding of variables to a stack slot with its actual concrete or symbolic value. Using these environment-related information \toolshort\ continue trying to either dereference objects used in the IR statement or express them in a fully-linearized form. 
+given stack slot.
 %
-
-Similarly, local variable outputs are the last \textit{def} of a \toolshort\ IR variable in a region summary that maps to a given
-stack slot. \toolshort\ uses this information to populate symbolic expression or concrete values that summaries the execution of the region.
+These are input variables to the region because, when the DSE hits a symbolic region where there is a opportunity of
+path-merging, \toolshort\ collects information (concrete/symbolic values) from the dynamic environment of DSE, and
+substitute them in the region's statements.
+%
+\toolshort\ reads values from stack slots and substitutes local input variables with their
+corresponding concrete or symbolic values.
+%
+%Using information from its environment, \toolshort\ continues trying to either
+%dereference objects used in the IR statement or express them in a fully-linearized form.
+%
+%
+Similarly, local variable outputs are the last \textit{def} of a Ranger IR variable in a region summary that maps to a given
+stack slot.
+%
+\toolshort\ uses this information to populate symbolic expression or concrete values to local outputs of a region.
 %The output table is populated with the last \textit{def} of a local variable at merge point of the region.
 %
 %We also use local variable type information for all variables that lie within the boundary of the region.
@@ -403,12 +433,20 @@ stack slot. \toolshort\ uses this information to populate symbolic expression or
 %We infer type information using the instantiation environment of a region for local variables, field references, and
 %array references.
 %
-To do this, \toolshort\ relies on Wala to provide stack slot information for intermediate variables. This is however not always available and therefore \toolshort\ needs to try to infer the mapping of intermediates to stack slots. This is done using the observation that, if at one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
-used in that $\phi$-expression must belong to the same stack slot.
+\toolshort\ relies on Wala to provide stack slot information for determining which variables in Ranger IR correspond to
+local variables.
 %
-\toolshort\ use this observation to propagate stack slots across all $\phi$-expressions. 
+%This is however not always available and therefore \toolshort\ needs to try to infer the mapping of intermediates to stack slots.
+%
+Since Ranger IR is a superset of Wala IR, and Wala IR contains $\phi$ expressions to represent the merging of variables
+assigned along different paths within the region to a single variable.
+%
+In order to ensure correctness of Ranger-IR-variable-to-stack-slot mapping, \toolshort\ makes use of an assumption about
+$\phi$ expressions: all variables used in a $\phi$-expression must belong to the same stack slot.
+%
+%\toolshort\ use this observation to propagate stack slots across all $\phi$-expressions.
 
-%Again, we use the dynamic environment to map \toolshort\ IR variables to their corresponding stack slots, starting with
+%Again, we use the dynamic environment to map Ranger IR variables to their corresponding stack slots, starting with
 %the stack slot information provided by Wala. However, 
 %We also construct a stack slot table as part of a region\rq s Ranger IR summary.
 %
@@ -425,18 +463,26 @@ used in that $\phi$-expression must belong to the same stack slot.
 
 Formally we define the following structures:\\
 %
-\textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps a location (i.e, stack slots, heap entry), to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
+\textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps a location (i.e, stack slots, heap entry), to concrete $val$ or
+symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to
+populate the output of the region.\\
 \textbf{Type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and DSE respectively.\\
-\textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. This is used to bind the region type to its statement. The actual form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.\\
+\textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines
+the region\rq s summary. This is used to bind the region type to its statement. The actual form of the region type is
+abstracted here, but really it is defined by class-name, method-name, and instruction line number. This way, if a region
+is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls
+the region from the map.\\
 \textbf{Path-subscript-map}: This is used to associate with every reference, the last subscripted variable.\\
 \textbf{Location-map}: a map $\Theta$ that defines a location mapping for each variable in the \tool\ IR statement, i.e, which stack-slot or part of the heap does it refer to.\\
 \textbf{Path-Constraint-List}: A list $\Sigma$ of path constraints. This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.\\
-\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. This is used to set up the path condition for return case, more information is in next section.
-\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.
+\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. This is used to set up the path condition for return case, more information is in next section.\\
+\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.\\
 \textbf{Return-Next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for return case.
 
 
-Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a transformation step on some statement s, w.r.t. the maps, which usually yield a new statement $s'$ and possibly some changes in the map.\\
+Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a
+transformation step on some statement s, w.r.t. the maps, which yield a new statement $s'$ and
+changes in the map.\\
 %
 %The stack slot table on the other hand, does not use region boundary for its population. The reason for this is that,
 %the static analysis framework we use, WALA, sometime does not provide information about the stack slots of intermediate
@@ -565,9 +611,18 @@ $$
 \subsection{Transformations}
 \label{sec:Transformations}
 
-\textbf{Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.
+\textbf{Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more}
+return statements or a method region with \textit{more than one} return statement, into a region that assigns a return
+variable $x_{ret}$ as the region\rq s return value.
 %
-The $\rntext{return_1}$ and $\rn{return_2}$ describe the semantics of this transformation, where the first rule describes the outermost transformation of a conditional if with the setting of the next instruction to be executed, i.e., a return or continue with the next instruction following the if-condition. The second rule describes the event of multiple returns inside a conditional if, where all possible return values are summarized in the assignment of $x$ depending on the gamma evaluation.
+$x_{ret}$ is assigned to a $gamma$ expression that evaluates to different return values, each
+predicated on the condition that would cause that value to be returned.
+%
+The $\rntext{return_1}$ and $\rn{return_2}$ rules describe the semantics of this transformation, where the first rule describes
+the outermost transformation of a conditional if with the setting of the next instruction to be executed, i.e., a return
+or continue with the next instruction following the if-condition. The second rule describes the event of multiple
+returns inside a conditional if, where all possible return values are summarized in the assignment of $x$ depending on
+the gamma evaluation.
 %
 %In this transformation, Java Ranger collects that conditions for branches that
 %have early return in them. In figure~\ref{fig:semantics} we show the rule of having an early return on the else side
@@ -614,9 +669,13 @@ x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
 %
 At this point, we perform three steps.
 %
-(1) The called method\rq s region is retrieved, depending on the dynamic type obtained from DSE, if the region is not found then JIT-region construction is called for it. If a method region was finally constructed/retrieved then its variables are alpha-renamed.
+(1) The called method\rq s region is retrieved, depending on the dynamic type obtained from the baseline symbolic
+executor\rq s environment, if the region is not found then JIT-region construction is called for it. If a method region
+was finally constructed/retrieved then its variables are alpha-renamed.
 %
-(2) For concrete object references that \toolshort\ was able to substitute for callee objects (if it is non-static invocation, otherwise no object reference is need), \toolshort\ uses expressions of IR parameters to substitute the formal parameters by repeatedly applying local variable substitution transformation over the method region.
+(2) For concrete object references that \toolshort\ was able to substitute for callee objects (if it is non-static
+invocation, otherwise no object reference is need), \toolshort\ uses expressions of IR parameters to substitute the
+formal parameters by repeatedly applying local variable substitution transformation over the method region.
 %
 (3) When no more higher-order method summaries can be inlined, the resulting substituted method region is inlined into
 the outer region.
@@ -625,7 +684,7 @@ the outer region.
 %Formally, rules $\rn{high-order_1}$ describes the inlining process for methods that has no return values for a concrete
 %reference, 
 
-Rule $\rntext{high-order}$ describes inlining of methods that have a single return values for concrete
+The $\rntext{high-order}$ rule describes inlining of methods that have a single return values for concrete
 object reference. In this rule, $e_1$ reduces using substitution to a concrete reference $v_1$ type, then using the DSE environment method-region $\lambda x.s_2$ is pulled out from region map $\Psi$. Finally inlining of the method-region is down where values $v_3$ substitute formal parameters.
 %For non-concerete reference, and after reaching a fixed point, the updated type table (using type
 %propagation) is used to get the type of the variable and therefore the corresponding parametric region statement. It
@@ -682,7 +741,14 @@ At the merge point of the region, field assignments done on the same field are m
 Gated Single Assignment (GSA)~\cite{Ottenstein1990}.
 %
 
-Rule $\rntext{put-field_1}$ and $\rntext{put-field_2}$ describes the operation of the field transformation over a put-field instruction and rule $\rntext{gamma-generation_1}$ describes the generation of a gamma expression for field SSA vars. The first rule describes a put-field for a concrete reference $v$ that has not been mapped to SSA variable. In this case, \toolshort\ defines a new var with initial subscript $x_0$ and adds that to the $psm$ map.  The second rule describes a situation where the reference has an occurance in $psm$ map, and therefore a new subscript variable is being created $x'_{ref}$ that would be assigned the put field value. Finally the $\rntext{gamma-generation}$ rule, describes the situation where on different sides of an if instruction $psm$ had different subscripted variables appear for the same referenced variable, in this case \toolshort\ creates a gamma statement. 
+Rule $\rntext{put-field_1}$ and $\rntext{put-field_2}$ describes the operation of the field transformation over a
+put-field instruction and rule $\rntext{gamma-generation_1}$ describes the generation of a gamma expression for field
+SSA vars. The first rule describes a put-field for a concrete reference $v$ that has not been mapped to SSA variable. In
+this case, \toolshort\ defines a new var with initial subscript $x_0$ and adds that to the $psm$ map.  The second rule
+describes a situation where the reference has an occurance in $psm$ map, and therefore a new subscript variable is being
+created $x'_{ref}$ that would be assigned the put field value. Finally the $\rntext{gamma-generation}$ rule, describes
+the situation where on different sides of an if instruction $psm$ had different subscripted variables appear for the
+same referenced variable, in this case \toolshort\ creates a gamma statement.
 
 %
 To continue expanding the motivating example, the field references transformation on the above Ranger IR statement
@@ -733,7 +799,7 @@ every array when it is first accessed within a region.
 %
 Reads and writes of arrays are then done on a path-specific copy of the array.
 %
-All array copies are merged at the merge point of multi-path regions.
+All array copies are merged at the merge point of the region.
 %
 The merged array copy represents array outputs of the region.
 %
@@ -790,8 +856,7 @@ Therefore, at this point, \tool\ would run one more iteration of the nested fixe
 Every iteration through the fixed-point loop modifies the Ranger IR summary so that it is closer to having fully-linearized
 form.
 %
-If \tool\ cannot modify the Ranger IR summary any further, it then proceeds with the following transformations only
-if the summary has a fully-linearized form.
+Once \tool\ cannot modify the Ranger IR summary any further, it proceeds with the following transformations.
 %
 Otherwise, it aborts using this region and transfers control back to DSE.\\
 %
@@ -819,8 +884,10 @@ exceptional behavior and potentially reduces the branching factor in the multi-p
 %
 
 In this transformation, \tool\ identifies non-nominal exit points, collects their path predicates and prunes them away
-from the Ranger IR statement. The formal rules of this transformation is defined in rule $\rntext{single-path_1}$ and
-$\rntext{single-path_2}$, where the former transforms statements that are considered exit points, then the later
+from the Ranger IR statement.
+%
+This transformation is defined in the $\rntext{single-path_1}$ and
+$\rntext{single-path_2}$ rules, where the former transforms statements that are considered exit points, then the latter
 constructs the matching constraints to explore the single path of interest.
 %
 The outcome of this process, is a more simplified and concise statement that represent the nominal behavior of the Ranger region.
@@ -871,12 +938,14 @@ On encountering an array access with a symbolic index, a baseline symbolic execu
 due to the index being less than 0, equal to and greater than the size of the array, and being within bounds of
 the array length.
 %
-The array references transformation preserves these semantics of out-of-bounds exploration of array accesses by adding
-{\tt throw} Ranger IR statements into the region summary that are predicated on a disjunction of these same conditions
-that check the symbolic index.
+The array references transformation preserves these semantics of out-of-bounds exploration of each array access by adding a
+{\tt if} statement into the region summary for each array access.
 %
-{\tt throw} Ranger IR statements are explored as single-path cases causing the baseline symbolic executor to
-explore the same out-of-bounds array accesses as it would have without any path-merging.
+This {\tt if} statement contains a {\tt throw} Ranger IR statement on the then-side and uses a condition that is a
+disjunction of the aforementioned out-of-bounds conditions that check the symbolic index.
+%
+Since {\tt throw} Ranger IR statements are explored as single-path cases, \tool\
+explores the possibility of the same out-of-bounds array accesses as would be explored without path-merging of array accesses.
 
 %\subsection{Checking Correctness Of Region Summaries}
 %The Ranger IR computed as a result of performing the transformations described in Figure~\ref{fig:overview} should

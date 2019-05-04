@@ -205,14 +205,35 @@ returning exit point, \tool\ is able to inline more than 8,000 method summaries 
 inputs and finish in about 8 hours while vanilla SPF needs about 18 hours to explore all feasible paths.
 
 \tool\ has the same performance as SPF on Siena and Schedule2 with a minor overhead~(about 5\% in running time) in
-running time that comes from \tool\rq s lookup of a region summary for every executed branch instruction, recording of
-metrics, and from doing JIT static analysis to recover region statements.
+running time that comes from \tool\rq s lookup of a region summary for every executed conditional
+branch instruction, recording of metrics, and from doing JIT static analysis to recover region statements.
 %
 We restrict our results with Siena to 7 symbolic inputs because 7 is the most number of symbolic inputs for which
 SPF finishes exploring all feasible paths within a 24 hour time budget.
 %
 We do not attempt to construct a fully linearized region if the region does not begin on a symbolic conditional
 branch.
+%
+In the Siena benchmark, \tool\ begins to transform four different multi-path regions.
+%
+But, at the point where it is about to fully linearize the region summary, it realizes that the number of estimated paths
+through the region is equal to the number of single-path cases it would need to execute through the region.
+%
+Since using the fully linearized form of these regions does not lead to a reduction in the number of paths through the
+region, \tool\ does not use these region summaries.
+%
+On the Schedule2 benchmark, \tool\ begins to transform six different multi-path regions.
+%
+But, when attempting to inline method summaries, it fails to summarize a crucial method, {\tt Schedule2.get\_current()}
+that is invoked in all six regions.
+%
+This method contains a loop whose bound is symbolic.
+%
+Summarizing this method would require \tool\ to also have the ability to summarize loops with symbolic bounds (loops
+that are executed for a symbolic number of iterations).
+%
+Since \tool\ currently does not summarize loops, it fails to summarize {\tt Schedule2.get\_current()} which has a
+cascading effect of not being able to convert summaries for these six regions into a fully linearized form.
 
 In the PrintTokens2 benchmark, \tool\ uses 4 distinct regions, 2 of which involve summarizing multi-path regions which
 have a {\tt return} instruction at the end of every path in the region.
@@ -273,7 +294,7 @@ This observation matches our intuition that regions are most commonly present in
 The addition of method summary inlining provides a major reduction in all three metrics in TCAS.
 %
 This observation matches a observation made manually from TCAS' source code that multi-path regions in it often invoke
-methods that can be summarized by \tool\.
+methods that can be summarized by \tool.
 %
 The addition of single-path cases provides a major reduction in the number of solver queries in the replace and
 NanoXML benchmarks.
