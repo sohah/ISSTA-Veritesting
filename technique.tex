@@ -24,20 +24,18 @@ $\region_{after}$ = null\;
 		}
 		$\region_{after}$ =  higher order transformation($\region_{after}$)\;
 	}
-$\region_{single\_path}$ = single-path cases transformation(R)\;
-$\region_{linear}$ = linearization transformation(R)\;
-$\region_{green}$ = to-green transformation(R)\;
-
-\eIf{is-canonical($\region_{green}$)}
-	{populate outputs \tcp{successful transformation} 
+$\region_{single\_path}$ = single-path cases transformation($\region_{after}$)\;
+$\region_{linear}$ = linearization transformation($\region_{single}$)\;
+\eIf{is-fully-linearized($\region_{linear}$)}
+	{$\region_{green}$ = to-green transformation($\region_{linear}$)\;   
+	populate outputs \tcp{successful transformation} 
 	skip region execution\;}
    {abort \tcp*{resume DSE of conditional branch instruction}}  
-   
 \caption{Ranger general pseudocode}
 \label{fig:algorithm}
 \end{algorithm}
 
-\newtext{Algorithm~\ref{fig:algorithm} describes how \tool\ works.
+Algorithm~\ref{fig:algorithm} describes how \tool\ works.
 %
 The main idea is that \toolshort\ intercepts
 conditional branch instructions with symbolic operands and attempts to summarize instructions that lie along
@@ -47,37 +45,37 @@ We call this summarization a ``region'' or just \region.
 %
 It is important to note that, \region\ contains not only the summarization in form of a Ranger IR
 statement, it also contains other environment-related information, such as types, input and outputs of the region,
-explained later in this section.}
+explained later in this section.
 
-\newtext{\tool\ uses Just-In-Time~(JIT) analysis and, with the help of Wala~\cite{Wala},
+\tool\ uses Just-In-Time~(JIT) analysis and, with the help of Wala~\cite{Wala},
 constructs the control-flow graph~(CFG) of the method containing the intercepted symbolic conditional branch instruction.
 %
 Then \toolshort\ translates a part of the CFG, that begins from the node containing the symbolic conditional branch
 and ends at this node\rq s immediate post-dominator,
-into a Ranger IR statement and an environment (line 2). We call this step ``JIT region construction''.}
+into a Ranger IR statement and an environment (line 2). We call this step ``JIT region construction''.
 %
-\newtext{The region is said to ``begin'' at the symbolic conditional branch instruction and ``end'' at the address of the first
-instruction in the immediate post-dominator of the node that contained the symbolic conditional branch instruction.}
+The region is said to ``begin'' at the symbolic conditional branch instruction and ``end'' at the address of the first
+instruction in the immediate post-dominator of the node that contained the symbolic conditional branch instruction.
 
-\newtext{Next, \tool\ then runs different transformations on \region\ (lines 2-22) with the goal of reducing the region\rq s
-IR statement into a canonical form that can be easily translated into a formula. }
+Next, \tool\ then runs different transformations on \region\ (lines 2-22) with the goal of reducing the region\rq s
+IR statement into a fully-linearized form that can be easily translated into a formula. 
 
-\newtext{These transformations perform operations, like for example inlining method summaries and supporting field
-accesses, that will allow the Ranger IR statement to ultimately be translated to a formula.}
+These transformations perform operations, like for example inlining method summaries and supporting field
+accesses, that will allow the Ranger IR statement to ultimately be translated to a formula.
 %
-\newtext{But, dependencies between these transformations are not pre-determined.
+But, dependencies between these transformations are not pre-determined.
 %
 For example, a region can contain field accesses and a method invocation, the summary of which contains other field
 accesses.
 %
 Using a nested fixed-point computation, \toolshort\ ensures that such dependencies are taken into
-consideration.}
+consideration.
 
-\newtext{If the transformations produce a canonical form of the region, then \tool\ adds the canonical region summary
+If the transformations produce a fully-linearized form of the region, then \tool\ adds the translated solver constraint of the region
 to the path condition, populates the region\rq s outputs, and sets the program counter~(the next instruction to be
 executed) to the address of the instruction that is at the beginning of the immediate post-dominator.
 %
-Otherwise, \toolshort\ aborts and allows DSE to resume execution (lines 23-28).}
+Otherwise, \toolshort\ aborts and allows DSE to resume execution (lines 23-28).
 %
 %%
 %To add path merging to SPF, we pre-compute static summaries of multi-path code regions and use them to also precompute summaries of methods.
@@ -173,23 +171,23 @@ transformation is realized on the motivating example presented in Figure~\ref{fi
 %
 \begin{figure}
 \begin{grammar}
-<stmt> ::= <canonical-stmt> | $\lambda$ x.<stmt> 
+<stmt> ::= skip | $\lambda$ x.<stmt> 
 \alt <stmt> ; <stmt> | <exp> := <exp>
 \alt <exit_stmt> | if <exp> then <stmt> else <stmt> 
-\alt invoke( <exp>, <exp> )  | exit
+\alt invoke( <exp>, <exp>,<exp> )  | exit
 
-<canonical-stmt> ::= <canonical-stmt> ; <canonical-stmt> 
-\alt <canonial-exp> := <canonical-exp> | skip
+%<canonical-stmt> ::= <canonical-stmt> ; <canonical-stmt> 
+%\alt <canonial-exp> := <canonical-exp> | skip
 
 <exit-stmt> ::=  new $\tau$  | return <exp> |  throw <exp> 
 
-<exp>  ::=  <canonical-exp> | get_field( <exp>.<exp> ) 
-\alt put_field( <exp>.<exp>, <exp> ) | array_load( <exp>, <exp>) 
+<exp>  ::=  <val> | <var> | <exp> $op_b$ <exp>  | $op_u$ <exp> 
+\alt get_field( <exp> ) | gamma(<exp>, <exp>, <exp>)
+\alt put_field( <exp>, <exp> ) | array_load( <exp>, <exp>) 
 \alt array_store( <exp>, <exp>, <exp> ) 
 
-<canonical-exp> ::= <val> | <var> | <canonical-exp> $op_b$ <canonical-exp> 
-\alt $op_u$ <canonical-exp> | gamma(<canonical-exp>, <canonical-exp>, <canonical-exp>)
-
+%<canonical-exp> ::= <val> | <var> | <canonical-exp> $op_b$ <canonical-exp> 
+%\alt $op_u$ <canonical-exp> | gamma(<canonical-exp>, <canonical-exp>, <canonical-exp>)
 <$op_b$> ::= $+$ | $-$ | $*$ | $\div$ | \& | bitwise-or | $\oplus$ | \% | $==$ | $\neq$ | $\leq$ | $\geq$ | \&\& | logical-or | \textgreater | \textless | $\ll$ | $\gg$ | $\ggg$
 
 <$op_u$> ::= $-$ | \textasciitilde  \quad <val> ::= \unit | $\mathbb{Z}$ |  $\mathbb{C}$ \quad <var> ::= ID_$\mathbb{N}$
@@ -204,21 +202,21 @@ $$
 \begin{array}{lllll}
 \text{Value-maps} & \Delta_r: loc \rightarrow & ( val, exp) &&
 \\
-& \Delta_s: loc \rightarrow & ( val, exp) &&
+& \Delta_s: loc \rightarrow & (val, exp) &&
 \\
 \text{Type-maps}  & \Gamma_r: var \rightarrow & \tau & &
 \\
-& \Gamma_s: ref \rightarrow & \tau&&
+& \Gamma_s: val \rightarrow & \tau&&
 \\
 \text{Region-map} & \Psi: \tau \rightarrow & \lambda x.s &&
 \\
-\text{path-subscript-map} & psm: v \rightarrow & x &&
+\text{Path-subscript-map} & psm: val \rightarrow & var &&
 \\
-& \Theta: var \rightarrow & loc &&
+\text{Location-map} & \Theta: var \rightarrow & loc &&
 \\
-\text{path-constraints} & \Sigma: \{exp\} &  &  & 
-%\\
-%\text{Return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
+\text{Path-constraints} & \Sigma: \{exp\} &  &  & 
+\\
+\text{Return-constraints} & \Sigma_{ret}: x_{ret} \rightarrow & \exp &  & 
 \\
 \text{Nominal-next-instruction} & Next: & \mathbb{Z} &  & 
 \\
@@ -257,11 +255,11 @@ $$
 %Finally creation of the condition of GSA is done during translating a phi-instruction its immediate predecessor blocks are retrieved then we look up  the edges in the blockConditionMap.  From here, and using condition stack leading to that branch, an if/then/else statement is constructed.
 
 \subsection{\tool\ Grammar}
-\newtext{Figure~\ref{fig:grammar} shows \tool\ grammar, which can be thought of as a superset of Wala IR which is in turn a superset of Java bytecode instructions. }
+Figure~\ref{fig:grammar} shows \tool\ grammar, which can be thought of as a superset of Wala IR which is in turn a superset of Java bytecode instructions. 
 
-\newtext{\toolshort's grammar is composed of statements $stmt$ and
-expressions $exp$. Statements include $\langle canonical\text{-}stmt\rangle$ used to describe the simplest form of statements in which different transformations of \toolshort\ tries to reduces to. A region statement $\lambda x.\langle stmt \rangle$, which defines the binding of the input parameter in the region statement. Other statements in \toolshort\ IR also include: sequential composition ($stmt ; stmt$), assignment ($exp := exp$),
-skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes $new\; \tau$, $throw\; exp$ and $return\; exp$ statements), if-then-else and finally $invoke$ statement to indicate call of a method.}
+\toolshort's grammar is composed of statements $stmt$ and
+expressions $exp$. Statements include, a region statement $\lambda x.\langle stmt \rangle$, which defines the binding of the input parameter in the region statement. Other statements in \toolshort\ IR also include: sequential composition ($stmt ; stmt$), assignment ($exp := exp$),
+skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes $new\; \tau$, $throw\; exp$ and $return\; exp$ statements), if-then-else and finally $invoke$ statement to indicate call of a method.
 
 %In the following sections we will discuss the various parts of this statement to show the effect of various transformations.
 %
@@ -275,14 +273,14 @@ skip, exit ($exit\text{-}stmt$) (which determine single-path Cases, it includes 
 %
 
 
-\newtext{\toolshort\ expressions consist of $\langle canonical\text{-}exp\rangle$, which is analogous to canonical statements, which describes the simplest form of expressions that \toolshort\ tries to reduce to.  $\langle canonical\text{-}exp\rangle$ includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them
-ID_$\mathbb{N}$), binary and unary operations over canonical expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expression that allow Ranger IR to construct Gated Single Assignment~(GSA)\cite{} form for variables which intuitively describes conditional assignment of variables.}
+\toolshort\ expressions includes constants aka values (unit \unit, positive and negative integers $\mathbb{Z}$, characters $\mathbb{C}$), variables (these are subscripted with integers to facilitate having SSA form for them
+ID_$\mathbb{N}$), binary and unary expressions as well as a special gamma expression, $gamma(exp, exp, exp)$. Gamma expression that allow Ranger IR to construct Gated Single Assignment~(GSA)\cite{} form for variables which intuitively describes conditional assignment of variables. Also \toolshort\ expressions includes read and writes to fields and arrays.
 
-\newtext{Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), a return variable (to carry the return values), variables that correspond to local variables, and variables used
+A fully-linearized statements in \toolshort only includes composition and assignment over fully-linearized expressions.
+A fully linearized expressions in turn consists of binary, unary and gamma expressions.
+
+Java Ranger defines 4 types of variables, a field or array variable (created to maintain fields and arrays ssa), a return variable (to carry the return values), variables that correspond to local variables, and variables used
 to represent intermediate computation. This distinction is abstracted away from the grammar but is referred to whenever necessary in the text.
-}
-
-\newtext{Other forms of expressions include non-canonical expressions, this includes read and writes to fields and arrays. }
 %
 %
 %Java Ranger expressions on the other hand are: values (unit \unit, positive and negative integers $\mathbb{Z}$ and
@@ -306,23 +304,23 @@ to represent intermediate computation. This distinction is abstracted away from 
 
 \subsection{JIT Region Construction}
 \label{sec:jit}
-\newtext{The construction of a region happens when \tool\ detects a symbolic conditional branch
+The construction of a region happens when \tool\ detects a symbolic conditional branch
 during DSE, and thus an opportunity for path-merging. Using the recovered cfg of the method where the intercepted
-conditional branch instruction resides, \toolshort\ constructs two types of regions: \textit{multi-path region} and \textit{method-region}.}
+conditional branch instruction resides, \toolshort\ constructs two types of regions: \textit{multi-path region} and \textit{method-region}.
 
-\newtext{A \textit{multi-path region} contains a statement in \toolshort\ IR and a corresponding environment. The IR
+A \textit{multi-path region} contains a statement in \toolshort\ IR and a corresponding environment. The IR
 statement represents the summarization of the instructions from the conditional instruction basic block, i.e,
 if-bytecode basic block, and down until the merge point, i.e, the phi basic block. The region environment that contains
 information about variables in the region, such as types of variables, variables stack slot information, inputs of the
-region and output of the region.}
+region and output of the region.
 
-\newtext{A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the
+A \textit{method-region}: also contains a statement in \toolshort\ IR and an environment. This time however the
 IR statement represents the summarization of the whole method. The environment for a method-region is similar to
 the multi-path region, except that the input and the stack slot of variables are defined in terms of the parameters to
-the method.}
+the method.
 
-\newtext{In the next subsections we describe the two main steps in constructing a region, the IR statement creation,
-which we call \textit{IR statement recovery} and the environment creation for regions.}
+In the next subsections we describe the two main steps in constructing a region, the IR statement creation,
+which we call \textit{IR statement recovery} and the environment creation for regions.
 \subsubsection{IR Statement Recovery}
 %In this step, a Java Ranger is created from the corresponding CFG. Since regions of interest for our technique are
 %bounded by the branch and meet of a given acyclic subgraph.  The intuition is that path explosion during execution of
@@ -380,7 +378,7 @@ x55 := (Gamma !(x58==0) (Gamma !(x47!=0) 0 x58) (Gamma !(x53==0) 1 x58));
 %\ref{lst:walk_static}.
 \subsubsection{Environment Creation}
 
-\newtext{Once the statement of a region has been recovered, i.e., a corresponding \toolshort\ IR statement has been created, \toolshort\ then tries to populate its corresponding environment.}
+Once the statement of a region has been recovered, i.e., a corresponding \toolshort\ IR statement has been created, \toolshort\ then tries to populate its corresponding environment.
 %
 This includes identifying the region boundary, in terms of the region\rq s local variable inputs and outputs, types, and stack
 slots of variables used in the region summary.
@@ -390,12 +388,12 @@ slots of variables used in the region summary.
 %This is used later to constrain the computation and population of Ranger IR environment tables.
 %
 
-\newtext{\toolshort\ defines local variable inputs as variables in the region summary that make the first \textit{use} of a
-given stack slot. This is called an input variable(s) to the region because, when the DSE hits a symbolic region where there is a opportunity of path-merging, \toolshort\ collects information (concrete/symbolic values) from the dynamic environment of DSE, and substitute them in the region's statements, i.e, substituting the first binding of variables to a stack slot with its actual concrete or symbolic value. Using these environment-related information \toolshort\ continue trying to either dereference objects used in the IR statement or express them in a canonical form. }
+\toolshort\ defines local variable inputs as variables in the region summary that make the first \textit{use} of a
+given stack slot. This is called an input variable(s) to the region because, when the DSE hits a symbolic region where there is a opportunity of path-merging, \toolshort\ collects information (concrete/symbolic values) from the dynamic environment of DSE, and substitute them in the region's statements, i.e, substituting the first binding of variables to a stack slot with its actual concrete or symbolic value. Using these environment-related information \toolshort\ continue trying to either dereference objects used in the IR statement or express them in a fully-linearized form. 
 %
 
-\newtext{Similarly, local variable outputs are the last \textit{def} of a \toolshort\ IR variable in a region summary that maps to a given
-stack slot. \toolshort\ uses this information to populate symbolic expression or concrete values that summaries the execution of the region.}
+Similarly, local variable outputs are the last \textit{def} of a \toolshort\ IR variable in a region summary that maps to a given
+stack slot. \toolshort\ uses this information to populate symbolic expression or concrete values that summaries the execution of the region.
 %The output table is populated with the last \textit{def} of a local variable at merge point of the region.
 %
 %We also use local variable type information for all variables that lie within the boundary of the region.
@@ -405,11 +403,11 @@ stack slot. \toolshort\ uses this information to populate symbolic expression or
 %We infer type information using the instantiation environment of a region for local variables, field references, and
 %array references.
 %
-\newtext{To do this, \toolshort\ relies on Wala to provide stack slot information for intermediate variables. This is however not always available and therefore \toolshort\ needs to try to infer the mapping of intermediates to stack slots. This is done using the observation that, if at one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
+To do this, \toolshort\ relies on Wala to provide stack slot information for intermediate variables. This is however not always available and therefore \toolshort\ needs to try to infer the mapping of intermediates to stack slots. This is done using the observation that, if at one variable used in a $\phi$-expression of Wala maps to a stack slot, then all variables
 used in that $\phi$-expression must belong to the same stack slot.
 %
 \toolshort\ use this observation to propagate stack slots across all $\phi$-expressions. 
-}
+
 %Again, we use the dynamic environment to map \toolshort\ IR variables to their corresponding stack slots, starting with
 %the stack slot information provided by Wala. However, 
 %We also construct a stack slot table as part of a region\rq s Ranger IR summary.
@@ -429,11 +427,13 @@ Formally we define the following structures:\\
 %
 \textbf{Value-map}: $\Delta_r$ and $\Delta_s$ maps a location (i.e, stack slots, heap entry), to concrete $val$ or symbolic $exp$ for Java Ranger and DSE respectively. This is used to collect the input of the region as well as to populate the output of the region.\\
 \textbf{Type-map}: $\Gamma_r$ and $\Gamma_s$ maps vars or references, to types $\tau$ for Java Ranger and DSE respectively.\\
-\textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. \newtext{This is used to bind the region type to its statement. The actually form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.}\\
-\textbf{Path-Constraint-List}: A list $\Sigma$ of path constraints. \newtext{This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.}\\
-%\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. \newtext{This is used to set up the path condition for return case, more information is in next section.}
-\newtext{\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.}
-\newtext{\textbf{Return-Next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for return case.}
+\textbf{Region-map}: \tool\ defines a map $\Psi$ from type $\tau$  to a parametric statement $\lambda x.s$ that defines the region\rq s summary. This is used to bind the region type to its statement. The actual form of the region type is abstracted here, but really it is defined by class-name, method-name and instruction line number. This way, if a region is every hit again, i.e., executed again, then instead of re-running the jit-region construction, \toolshort\ just pulls the region from the map.\\
+\textbf{Path-subscript-map}: This is used to associate with every reference, the last subscripted variable.\\
+\textbf{Location-map}: a map $\Theta$ that defines a location mapping for each variable in the \tool\ IR statement, i.e, which stack-slot or part of the heap does it refer to.\\
+\textbf{Path-Constraint-List}: A list $\Sigma$ of path constraints. This is later used to guide the DSE execution to particular paths that \toolshort\ did not summarize, more information is in next section.\\
+\textbf{Return-Constraint-map}: A map $\Sigma_{ret}$ from return vars $x_{ret}$ to return constraints. This is used to set up the path condition for return case, more information is in next section.
+\textbf{Nominal-next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful.
+\textbf{Return-Next-instruction}: is a the instruction position that DSE should resume from, if path-merging was successful for return case.
 
 
 Figure~\ref{fig:semantics} shows the semantics of different transformations, where the judgment describes a transformation step on some statement s, w.r.t. the maps, which usually yield a new statement $s'$ and possibly some changes in the map.\\
@@ -461,22 +461,29 @@ Figure~\ref{fig:semantics} shows the semantics of different transformations, whe
 % {\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{(s_2 ; \return{e_2})}}{\Sigma_{ret} \cup (x_{ret}, e_2)}{(\ifr{e_1}{(s_1 ; \return{e_2})}{s_2}) ; x_{ret} := e_2}{}}
 % {gen\_id() = x_{ret} \qquad \text{no_return}(s_1) \qquad \text{no_return}(s_2)}
 %$$
-%$$
-%\infer[\rn{get-return_2}]
-%{\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret}\cup (x_{ret},(e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{s_1}{s_2}) ; x_{ret} = gamma((c1 \wedge e_1), e_1',  e_2')}{}}
-%{\step{\Sigma_{ret}}{s_1}{\Sigma_{ret}\cup (w1_{ret},c_1)}{s_1' ; w1_{ret} := e_1''; \return e_1'}{}  \qquad
-%\step{\Sigma_{ret}}{s_2}{\Sigma_{ret}'\cup(w2_{ret}, c_2)}{s_2' ; (w2_{ret} := e_2'' ; \return e_2')}{} \qquad gen\_id() = x_{ret}}
-%$$
-
 $$
-\infer[\rn{get-return}]
- {\step{\Sigma}{\ifr{e}{(s_1; \return{v_1})}{s_2}}{\Sigma}{(\ifr{e}{s_1; \return{v_1}}{s_2}) ; x_{ret} = v_1}{}}
+\infer[\rn{return_1}]
+ {\step{\Sigma}{\ifr{e}{(s_1; \return{e_1})}{s_2}}{\Sigma}{(\ifr{e}{s_1; \return{e_1}}{s_2}) ; x_{ret} = e_1}{}}
 {
-Next = position(if_{inst}.next())
+Next = position(next(if))
 \qquad
 Next_{ret} = position(return_{inst})
 \qquad
 gen\_id() = x_{ret}}
+$$
+
+
+$$
+\infer[\rn{return_2}]
+{\step{\Sigma_{ret}}{\ifr{e_1}{s_1}{s_2}}{\Sigma_{ret}\cup (x,(e_1\wedge c_1)\vee( e_1 \wedge c_2))}{(\ifr{e_1}{s_1}{s_2}) ; x = gamma((c_1 \wedge e_1), e_1',  e_2')}{}}
+{
+\begin{gathered}
+\step{\Sigma_{ret}}{s_1}{\Sigma_{ret}\cup ({w_1},c_1)}{(s_1' ; {w_1} := e_1')}{}  \qquad Next = position(next(if)) \\
+\step{\Sigma_{ret}}{s_2}{\Sigma_{ret}'\cup({w_2}, c_2)}{(s_2' ; {w_2} := e_2')}{} 
+\qquad gen\_id() = x
+\qquad
+Next_{ret} = position(return_{inst})
+\end{gathered}}
 $$
 
 $$
@@ -531,17 +538,17 @@ $$
 %$$
 $$
 \infer[\rn{put-field_1}]
- {\step{\Gamma_r, psm}{x := put\text{-}field(e1, e2)}{(\Gamma_r \cup (x_0, \Gamma_s{v})), (psm\cup(v, x_0))}{ (x := x_0); (x_0 := e2)}{field}}
- {\step{\Gamma_r, psm}{e}{\Gamma_r, psm}{v}{any} \qquad \Theta(v) = l \qquad psm(v) = \phi }
+ {\step{\Gamma_r, psm}{x := put\text{-}field(e_1, e_2)}{(\Gamma_r \cup (x_0, \Gamma_s{(v)})), (psm\cup(v, x_0))}{ (x := x_0); (x_0 := e_2)}{field}}
+ {\step{\Gamma_r, psm}{e_1}{\Gamma_r, psm}{v}{any} \qquad psm(v) = \phi }
 $$
 $$
 \infer[\rn{put-field_2}]
- {\step{\Gamma_r, psm}{x := put\text{-}field(e1, e2)}{(\Gamma_r \cup (x_{ref}', \Gamma_r(x_{ref}))), (psm\cup(v, x_{ref}'))}{ (x := x_r) ; (x_{ref}' := e2)}{field}}
- {\step{psm}{e}{psm}{v}{any} \qquad \Theta(v) = l \qquad psm(v) = x_{ref} \quad gen\_id() = x_{ref}'}
+ {\step{\Gamma_r, psm}{x := put\text{-}field(e_1, e_2)}{(\Gamma_r \cup (x_{ref}', \Gamma_r(x_{ref}))), (psm\cup(v, x_{ref}'))}{ (x := x_r) ; (x_{ref}' := e_2)}{field}}
+ {\step{psm}{e}{psm}{v}{any} \qquad psm(v) = x_{ref} \quad gen\_id() = x_{ref}'}
 $$
 $$
 \infer[\rn{gamma-generation_1}]
- {\step{\Gamma, psm}{\ifr{e}{s_1}{s_2}}{\Gamma''), psm''}{\ifr{e}{s_1'}{s_2'} ; x_{ref} = create\text{-}gamma(s_1', s_2', psm)}{field}}
+ {\step{\Gamma, psm}{\ifr{e}{s_1}{s_2}}{\Gamma''), psm''}{\ifr{e}{s_1'}{s_2'} ; x_{ref} = create\text{-}gamma(s_1', s_2', psm}{field}}
  {\step{\Gamma, psm}{s_1}{\Gamma', psm'}{s_1'}{field} \qquad 
  \step{\Gamma', psm'}{s_2}{\Gamma'', psm''}{s_2'}{field}  \qquad gen\_id() = x_{ref}}
 $$
@@ -558,9 +565,9 @@ $$
 \subsection{Transformations}
 \label{sec:Transformations}
 
-\newtext{\textbf{Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.}
+\textbf{Return Transformation}: In this transformation, Java Ranger converts multi-path region with \textit{one or more} return statements or a method region with \textit{more than one} return statement, into region that assigns a return variable $x_{ret}$  $gamma$ expression that evaluates to different return values depending on the return value predicated on the condition that would cause that value to be returned.
 %
-\newtext{The $\rntext{return}$ describe the semantics of this transformation when the return statement is on one side of a multi-path region. In this case \toolshort\ generates a new return variable $x_{ret}$ and assign it to the return variable. Eventually if the path-merging of this region was successful \toolshort\ will in this case generate two paths one to explore the return choice and another to explore the nominal choice. Accordingly, the position where DSE needs to resume from needs to be changed depending on which choice is being executed.}
+The $\rntext{return_1}$ and $\rn{return_2}$ describe the semantics of this transformation, where the first rule describes the outermost transformation of a conditional if with the setting of the next instruction to be executed, i.e., a return or continue with the next instruction following the if-condition. The second rule describes the event of multiple returns inside a conditional if, where all possible return values are summarized in the assignment of $x$ depending on the gamma evaluation.
 %
 %In this transformation, Java Ranger collects that conditions for branches that
 %have early return in them. In figure~\ref{fig:semantics} we show the rule of having an early return on the else side
@@ -592,7 +599,7 @@ x44$2 = invoke < Application, Ljava/util/List, get(I)Ljava/lang/Object; >[x9$2, 
 
 \textbf{Local Variable Substitution Transformation}: During this transformation, local variable inputs in \toolshort\ are substituted with their concrete or symbolic values obtained from the environment of DSE.
 %
-\newtext{The $\rntext{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation where the location of an input variable $l$ is used to lookup its value in the DSE environment $\Delta_s$ and is substituted in the region statement.}
+The $\rntext{substitution}$ rule in Figure~\ref{fig:semantics} describes the semantics of this transformation where the location of an input variable $l$ is used to lookup its value in the DSE environment $\Delta_s$ and is substituted in the region statement.
 %
 %The $\rn{substitution}$ given a parametric statement $x.s$, and if $x$ was mapped to a location $l$ then its
 %dynamic, i.e., concrete or symbolic $(v, e)$, substitute $x$ in $s$.
@@ -607,9 +614,9 @@ x44$2= invoke(ArrayList.get(I)Ljava.lang.Object,375, x59$2);
 %
 At this point, we perform three steps.
 %
-\newtext{(1) The called method\rq s region is retrieved, depending on the dynamic type obtained from DSE, if the region is not found then JIT-region construction is called for it. If a method region was finally constructed/retrieved then its variables are alpha-renamed.}
+(1) The called method\rq s region is retrieved, depending on the dynamic type obtained from DSE, if the region is not found then JIT-region construction is called for it. If a method region was finally constructed/retrieved then its variables are alpha-renamed.
 %
-\newtext{(2) For concrete object references that \toolshort\ was able to substitute for callee objects (if it is non-static invocation, otherwise no object reference is need), \toolshort\ uses expressions of IR parameters to substitute the formal parameters by repeatedly applying local variable substitution transformation over the method region.}
+(2) For concrete object references that \toolshort\ was able to substitute for callee objects (if it is non-static invocation, otherwise no object reference is need), \toolshort\ uses expressions of IR parameters to substitute the formal parameters by repeatedly applying local variable substitution transformation over the method region.
 %
 (3) When no more higher-order method summaries can be inlined, the resulting substituted method region is inlined into
 the outer region.
@@ -618,8 +625,8 @@ the outer region.
 %Formally, rules $\rn{high-order_1}$ describes the inlining process for methods that has no return values for a concrete
 %reference, 
 
-\newtext{Rule $\rntext{high-order}$ describes inlining of methods that have a single return values for concrete
-object reference. In this rule, $e_1$ reduces using substitution to a concrete reference $v_1$ type, then using the DSE environment method-region $\lambda x.s_2$ is pulled out from region map $\Psi$. Finally inlining of the method-region is down where values $v_3$ substitute formal parameters.}
+Rule $\rntext{high-order}$ describes inlining of methods that have a single return values for concrete
+object reference. In this rule, $e_1$ reduces using substitution to a concrete reference $v_1$ type, then using the DSE environment method-region $\lambda x.s_2$ is pulled out from region map $\Psi$. Finally inlining of the method-region is down where values $v_3$ substitute formal parameters.
 %For non-concerete reference, and after reaching a fixed point, the updated type table (using type
 %propagation) is used to get the type of the variable and therefore the corresponding parametric region statement. It
 %must be noted that methods with multiple returns, should have been normalized out with the early-return transformation
@@ -675,7 +682,7 @@ At the merge point of the region, field assignments done on the same field are m
 Gated Single Assignment (GSA)~\cite{Ottenstein1990}.
 %
 
-\newtext{Rule $\rntext{put-field_1}$ and $\rntext{put-field_2}$ describes the operation of the field transformation over a put-field instruction and rule $\rntext{gamma-generation_1}$ describes the generation of a gamma expression for field SSA vars. The first rule describes a put-field for a concrete reference $v$ that has not been mapped to SSA variable. In this case, \toolshort\ gives a new var with initial subscript $x_0$ and adds that to the $psm$ map.  The second rule describes a situation where the reference has an occurance in $psm$ map, and therefore a new subscript variable is being created $x'_{ref}$ that would be assigned the put field value. Finally the $\rntext{gamma-generation}$ rule, describes the situation where on different sides of an if instruction $psm$ had different subscripted variables appear for the same referenced variable, in this case \toolshort\ creates a gamma statement. }
+Rule $\rntext{put-field_1}$ and $\rntext{put-field_2}$ describes the operation of the field transformation over a put-field instruction and rule $\rntext{gamma-generation_1}$ describes the generation of a gamma expression for field SSA vars. The first rule describes a put-field for a concrete reference $v$ that has not been mapped to SSA variable. In this case, \toolshort\ defines a new var with initial subscript $x_0$ and adds that to the $psm$ map.  The second rule describes a situation where the reference has an occurance in $psm$ map, and therefore a new subscript variable is being created $x'_{ref}$ that would be assigned the put field value. Finally the $\rntext{gamma-generation}$ rule, describes the situation where on different sides of an if instruction $psm$ had different subscripted variables appear for the same referenced variable, in this case \toolshort\ creates a gamma statement. 
 
 %
 To continue expanding the motivating example, the field references transformation on the above Ranger IR statement
@@ -775,16 +782,16 @@ x54$2 := (Gamma x40$1!=0 (Gamma x47$2==0 1 0) 0);
 x55$2 := (Gamma x40$1!=0 (Gamma x47$2==0 0 x40$1) (Gamma x53$2!=0 1 x40$1));
 \end{lstlisting}
 %
-\textbf{Termination of the fixed-point computation loop}: The above Ranger IR statement does not have canonical form
+\textbf{Termination of the fixed-point computation loop}: The above Ranger IR statement is not fully-linearized
 because we still need to inline the method summary for {\tt Integer.intValue()} and perform simplification on it.
 %
 Therefore, at this point, \tool\ would run one more iteration of the nested fixed-point computation.
 %
-Every iteration through the fixed-point loop modifies the Ranger IR summary so that it is closer to having canonical
+Every iteration through the fixed-point loop modifies the Ranger IR summary so that it is closer to having fully-linearized
 form.
 %
 If \tool\ cannot modify the Ranger IR summary any further, it then proceeds with the following transformations only
-if the summary has canonical form.
+if the summary has a fully-linearized form.
 %
 Otherwise, it aborts using this region and transfers control back to DSE.\\
 %

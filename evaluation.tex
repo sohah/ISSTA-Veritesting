@@ -15,16 +15,16 @@ On finding such a symbolic branch condition, \tool\ attempts to compute a static
 regions in the method which contains the current program location.
 %
 After this Just-In-Time static analysis, if \tool\ summarized the multi-path region that begins at the current program
-location, \tool\ computes the canonical region corresponding to the current program location by reading inputs from
+location, \tool\ computes the fully-linearized region corresponding to the current program location by reading inputs from
 and writing outputs to the stack and the heap.
 %
-Finally, it conjuncts the canonical region summary with the path condition and resumes symbolic execution at the
+Finally, it conjuncts the fully-linearized region summary with the path condition and resumes symbolic execution at the
 bytecode offset of the end of the region.
 %
 \tool\ wraps around SPF and can be configured to either run SPF without any path merging or run SPF with the
 following four path-merging features enabled.
 
-(1) \tool\ only transforms multi-path regions with a single exit point to their canonical form.
+(1) \tool\ only transforms multi-path regions with a single exit point to their fully-linearized form.
 This includes multi-path regions that have local, stack, field, or array outputs.
 %
 \tool\ substitutes local inputs into the Ranger IR representation of the multi-path region, and constructs SSA form
@@ -71,10 +71,10 @@ path condition every time a query is to be solved.
 Since path-merging can create large formulas in the path condition, the incremental solving mode provided a crucial
 benefit in reducing the number of times large formulas had to be passed to the solver.
 %
-Finally, we also built in a heuristic that estimates the number of paths through a canonical region summary and compares
+Finally, we also built in a heuristic that estimates the number of paths through a fully-linearized region summary and compares
 it to the number of exit points present in the region.
 %
-The canonical region summary is used only if the estimated number of paths is greater than the number of exit points in
+The fully-linearized region summary is used only if the estimated number of paths is greater than the number of exit points in
 the region.
 %
 \subsection{Evaluation}
@@ -162,7 +162,7 @@ benchmarks within 2.81 seconds and 1.41 seconds respectively.
 In the replace benchmark, while \tool\ reduces the number of execution paths by about 88\%, it incurs an increase in
 execution time.
 %
-This increase occurs even when \tool\ transforms 20 distinct regions into 7334 canonical region summaries.
+This increase occurs even when \tool\ transforms 20 distinct regions into 7334 fully-linearized region summaries.
 %
 On manually investigating the set of instantiated regions in replace, we found that the outputs of most of these
 regions were being branched on later in the code causing the benefit from path-merging to be lost.
@@ -181,7 +181,7 @@ This list began with 14 region subsets, each containing one region, and ended wi
 %
 The total number of region subsets present in this list was $2^{14}-1$.
 %
-Finally, we ran \tool\ with every region subset in this list, where \tool\ was allowed to only canonicalize regions
+Finally, we ran \tool\ with every region subset in this list, where \tool\ was allowed to only fully-linearize regions
 within a given subset.
 %
 After running this evaluation for 96 hours, we found that all possible region subsets containing up to 4 regions had
@@ -194,7 +194,7 @@ While it is possible that there is a larger set of regions in the replace benchm
 from path-merging, our automated evaluation and a manual investigation did not reveal what such a set of regions might be.
 %
 In the future, we plan to integrate a query count estimated heuristic of the kind proposed by
-Kuznetsov et al.~\cite{kuznetsov} to canonicalize only a beneficial set of regions in the replace benchmark.
+Kuznetsov et al.~\cite{kuznetsov} to fully-linearize only a beneficial set of regions in the replace benchmark.
 
 On the NanoXML benchmark, \tool\ finds several opportunities for execution path count reduction on account of the
 NanoXML benchmark having several methods with multi-path regions that have a control-flow returning instruction on every
@@ -211,7 +211,7 @@ metrics, and from doing JIT static analysis to recover region statements.
 We restrict our results with Siena to 7 symbolic inputs because 7 is the most number of symbolic inputs for which
 SPF finishes exploring all feasible paths within a 24 hour time budget.
 %
-We do not attempt to construct a fully linearized form of a region summary if it does not begin on a symbolic conditional
+We do not attempt to construct a fully linearized region if the region does not begin on a symbolic conditional
 branch.
 
 In the PrintTokens2 benchmark, \tool\ uses 4 distinct regions, 2 of which involve summarizing multi-path regions which
@@ -284,7 +284,7 @@ We attribute this increase to the fact that the reduction in the number of solve
 for the increase in complexity of the solver queries introduced with single-path cases.
 %
 In the future, we plan to address this issue by transforming region summaries with more sophisticated term rewriting
-and context-specific simplification of canonical regions to reduce the complexity of solver queries.
+and context-specific simplification of fully-linearized regions to reduce the complexity of solver queries.
 %
 The addition of summarizing multiple control flow-returning exit points into a single such exit point provides a
 significant reduction in the number of execution paths and number of solver queries in the NanoXML, PrintTokens2
